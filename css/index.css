@@ -120,7 +120,7 @@
             position: fixed;
             inset: 0;
             z-index: 1200;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
             padding: 20px;
             background: rgba(0,0,0,0.45);
@@ -136,6 +136,7 @@
             border-radius: 12px;
             padding: 20px;
             box-shadow: 0 12px 30px rgba(0,0,0,0.18);
+            margin-top: 100px;
         }
 
         .home-name-modal-content h3 {
