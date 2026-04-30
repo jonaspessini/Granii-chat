@@ -3463,3 +3463,194 @@ font-size: 1.5em;
 .menu-item:last-child:hover {
     background-color: rgba(229, 57, 53, 0.1);
 }
+/* ===================================================
+   REDESIGN MINIMALISTA — MODAL DE TRANSAÇÕES
+   =================================================== */
+
+/* Fundo da tela (overlay) mais suave */
+#modal {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+/* Corpo do modal: fundo cinza suave */
+#modal .modal-content {
+  background: #f2f3f5;
+  padding: 24px 20px;
+}
+
+/* Labels: cor mais suave e peso menor */
+#modal .modal-content label,
+#modal .modal-content .parcelamento-fields label {
+  font-size: 1em;
+  font-weight: 400;
+  color: #4b5563;
+  text-transform: none;
+  letter-spacing: 0;
+  margin-bottom: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+/* Labels de parcelamento: texto mais escuro */
+#modal .modal-content .parcelamento-fields label {
+  color: #4b5563;
+  font-weight: 400;
+  font-size: 0.9em;
+}
+
+/* Label do status (pago): tudo maiúsculo */
+#modal .pago-toggle-label,
+#modal .pago-toggle-label span,
+#modal #pagoToggleText {
+  /* text-transform: uppercase; */
+  letter-spacing: 0.5px;
+}
+
+/* Inputs e selects: brancos, borda suave, sem sombra pesada */
+/* #valor excluído pois fica no topo colorido */
+#modal .modal-content input[type="text"],
+#modal .modal-content input[type="number"],
+#modal .modal-content input[type="date"],
+#modal .modal-content select {
+  background: #ffffff;
+  border: 1px solid #e4e6ea;
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-size: 0.95em;
+  color: #2d3142;
+  box-shadow: none;
+  transition: border-color 0.2s ease;
+}
+
+/* Garantir que o campo valor do topo NÃO seja afetado */
+#modal .modal-top-header #valor {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 5px 0 !important;
+  font-size: 2.5em !important;
+  font-weight: 700 !important;
+  color: white !important;
+}
+
+#modal .modal-top-header #valor:focus {
+  border-bottom: 2px solid rgba(255,255,255,0.5) !important;
+  box-shadow: none !important;
+}
+
+/* Foco verde nos inputs de texto do modal */
+#modal .modal-content input[type="text"]:focus,
+#modal .modal-content input[type="date"]:focus,
+#modal .modal-content input[type="number"]:focus,
+#modal .modal-content select:focus {
+  border-color: #21c45d;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(33, 196, 93, 0.1);
+}
+
+/* Foco vermelho para despesas */
+#modal[data-tipo="despesa"] .modal-content input[type="text"]:focus,
+#modal[data-tipo="despesa"] .modal-content input[type="date"]:focus,
+#modal[data-tipo="despesa"] .modal-content input[type="number"]:focus,
+#modal[data-tipo="despesa"] .modal-content select:focus {
+  border-color: #f44336;
+  box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.1);
+}
+
+/* Custom select trigger: branco e minimalista */
+#modal .custom-select-trigger {
+  background: #ffffff;
+  border: 1px solid #e4e6ea;
+  border-radius: 10px;
+  padding: 11px 14px;
+  box-shadow: none;
+  color: #2d3142;
+  font-size: 0.95em;
+}
+
+#modal .custom-select-trigger:hover {
+  border-color: #c8cad0;
+}
+
+#modal .custom-select-dropdown {
+  background: #ffffff;
+  border: 1px solid #e4e6ea;
+  border-top: none;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
+
+/* Botões de tipo (Único / Parcelado / Fixo): minimalistas */
+#modal .modal-content .add-entry-options .btn {
+  background: #ffffff;
+  border: 1px solid #e4e6ea;
+  border-radius: 10px;
+  color: #6b7280;
+  font-weight: 500;
+  font-size: 0.88em;
+  padding: 10px 12px;
+  box-shadow: none;
+  transition: all 0.18s ease;
+}
+
+#modal .modal-content .add-entry-options .btn:hover {
+  background: #f9f9f9;
+  border-color: #c8cad0;
+}
+
+#modal[data-tipo="receita"] .modal-content .add-entry-options .btn.active {
+  background: #21c45d;
+  border-color: #21c45d;
+  color: #ffffff;
+}
+
+#modal[data-tipo="despesa"] .modal-content .add-entry-options .btn.active {
+  background: #f44336;
+  border-color: #f44336;
+  color: #ffffff;
+}
+
+/* Toggle de status: mantém estilo original */
+
+/* Botões de ação (Salvar / Cancelar / Excluir): minimalistas e limpos */
+#modal .btn-group .btn-primary {
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95em;
+  letter-spacing: 0.3px;
+  box-shadow: none;
+  border: none;
+  padding: 14px 20px;
+}
+
+#modal .btn-group .btn-secondary {
+  background: #ffffff;
+  color: #6b7280;
+  border: 1px solid #e4e6ea;
+  border-radius: 12px;
+  font-weight: 500;
+  font-size: 0.95em;
+  box-shadow: none;
+  padding: 14px 20px;
+}
+
+#modal .btn-group .btn-secondary:hover {
+  background: #f5f5f5;
+  border-color: #c8cad0;
+}
+
+#modal .btn-group .btn-danger {
+  background: #fff8e1;
+  color: #f59e0b;
+  border: 1px solid #fde68a;
+  border-radius: 12px;
+  font-weight: 500;
+  font-size: 0.95em;
+  box-shadow: none;
+  padding: 14px 20px;
+}
+
+#modal .btn-group .btn-danger:active {
+  background: #fef3c7;
+}

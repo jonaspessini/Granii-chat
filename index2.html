@@ -499,11 +499,11 @@ index2
 
     <div id="parcelamentoFields" class="parcelamento-fields">
       <div>
-        <label for="totalParcelas">Total de Parcelas:
-          <input type="number" id="totalParcelas" min="1" value="1">
-        </label>
         <label for="parcelaAtual">Parcela Atual:
           <input type="number" id="parcelaAtual" min="1" value="1">
+        </label>
+        <label for="totalParcelas">Total de Parcelas:
+          <input type="number" id="totalParcelas" min="1" value="1">
         </label>
       </div>
     </div>
@@ -4175,27 +4175,35 @@ function atualizarLabelTopo() {
 
 // Função para alterar a cor da status bar baseado no tipo de lançamento
 function updateStatusBarColor(tipo) {
+    const cor = tipo === 'despesa' ? '#f44336' : '#21c45d';
+
+    // Atualiza a meta theme-color (barra do navegador no celular)
+    let metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (!metaTheme) {
+        metaTheme = document.createElement('meta');
+        metaTheme.name = 'theme-color';
+        document.head.appendChild(metaTheme);
+    }
+    metaTheme.setAttribute('content', cor);
+
+    // Cordova StatusBar (app nativo)
     if (typeof StatusBar !== 'undefined') {
-        if (tipo === 'despesa') {
-            // Cor vermelha para despesas
-            StatusBar.backgroundColorByHexString("#f44336");
-            StatusBar.styleLightContent(); // Texto branco
-        } else if (tipo === 'receita') {
-            // Cor verde para receitas
-            StatusBar.backgroundColorByHexString("#21c45d");
-            StatusBar.styleLightContent(); // Texto branco
-        } else {
-            // Cor padrão
-            StatusBar.backgroundColorByHexString("#21c45d");
-            StatusBar.styleLightContent();
-        }
+        StatusBar.backgroundColorByHexString(cor);
+        StatusBar.styleLightContent();
     }
 }
 
 // Função para restaurar a cor original da status bar
 function restoreStatusBarColor() {
+    const corPadrao = '#21c45d';
+
+    // Restaura a meta theme-color
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (metaTheme) metaTheme.setAttribute('content', corPadrao);
+
+    // Cordova StatusBar (app nativo)
     if (typeof StatusBar !== 'undefined') {
-        StatusBar.backgroundColorByHexString("#21c45d");
+        StatusBar.backgroundColorByHexString(corPadrao);
         StatusBar.styleLightContent();
     }
 }

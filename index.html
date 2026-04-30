@@ -41,16 +41,6 @@
 </div>
 
 <!-- CONTEÚDO PRINCIPAL ROLÁVEL -->
-<div class="home-name-modal" id="homeNameModal">
-    <div class="home-name-modal-content">
-        <h3>Como voce quer ser chamado?</h3>
-        <input type="text" id="homeNameInput" placeholder="Seu nome" maxlength="40">
-        <div class="home-name-actions">
-            <button type="button" class="home-name-cancel" id="homeNameCancelBtn">Cancelar</button>
-            <button type="button" class="home-name-save" id="homeNameSaveBtn">Salvar</button>
-        </div>
-    </div>
-</div>
 
 <div class="main-scroll" id="mainScroll">
     
@@ -229,68 +219,6 @@ function navigateTo(pagina) {
         }
     }
 
-    async function abrirEditorNomeUsuario() {
-        const user = await getCurrentUser();
-        if (!user) {
-            window.location.href = 'login.html';
-            return;
-        }
-
-        const nomeAtual = user.user_metadata?.display_name || user.user_metadata?.name || '';
-        const modal = document.getElementById('homeNameModal');
-        const input = document.getElementById('homeNameInput');
-
-        input.value = nomeAtual;
-        modal.classList.add('active');
-        setTimeout(() => input.focus(), 0);
-    }
-
-    function fecharEditorNomeUsuario() {
-        document.getElementById('homeNameModal')?.classList.remove('active');
-    }
-
-    async function salvarNomeUsuario() {
-        const input = document.getElementById('homeNameInput');
-        const saveBtn = document.getElementById('homeNameSaveBtn');
-        const novoNome = input.value.trim();
-
-        if (!novoNome) {
-            alert('Informe um nome para aparecer no app.');
-            input.focus();
-            return;
-        }
-
-        const user = await getCurrentUser();
-        if (!user) {
-            window.location.href = 'login.html';
-            return;
-        }
-
-        saveBtn.disabled = true;
-
-        const { data, error } = await supabase.auth.updateUser({
-            data: {
-                ...(user.user_metadata || {}),
-                display_name: novoNome,
-                name: novoNome
-            }
-        });
-
-        saveBtn.disabled = false;
-
-        if (error) {
-            alert('Nao foi possivel alterar o nome: ' + error.message);
-            return;
-        }
-        // atualizado
-        const userEmail = document.getElementById('homeUserEmail');
-        if (userEmail) {
-            userEmail.textContent = novoNome;
-            userEmail.title = data.user?.email || user.email || novoNome;
-        }
-        fecharEditorNomeUsuario();
-    }
-
     async function sairDaHome() {
         const logoutBtn = document.getElementById('homeLogoutBtn');
 
@@ -318,16 +246,6 @@ function navigateTo(pagina) {
     }
 
     document.getElementById('homeLogoutBtn')?.addEventListener('click', sairDaHome);
-    document.getElementById('homeUserNameBtn')?.addEventListener('click', abrirEditorNomeUsuario);
-    document.getElementById('homeNameCancelBtn')?.addEventListener('click', fecharEditorNomeUsuario);
-    document.getElementById('homeNameSaveBtn')?.addEventListener('click', salvarNomeUsuario);
-    document.getElementById('homeNameModal')?.addEventListener('click', (event) => {
-        if (event.target.id === 'homeNameModal') fecharEditorNomeUsuario();
-    });
-    document.getElementById('homeNameInput')?.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter') salvarNomeUsuario();
-        if (event.key === 'Escape') fecharEditorNomeUsuario();
-    });
     atualizarUsuarioHome();
     startSingleSessionGuard();
     console.log('✅ Supabase module loaded');
@@ -417,7 +335,7 @@ function navigateTo(pagina) {
         function updateMonthDisplay() {
             const month = currentDate.getMonth();
             const year = currentDate.getFullYear();
-            currentMonthTextHeader.textContent = `${monthNames[month]} ${year}`;
+            const nomeMes = monthNames[month]; currentMonthTextHeader.textContent = `${nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1)} ${year}`;
             calcularTotais();
             renderizarCartoes();
             renderizarResumoMes();
@@ -610,6 +528,10 @@ function navigateTo(pagina) {
                 `;
                 container.appendChild(wrapper);
             });
+
+            // Sempre abre no mês mais recente (final do scroll)
+            const chartContainer = container.closest('.chart-container') || container.parentElement;
+            if (chartContainer) chartContainer.scrollLeft = chartContainer.scrollWidth;
         }
 
         // ========== RENDERIZAR CARTÕES ==========
@@ -751,6 +673,12 @@ function navigateTo(pagina) {
             updateMonthDisplay();
             closeMonthYearPickerModal();
         }
+
+        // Expõe funções chamadas via onclick inline no HTML
+        window.changeYearPicker = changeYearPicker;
+        window.closeMonthYearPickerModal = closeMonthYearPickerModal;
+        window.goToCurrentMonth = goToCurrentMonth;
+        window.closeCartoesDetails = closeCartoesDetails;
 
         // ========== FUNÇÃO DO OLHO ==========
         function toggleValoresVisiveis() {
