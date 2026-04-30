@@ -57,9 +57,14 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            border: none;
+            background: transparent;
+            padding: 0;
             font-size: 0.85em;
             font-weight: 600;
             color: rgba(255,255,255,0.96);
+            cursor: pointer;
+            font-family: inherit;
         }
 
         .home-user-info span {
@@ -71,6 +76,15 @@
         .home-user-info i {
             flex: 0 0 auto;
             font-size: 1.1em;
+        }
+
+        .home-user-info:active {
+            opacity: 0.82;
+        }
+
+        .home-user-edit-icon {
+            opacity: 0.8;
+            font-size: 1em !important;
         }
 
         .home-logout-btn {
@@ -97,6 +111,81 @@
         }
 
         .home-logout-btn:disabled {
+            opacity: 0.65;
+            cursor: wait;
+        }
+
+        .home-name-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 1200;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(0,0,0,0.45);
+        }
+
+        .home-name-modal.active {
+            display: flex;
+        }
+
+        .home-name-modal-content {
+            width: min(100%, 360px);
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.18);
+        }
+
+        .home-name-modal-content h3 {
+            color: #1a1a2e;
+            font-size: 1.05em;
+            margin-bottom: 14px;
+        }
+
+        .home-name-modal-content input {
+            width: 100%;
+            height: 46px;
+            border: 1px solid #d7dde8;
+            border-radius: 8px;
+            padding: 0 12px;
+            font: inherit;
+            outline: none;
+        }
+
+        .home-name-modal-content input:focus {
+            border-color: #21c45d;
+            box-shadow: 0 0 0 3px rgba(33,196,93,0.14);
+        }
+
+        .home-name-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .home-name-actions button {
+            flex: 1;
+            height: 42px;
+            border: none;
+            border-radius: 8px;
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .home-name-cancel {
+            background: #eef2f7;
+            color: #475569;
+        }
+
+        .home-name-save {
+            background: #21c45d;
+            color: white;
+        }
+
+        .home-name-save:disabled {
             opacity: 0.65;
             cursor: wait;
         }
