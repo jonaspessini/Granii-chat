@@ -1,0 +1,3465 @@
+:root {
+  --cor-principal: #21c45d;
+  --primary-color: #2e7d32;
+  --secondary-color: #616161;
+  --background-color: #f9f9f9;
+  --card-background: #ffffff;
+  --border-color: #e0e0e0;
+  --text-color: #212121;
+  --positive-color: #21c45d;
+  --negative-color: #F44336;
+  --shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  --border-radius: 8px;
+  --paid-color: #4CAF50;
+  --unpaid-color: #FF9800;
+  --open-color: #1E88E5;
+  --header-bg-color: #21c45d;
+  --header-text-color: #ffffff;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+  padding: 0;
+  background: var(--background-color);
+  color: var(--text-color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding-bottom: 0;
+  overflow-x: hidden;
+  width: 100%;
+  position: relative;
+}
+
+.main-container {
+  margin-top: 160px; /* Ajustei para 160px */
+  max-width: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  box-sizing: border-box;
+  padding: 0;
+  align-items: center;
+  overflow: hidden;
+  background-color: var(--card-background);
+  padding-bottom: 70px;
+}
+
+.section-block {
+  background: var(--card-background);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  padding: 25px;
+  box-sizing: border-box;
+}
+
+.header-purple {
+  position: fixed;
+  top: 50px; /* Aumentei de 0 para 60px para ficar abaixo do título */
+  left: 0;
+  z-index: 100;
+  width: 100%;
+  background-color: var(--header-bg-color);
+  color: var(--header-text-color);
+  padding: 1px 0 !important;
+  text-align: center;
+  box-shadow: var(--shadow);
+  box-sizing: border-box;
+  margin-bottom: 40px;
+  font-size: 1em;
+}
+
+.header-purple .month-navigation-header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  margin-bottom: 22px;
+  width: 100%;
+  padding: 0 60px;
+  box-sizing: border-box;
+}
+
+.header-purple .month-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.4em;
+  color: var(--header-text-color);
+  transition: color 0.2s ease;
+  padding: 12px;
+}
+
+.header-purple .month-btn:first-child {
+  justify-self: start;
+}
+
+.header-purple .month-btn:last-child {
+  justify-self: end;
+}
+
+.header-purple .month-btn:hover {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.header-purple .month-display-header {
+  font-weight: 500;
+  font-size: 1.1em;
+  text-transform: capitalize;
+  cursor: pointer;
+  color: var(--header-text-color);
+  transition: opacity 0.2s ease;
+  text-align: center;
+  grid-column: 2;
+  justify-self: center;
+}
+
+.header-purple .month-display-header:hover {
+  opacity: 0.8;
+}
+
+.header-purple .current-balance {
+  font-size: 2.8em;
+  font-weight: 700;
+  margin-bottom: 20px;
+  display: block;
+}
+
+.header-purple .balance-summary {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  padding: 0 20px;
+}
+
+.header-purple .balance-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.header-purple .balance-label {
+  font-size: 0.9em;
+  font-weight: 500;
+  margin-bottom: 5px;
+}
+
+.header-purple .balance-value {
+  font-size: 1.1em;
+  font-weight: 600;
+}
+
+.header-purple .receitas-valor {
+  color: var(--positive-color);
+}
+
+.header-purple .despesas-valor {
+  color: var(--negative-color);
+}
+
+h1 {
+  text-align: center;
+  color: var(--primary-color);
+  margin-top: 0;
+  margin-bottom: 25px;
+  font-weight: 600;
+  font-size: 1.8em;
+  display: none;
+}
+
+.section-block > .month-navigation,
+.section-block > .add-btn,
+.section-block > h1 {
+  display: none;
+}
+
+.transactions-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 10px 15px;
+  background-color: var(--card-background);
+  margin-top: 2px;
+}
+
+.transaction-card {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05);
+  padding: 16px 20px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.transaction-card:active {
+  transform: scale(0.98);
+  background-color: #f5f5f5;
+}
+
+.transaction-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: -5px;
+}
+
+.transaction-desc {
+  font-weight: 600;
+  font-size: 1em;
+  color: var(--text-color);
+  flex: 1;
+}
+
+.transaction-value {
+  font-weight: 600;
+  font-size: 1.05em;
+  text-align: right;
+  min-width: 80px;
+}
+
+.transaction-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.transaction-date {
+  font-size: 0.85em;
+  color: var(--secondary-color);
+  flex: 1;
+}
+
+.transaction-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.transaction-actions .status-btn {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75em;
+  width: 75px;
+  margin: 0;
+}
+
+table {
+  display: none;
+}
+
+.valor-positivo {
+  color: var(--positive-color) !important; 
+  font-weight: 500;
+}
+
+.valor-negativo {
+  color: var(--negative-color) !important;
+  font-weight: 500;
+}
+
+.actions-cell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  width: 100%;
+}
+
+.valor-display {
+  min-width: 70px;
+  text-align: right;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+.status-btn.paid {
+  background: var(--cor-principal); /*#dbf8dd*/
+  color: white;      /*#2e7d32*/
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 0.75em;
+  margin-top: 6px;
+}
+
+.status-btn.unpaid {
+  background: #fde7e7;
+  color: #ff6b6b;
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 0.75em;
+  margin-top: 6px;
+}
+
+.edit-icon {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+  flex-shrink: 0;
+}
+
+.edit-icon:hover { 
+  opacity: 1; 
+}
+
+.totais {
+  margin: 25px 0;
+  margin-bottom: 120px;
+  background: var(--background-color);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  font-size: 1.1em;
+  font-weight: 500;
+  border: 1px solid var(--border-color);
+  width: calc(100% - 30px);
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 20px 20px;
+}
+
+.totais div:not(.fluxo-caixa-destaque) {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
+}
+
+.fluxo-caixa-destaque {
+  background-color: #e0e0e0;
+  padding: 14px 15px;
+  border-radius: var(--border-radius);
+  margin-top: 10px;
+  font-size: 1.2em;
+  font-weight: 700;
+  color: var(--text-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-left: -20px;
+  margin-right: -20px;
+  width: calc(100% + 40px);
+  box-sizing: border-box;
+}
+
+.receitas-totais-cor { 
+  color: #00b050; 
+}
+
+.despesas-totais-cor { 
+  color: #FF0000; 
+}
+
+.total-detail { 
+  font-size: 0.8em; 
+  margin-left: 15px; 
+  color: var(--secondary-color); 
+}
+
+.total-detail.paid-value { 
+  color: var(--paid-color); 
+}
+
+.total-detail.unpaid-value { 
+  color: var(--open-color); 
+}
+
+/* Modal de Adição/Edição de Lançamento - TELA CHEIA */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: var(--card-background);
+  padding: 30px;
+  border-radius: 0; /* Remove bordas arredondadas */
+  width: 100%;
+  max-width: 100%;
+  height: 100%; /* Ocupa altura total */
+  max-height: 100%; /* Garante altura total */
+  box-shadow: none; /* Remove sombra */
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  overflow-y: auto; /* Adiciona scroll se necessário */
+  box-sizing: border-box; /* Garante que padding não ultrapasse */
+}
+
+/* Ajuste para o topo colorido ocupar toda largura */
+.modal-top-header {
+  margin: -30px -30px 20px -30px;
+  padding: 25px 30px 20px 30px;
+  text-align: left;
+  border-radius: 0; /* Remove bordas arredondadas do topo */
+  transition: background 0.3s ease;
+}
+
+/* Garantir que os campos ocupem toda largura */
+.modal-content input,
+.modal-content select,
+.modal-content .custom-select-container {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* CORES ESPECÍFICAS PARA O MODAL DE LANÇAMENTO */
+#modal[data-tipo="receita"] .modal-content h2 {
+  color: var(--positive-color);
+}
+
+#modal[data-tipo="despesa"] .modal-content h2 {
+  color: var(--negative-color);
+}
+
+#modal[data-tipo="receita"] .btn-primary {
+  background: var(--positive-color);
+}
+
+#modal[data-tipo="receita"] .btn-primary:hover {
+  background: #43a047;
+}
+
+#modal[data-tipo="despesa"] .btn-primary {
+  background: var(--negative-color);
+}
+
+#modal[data-tipo="despesa"] .btn-primary:hover {
+  background: #d32f2f;
+}
+
+#modal[data-tipo="receita"] .add-entry-options .btn.active {
+  background-color: var(--positive-color);
+  border-color: var(--positive-color);
+}
+
+#modal[data-tipo="despesa"] .add-entry-options .btn.active {
+  background-color: var(--negative-color);
+  border-color: var(--negative-color);
+}
+
+input[type="text"], 
+input[type="valor"], 
+select, 
+input[type="number"],
+input[type="date"] {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  font-size: 1em;
+  color: var(--text-color);
+  background-color: var(--background-color);
+  outline: none;
+  box-sizing: border-box;
+  font-family: 'Inter', sans-serif;
+}
+
+input[type="valor"] { 
+  text-align: right; 
+}
+
+input[type="date"]:invalid {
+  color: var(--secondary-color);
+}
+
+.transaction-date.vencida {
+  color: var(--negative-color) !important;
+  font-weight: 600;
+}
+
+.btn-group { 
+  display: flex; 
+  gap: 10px; 
+  justify-content: flex-end; 
+  margin-top: 20px; 
+}
+
+.btn { 
+  padding: 10px 15px; 
+  border: none; 
+  border-radius: var(--border-radius); 
+  cursor: pointer; 
+  font-size: 1em; 
+  font-weight: 500; 
+  transition: background 0.3s ease, color 0.3s ease; 
+}
+
+.btn-primary { 
+  background: var(--primary-color); 
+  color: white; 
+}
+
+.btn-primary:hover { 
+  background: #236127; 
+}
+
+.btn-danger { 
+  background: var(--negative-color); 
+  color: white; 
+}
+
+.btn-danger:hover { 
+  background: #d32f2f; 
+}
+
+.btn-secondary { 
+  background: var(--secondary-color); 
+  color: white; 
+}
+
+.btn-secondary:hover { 
+  background: #424242; 
+}
+
+.modal-content .add-entry-options {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.modal-content .add-entry-options .btn {
+  flex: 1;
+  padding: 12px 15px;
+  font-size: 0.95em;
+  font-weight: 600;
+  text-align: center;
+  background-color: #f0f0f0;
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+}
+
+.modal-content .add-entry-options .btn:hover {
+  background-color: #e0e0e0;
+}
+
+.modal-content .add-entry-options .btn.active {
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.parcelamento-checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  display: none;
+}
+
+.parcelamento-fields {
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: -5px;
+}
+
+.parcelamento-fields > div {
+  display: flex;
+  gap: 10px;
+}
+
+.parcelamento-fields label {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  font-size: 0.9em;
+  color: var(--secondary-color);
+}
+
+.parcelamento-fields input {
+  margin-top: 5px;
+  text-align: center;
+}
+
+#deleteParceladoModal .btn-group {
+  flex-direction: column;
+  gap: 15px;
+}
+
+#deleteParceladoModal .btn-group .btn {
+  width: 100%;
+}
+
+#monthYearPickerModal .modal-content {
+  max-width: 450px;
+  padding: 0;
+  overflow: hidden;
+}
+
+#monthYearPickerModal .modal-header {
+  background-color: var(--header-bg-color);
+  color: var(--header-text-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  font-size: 1.1em;
+  font-weight: 600;
+}
+
+#monthYearPickerModal .modal-header .nav-btn {
+  background: none;
+  border: none;
+  color: var(--header-text-color);
+  font-size: 1.5em;
+  cursor: pointer;
+  padding: 0 5px;
+}
+
+#monthYearPickerModal .modal-header .current-year-display {
+  flex-grow: 1;
+  text-align: center;
+}
+
+#monthYearPickerModal .months-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding: 20px;
+}
+
+#monthYearPickerModal .month-item {
+  background-color: #f0f0f0;
+  padding: 15px 5px;
+  text-align: center;
+  cursor: pointer;
+  font-size: 0.95em;
+  font-weight: 500;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+#monthYearPickerModal .month-item:hover {
+  background-color: #e0e0e0;
+}
+
+#monthYearPickerModal .month-item.selected {
+  background-color: var(--header-bg-color);
+  color: white;
+  font-weight: 600;
+}
+
+#monthYearPickerModal .month-item.current-month {
+  border: 2px solid var(--primary-color);
+  box-sizing: border-box;
+}
+
+#monthYearPickerModal .month-item.selected.current-month {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: white;
+}
+
+#monthYearPickerModal .modal-footer {
+  padding: 15px 20px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.fab-button {
+  position: fixed;
+  bottom: 14px !important;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 60px;
+  background-color: #03b444;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 2em;
+  cursor: pointer;
+  box-shadow: 0 5px 8px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  z-index: 1001;
+  border: none;
+}
+
+.fab-button:hover {
+  background-color: #236127;
+  transform: translateX(-50%) scale(1.05);
+}
+
+.fab-button:active {
+  transform: translateX(-50%) scale(0.95);
+}
+
+.fab-button svg {
+  fill: currentColor;
+  width: 28px;
+  height: 28px;
+}
+
+.fab-options {
+  position: fixed;
+  bottom: 110px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: row;
+  gap: 80px;
+  align-items: center;
+  z-index: 998;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+}
+
+.fab-options.active {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(-10px);
+}
+
+.fab-option-btn {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-weight: 600;
+  font-size: 0.70em;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  border: none;
+  text-transform: uppercase;
+  transition: transform 0.2s ease, background-color 0.3s ease;
+}
+
+.fab-option-btn:hover {
+  transform: scale(1.05);
+}
+
+.fab-option-btn.receita {
+  background-color: var(--positive-color);
+}
+
+.fab-option-btn.receita:hover {
+  background-color: #43a047;
+}
+
+.fab-option-btn.despesa {
+  background-color: var(--negative-color);
+}
+
+.fab-option-btn.despesa:hover {
+  background-color: #e53935;
+}
+
+#modal #tipo {
+  display: none;
+}
+
+#modal.edit-mode #tipo {
+  display: block;
+}
+
+.header-balance-card {
+  position: fixed;
+  top: 150px; /* Ajustei para 120px (60px título + 60px header) */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 101; /* z-index menor que os headers */
+  width: 100%;
+  max-width: 100%;
+  margin-top: -45px;
+  background-color: white;
+  border-radius: 18px 18px 0px 0px;
+  padding: 18px 0px 18px 0px;
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  height: auto;
+  min-height: auto;
+}
+
+.header-balance-card:active {
+  transform: translateX(-50%) scale(0.98);
+}
+
+/* .header-balance-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 10px;
+  right: 10px;
+  height: 1px;
+  background: #00000025;
+  border-radius: 1px;
+} */
+
+.header-balance-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 10px;
+  right: 10px;
+  border-bottom: 1px solid #f0f0f0; /* Usa border-bottom igual a border-right */
+}
+
+.header-balance-card .balance-label {
+  color: var(--secondary-color);
+  font-size: 0.9em;
+  font-weight: 400;
+  margin-bottom: 5px;
+  margin-top: -20px;
+}
+
+.header-balance-card .balance-value {
+  font-size: 2.2em;
+  font-weight: 600;
+  color: var(--text-color);
+  margin-bottom: 16px;
+  display: inline-block;
+}
+
+.header-balance-card .balance-summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0px;
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 0px;
+  margin-top: 0px;
+  padding: 0;
+}
+
+.header-balance-card .summary-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  flex: 1; /* Faz cada item ocupar metade da tela */
+  min-width: 0; /* Permite que o conteúdo quebre corretamente */
+}
+
+.header-balance-card .summary-item:first-child {
+  align-items: flex-start; /* Saldo atual alinhado à esquerda */
+  padding-left: 20px; /* Espaçamento da borda esquerda */
+  border-right: 1px solid #f0f0f0; /* Linha divisória no meio */
+}
+
+.header-balance-card .summary-item:last-child {
+  align-items: flex-start; /* Balanço mensal alinhado à esquerda */
+  padding-left: 20px; /* Espaçamento a partir do meio */
+}
+
+.header-balance-card .summary-item-value {
+  font-size: 1.1em;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-start; /* Alinha todo o conteúdo à esquerda */
+  width: 100%; /* Ocupa toda a largura disponível */
+}
+
+/* Opcional: se quiser que o ícone fique mais próximo do valor */
+.header-balance-card .summary-item-icon {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--secondary-color);
+  font-weight: 100;
+  font-size: 1.2em;
+  flex-shrink: 0; /* Impede que o ícone diminua */
+}
+
+/* Se quiser alinhar também os labels à esquerda */
+.header-balance-card .summary-item-label {
+  font-size: 0.8em;
+  color: var(--secondary-color);
+  align-self: flex-start; /* Alinha o label à esquerda */
+  margin-left: 5px; /* Compensa a largura do ícone + gap */
+}
+
+/* Para a estrutura geral dos itens */
+.header-balance-card .summary-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* Alinha todo o conteúdo do item à esquerda */
+  gap: 5px;
+  flex: 1;
+  min-width: 0;
+  padding: 0 20px; /* Espaçamento interno consistente */
+}
+
+.header-balance-card .summary-item-icon {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--secondary-color);
+  font-weight: 100;
+  font-size: 1.2em;
+}
+
+.header-balance-card .income-value { 
+  color: var(--positive-color); 
+}
+
+.header-balance-card .expense-value { 
+  color: var(--positive-color); 
+}
+
+/* Modal de Detalhes do Saldo */
+.balance-details-modal {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 80%;
+  background: var(--card-background);
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+  z-index: 1001;
+  transform: translateY(100%);
+  transition: transform 0.3s ease-out;
+  overflow: hidden;
+}
+
+.balance-details-modal.active {
+  transform: translateY(0);
+}
+
+.balance-details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--header-bg-color);
+  color: var(--header-text-color);
+  border-radius: 20px 20px 0 0;
+}
+
+.balance-details-title {
+  font-size: 1.2em;
+  font-weight: 600;
+}
+
+.balance-details-close {
+  background: none;
+  border: none;
+  color: var(--header-text-color);
+  font-size: 1.5em;
+  cursor: pointer;
+  padding: 5px;
+}
+
+.balance-details-content {
+  padding: 20px;
+  height: calc(100% - 70px);
+  overflow-y: auto;
+}
+
+.balance-details-totals {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.balance-detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.balance-detail-label {
+  font-size: 1em;
+  color: var(--text-color);
+  font-weight: 500;
+}
+
+.balance-detail-value {
+  font-size: 1.1em;
+  font-weight: 600;
+}
+
+.balance-detail-positive {
+  color: var(--positive-color);
+}
+
+.balance-detail-negative {
+  color: var(--negative-color);
+}
+
+.balance-detail-section {
+  margin-bottom: 25px;
+}
+
+.balance-detail-section-title {
+  font-size: 1.1em;
+  font-weight: 600;
+  color: var(--secondary-color);
+  margin-bottom: 15px;
+  padding-bottom: 8px;
+}
+
+.balance-detail-subitem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  margin-left: 15px;
+  font-size: 0.95em;
+}
+
+.balance-detail-subitem .balance-detail-label {
+  font-weight: 400;
+  color: var(--secondary-color);
+}
+
+.balance-detail-subitem .balance-detail-value {
+  font-size: 1em;
+  font-weight: 500;
+}
+
+.balance-details-highlight {
+  background-color: var(--background-color);
+  padding: 15px;
+  border-radius: var(--border-radius);
+  margin-top: 10px;
+  border-left: 4px solid var(--primary-color);
+}
+
+.overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+}
+
+.overlay.active {
+  display: block;
+}
+
+.transaction-details-modal {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: auto;
+  max-height: 60%;
+  background: var(--card-background);
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+  z-index: 1002;
+  transform: translateY(100%);
+  transition: transform 0.3s ease-out;
+  overflow: hidden;
+}
+
+.transaction-details-modal.active {
+  transform: translateY(0);
+}
+
+.transaction-details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--header-bg-color);
+  color: var(--header-text-color);
+  border-radius: 20px 20px 0 0;
+}
+
+.transaction-details-title {
+  font-size: 1.2em;
+  font-weight: 600;
+}
+
+.transaction-details-close {
+  background: none;
+  border: none;
+  color: var(--header-text-color);
+  font-size: 1.5em;
+  cursor: pointer;
+  padding: 5px;
+}
+
+.transaction-details-content {
+  padding: 20px;
+  height: auto;
+  max-height: calc(100vh - 150px);
+  overflow-y: auto;
+}
+
+.transaction-detail-section {
+  margin-bottom: 25px;
+}
+
+.transaction-detail-section-title {
+  font-size: 1em;
+  font-weight: 600;
+  color: var(--secondary-color);
+  margin-bottom: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.transaction-detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.transaction-detail-label {
+  font-size: 1em;
+  color: var(--text-color);
+  font-weight: 500;
+}
+
+.transaction-detail-value {
+  font-size: 1em;
+  font-weight: 400;
+  color: var(--text-color);
+}
+
+.transaction-detail-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 25px;
+}
+
+.transaction-action-btn {
+  padding: 16px;
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: 1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  text-align: center;
+}
+
+.transaction-action-btn.primary {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.transaction-action-btn.primary:hover {
+  background-color: #236127;
+}
+
+.transaction-action-btn.secondary {
+  background-color: #f0f0f0;
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+}
+
+.transaction-action-btn.secondary:hover {
+  background-color: #e0e0e0;
+}
+
+.transaction-detail-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85em;
+  font-weight: 600;
+}
+
+.transaction-detail-status.paid {
+  background: #dbf8dd;
+  color: #2e7d32;
+}
+
+.transaction-detail-status.unpaid {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.status-btn {
+  font-weight: 600;
+  cursor: default;
+  border: none;
+  width: 75px;
+  text-align: center;
+  flex-shrink: 0;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  font-size: 0.75em;
+  margin-top: 6px;
+  border-radius: 8px;
+  pointer-events: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.transaction-action-btn.primary.despesa {
+  background-color: var(--negative-color);
+}
+
+.transaction-action-btn.primary.despesa:hover {
+  background-color: #d32f2f;
+}
+
+.transaction-action-btn.primary.receita {
+  background-color: var(--positive-color);
+}
+
+.transaction-action-btn.primary.receita:hover {
+  background-color: #43a047;
+}
+
+/* Estilos para os status de vencimento */
+.transaction-date.pago {
+  color: #8f8f8f !important;
+}
+
+.transaction-date.vencido {
+  color: var(--negative-color) !important;
+  font-weight: 600;
+
+}
+
+.transaction-date.vence-hoje {
+  color: #ff9800 !important;
+  font-weight: 700;
+}
+
+.transaction-date.normal {
+  color: var(--secondary-color) !important;
+}
+
+.transaction-date.sem-data {
+  color: var(--secondary-color) !important;
+  opacity: 0.7;
+}
+
+
+/* /////////////////////////////////// CSS BARRA DE NAVEGAÇÃO - INICIO /////////////////////////// */
+
+/* Barra de Navegação Inferior */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: white;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1px 0px;
+  z-index: 1000;
+}
+
+.nav-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: none;
+  border: none;
+  color: var(--secondary-color);
+  font-size: 0.75em;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  flex: 1;
+  max-width: 80px;
+  margin: 0 50px; /* Distancia entre botões */
+}
+
+.nav-btn:hover {
+  background-color: var(--background-color);
+}
+
+.nav-btn.active {
+  color: var(--cor-principal);
+}
+
+.nav-btn i {
+  font-size: 1.8em;
+  margin-bottom: 4px;
+}
+
+.nav-btn .label {
+  font-weight: 500;
+}
+
+/* ///////////////////////////////////// CSS BARRA DE NAVEGAÇÃO - FIM /////////////////////////// */
+
+@media (max-width: 480px) {
+  .main-container { 
+    padding: 0px; 
+  }
+
+  .transaction-details-content {
+    padding-bottom: 40px;
+  }
+
+  .transaction-detail-actions {
+    margin-top: 30px;
+    margin-bottom: 10px;
+    gap: 15px;
+  }
+
+  .transaction-action-btn {
+    padding: 18px;
+  }
+
+  .transaction-details-modal {
+    max-height: 75%;
+  }
+
+  .section-block { 
+    padding: 20px; 
+  }
+
+  .header-purple { 
+    padding: 15px 0; 
+  }
+
+  .header-purple .current-balance { 
+    font-size: 2.2em; 
+  }
+
+  .header-purple .balance-summary { 
+    flex-direction: column; 
+    gap: 15px; 
+  }
+
+  .header-purple .balance-item { 
+    flex-direction: row; 
+    justify-content: space-between; 
+    width: 100%; 
+  }
+
+  thead th { 
+    font-size: 0.75em; 
+  }
+
+  .totais {
+    padding: 15px 20px;
+  }
+
+  .fluxo-caixa-destaque {
+    margin-left: -20px;
+    margin-right: -20px;
+    width: calc(100% + 40px);
+  }
+
+  /* .fab-button {
+    bottom: 20px;
+    right: 20px;
+    width: 55px;
+    height: 55px;
+    font-size: 1.8em;
+  } */
+
+  .fab-button svg {
+    width: 25px;
+    height: 25px;
+  }
+}
+
+/* Modal de Detalhes da Transação - Cores dinâmicas por tipo */
+.transaction-details-modal.receita .transaction-details-header {
+  background-color: var(--positive-color);
+}
+
+.transaction-details-modal.despesa .transaction-details-header {
+  background-color: var(--negative-color);
+}
+
+/* Mantém a cor padrão caso não tenha classe definida */
+.transaction-details-modal .transaction-details-header {
+  background-color: var(--header-bg-color);
+}
+
+.transaction-date.proximo-vencimento {
+  color: #ff9800 !important;
+  font-weight: 600;
+}
+
+/* //////////////////BOTAO DE STATUS PAGO OU NÃO////////////////// */
+/* ALTERNATIVA MODERNA - TOGGLE MINIMALISTA */
+.pago-toggle-group {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 20px 0;
+  padding: 0; /* Removido o padding e background */
+  background: transparent; /* Removido o fundo cinza */
+  border-radius: 0; /* Removido border-radius */
+  border: none; /* Removido a borda */
+  /* border-bottom: 1px solid #f0f0f0; */
+}
+
+.pago-toggle-label {
+  font-size: 16px;
+  font-weight: 400;
+  color: #2d3748;
+  margin-left: 9px;
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 52px;
+  height: 28px;
+  margin-right: 8px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #cbd5e0;
+  transition: .3s;
+  border-radius: 28px;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 22px;
+  width: 22px;
+  left: 3px;
+  bottom: 3px;
+  background: linear-gradient(145deg, #ffffff, #f7fafc);
+  transition: .3s;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+input:checked + .toggle-slider {
+  background: linear-gradient(145deg, #21c45d, #1ea34e);
+}
+
+.modal[data-tipo="despesa"] input:checked + .toggle-slider {
+  background: linear-gradient(145deg, #f44336, #d32f2f);
+}
+
+input:checked + .toggle-slider:before {
+  transform: translateX(24px);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+/* Efeito de glow quando ativo */
+input:checked + .toggle-slider {
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); /* Mantém apenas a sombra interna */
+}
+
+.modal[data-tipo="despesa"] input:checked + .toggle-slider {
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); /* Mantém apenas a sombra interna */
+}
+
+/* REMOVIDO: Indicador de estado com ícone (o "✕" e "✓") */
+/* .toggle-switch::after {
+  content: "✕";
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  font-weight: bold;
+  color: #718096;
+  transition: all 0.3s;
+}
+
+.toggle-switch input:checked::after {
+  content: "✓";
+  left: auto;
+  right: 8px;
+  color: white;
+} */
+
+/* Versão mobile */
+@media (max-width: 480px) {
+  .pago-toggle-group {
+    margin: 10px 0;
+  }
+  
+  .toggle-switch {
+    width: 48px;
+    height: 26px;
+  }
+  
+  .toggle-slider:before {
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+  }
+  
+  input:checked + .toggle-slider:before {
+    transform: translateX(22px);
+  }
+}
+
+/* Estilos para toggle desabilitado - Versão alternativa */
+.toggle-switch input:disabled + .toggle-slider {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background-color: #d1d5db;
+}
+
+.toggle-switch input:disabled + .toggle-slider:before {
+    background-color: #9ca3af;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.toggle-switch input:disabled:checked + .toggle-slider {
+    background-color: #d1d5db;
+}
+
+/* Texto mais claro quando desabilitado */
+.toggle-switch input:disabled ~ .pago-toggle-label {
+    opacity: 0.6;
+}
+
+.toggle-switch input:disabled ~ .pago-toggle-label span {
+    color: #6b7280;
+}
+
+/* Estilo específico para o grupo quando desabilitado */
+.pago-toggle-group:has(.toggle-switch input:disabled) {
+    opacity: 0.7;
+}
+
+.pendencia{
+  background-color: #f0f0f0;
+  position: relative;
+  left: 3px;
+  font-weight: 300;
+  font-size: 14px;
+  width: fit-content;
+  color: var(--negative-color);
+  padding: 5px;
+  border-radius: 12px;
+  margin-top: -27px;
+}
+
+.olho {
+  position: absolute;
+  top: 50%; /* Centraliza verticalmente em relação ao card */
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin-top: 20px; /* Ajuste fino para posicionar abaixo do valor do saldo */
+  font-size: 25px;
+  color: var(--secondary-color);
+  cursor: pointer;
+  z-index: 11;
+  padding: 10px;
+}
+
+.valor-oculto::after {
+    content: "---";
+    letter-spacing: 2px;
+}
+
+.valor-oculto {
+    letter-spacing: 2px;
+    font-weight: 600;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Header do título da página */
+.page-title-header {
+  position: fixed;
+  top: 0; /* Coloquei no topo absoluto */
+  left: 0;
+  width: 100%;
+  background-color: var(--cor-principal);
+  padding: 10px 0;
+  z-index: 101; /* Aumentei o z-index para ficar acima de tudo */
+  
+}
+
+.page-title {
+  text-align: center;
+  font-size: 1em;
+  font-weight: 500;
+  color: white;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 auto;
+  padding: 5px 15px;
+  border-radius: 20px;
+  transition: background-color 0.2s ease;
+}
+
+.dropdown-arrow {
+  font-size: 1.2em;
+  transition: transform 0.3s ease;
+  color: var(--secondary-color);
+}
+
+.page-title.active .dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+/* Menu dropdown */
+.dropdown-menu {
+  position: fixed;
+  top: 8px; /* Ajustei para ficar logo abaixo do título */
+  left: 21%;
+  transform: translateX(-50%) translateY(-10px);
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+  padding: 8px 0;
+  z-index: 102; /* z-index maior que o header-purple */
+  min-width: 160px;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.dropdown-menu.active {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+.dropdown-item {
+  padding: 12px 20px;
+  cursor: pointer;
+  font-size: 1em;
+  font-weight: 500;
+  color: var(--text-color);
+  transition: background-color 0.2s ease;
+  border-left: 3px solid transparent;
+}
+
+.dropdown-item:hover {
+  background-color: var(--background-color);
+}
+
+.dropdown-item.active {
+  background-color: var(--background-color);
+  border-left-color: v(--cor-principal)ar;
+  color: var(--cor-principal);
+  font-weight: 600;
+}
+
+.ri-arrow-down-s-line{
+  /* background-color: #ff0000; */
+  color: white;
+  font-size: 1.5em;
+  display: flex;
+  margin-top: 5px;
+  margin-left: -5px;
+}
+
+/* CORES DINÂMICAS APENAS PARA OS VALORES NUMÉRICOS */
+.header-balance-card.receitas-view .income-value,
+.header-balance-card.receitas-view .expense-value {
+  color: var(--positive-color) !important;
+}
+
+.header-balance-card.despesas-view .income-value,
+.header-balance-card.despesas-view .expense-value {
+  color: var(--negative-color) !important;
+}
+
+/* View Transações - Cores padrão (verde para receitas, vermelho para despesas) */
+.header-balance-card.transacoes-view .income-value {
+  color: var(--positive-color) !important;
+}
+
+.header-balance-card.transacoes-view .expense-value {
+  color: var(--negative-color) !important;
+}
+
+/* Modal de Balanço Mensal com Gráfico - CENTRALIZADO */
+.balance-chart-modal {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.8);
+  width: 95%; /* Aumentei de 90% para 95% */
+  max-width: 420px; /* Aumentei de 380px para 420px */
+  background: var(--card-background);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  z-index: 1003;
+  transition: all 0.3s ease-out;
+  overflow: hidden;
+  opacity: 0;
+}
+
+.balance-chart-modal.active {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+}
+
+.balance-chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 25px; /* Aumentei o padding horizontal */
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--header-bg-color);
+  color: var(--header-text-color);
+}
+
+.balance-chart-content {
+  padding: 25px; /* Aumentei o padding */
+  margin: 20px 0 40px 0;
+}
+
+.balance-chart-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.chart-section {
+  display: grid;
+  grid-template-columns: 150px 1fr; /* Aumentei de 140px para 150px */
+  gap: 25px; /* Aumentei o gap */
+  align-items: center;
+  min-height: 150px;
+}
+
+.chart-bars {
+  display: flex;
+  gap: 10px; /* Aumentei o gap entre as barras */
+  justify-content: center;
+  align-items: flex-end;
+  height: 130px; /* Aumentei a altura */
+  padding: 15px; /* Aumentei o padding */
+  padding-right: 40px;
+  border-right: 1px solid var(--border-color);
+}
+
+.chart-bar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px; /* Aumentei o gap */
+  width: 60px; /* Aumentei a largura */
+}
+
+.chart-bar {
+  width: 35px; /* Aumentei a largura da barra */
+  border-radius: 6px 6px 0 0;
+  position: relative;
+  transition: height 0.5s ease;
+  min-height: 15px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.income-bar {
+  background: linear-gradient(to top, var(--positive-color), #4caf50);
+}
+
+.expense-bar {
+  background: linear-gradient(to top, var(--negative-color), #f44336);
+}
+
+.chart-bar-value {
+  position: absolute;
+  top: -25px; /* Ajustei a posição */
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.75em; /* Aumentei a fonte */
+  font-weight: 600;
+  color: var(--text-color);
+  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 3px 6px; /* Aumentei o padding */
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  border: 1px solid var(--border-color);
+}
+
+.chart-bar-label {
+  font-size: 0.8em; /* Aumentei a fonte */
+  font-weight: 500;
+  color: var(--secondary-color);
+  text-align: center;
+}
+
+.balance-chart-totals {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px; /* Reduzi um pouco o gap para caber o novo item */
+  height: 100%;
+  font-size: 12px;
+}
+
+.chart-total-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0; /* Reduzi o padding vertical */
+}
+
+.chart-balance-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0; /* Reduzi o padding vertical */
+  border-top: 1px solid var(--border-color); /* Mudei para 1px para ficar mais sutil */
+  margin-top: 2px;
+}
+
+/* Remove a borda do primeiro item de balanço */
+.chart-balance-item:first-of-type {
+  border-top: 2px solid var(--border-color); /* Mantém mais forte apenas no primeiro */
+  margin-top: 5px;
+}
+
+.chart-balance-label {
+  font-size: 0.95em; /* Reduzi ligeiramente */
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.chart-balance-value {
+  font-size: 1.1em; /* Reduzi ligeiramente */
+  font-weight: 700;
+}
+
+/* Responsividade para mobile */
+@media (max-width: 480px) {
+  .balance-chart-modal {
+    width: 98%;
+    max-width: 380px;
+  }
+  
+  .chart-section {
+    grid-template-columns: 120px 1fr;
+    gap: 20px;
+  }
+  
+  .balance-chart-totals {
+    padding: 0 10px;
+    gap: 10px; /* Reduzi o gap no mobile */
+  }
+  
+  .chart-bar-container {
+    width: 50px;
+  }
+  
+  .chart-bar {
+    width: 30px;
+  }
+  
+  .chart-bar-value {
+    font-size: 0.7em;
+    padding: 2px 5px;
+  }
+  
+  .chart-bar-label {
+    font-size: 0.75em;
+  }
+  
+  .chart-balance-label {
+    font-size: 0.9em;
+  }
+  
+  .chart-balance-value {
+    font-size: 1em;
+  }
+  
+  .chart-total-item {
+    padding: 5px 0;
+  }
+  
+  .chart-balance-item {
+    padding: 6px 0;
+  }
+}
+
+/* Para telas muito pequenas */
+@media (max-width: 360px) {
+  .chart-section {
+    grid-template-columns: 110px 1fr;
+    gap: 15px;
+  }
+  
+  .chart-bars {
+    gap: 12px;
+  }
+  
+  .chart-bar-container {
+    width: 45px;
+  }
+  
+  .chart-bar {
+    width: 28px;
+  }
+}
+
+.balance-chart-close{
+background-color: var(--cor-principal);
+border: none;
+color: white;
+font-size: 1.5em;
+}
+/* Oculta os valores acima das barras do gráfico */
+.balance-chart-modal .chart-bar-value {
+  display: none;
+}
+
+/* Container do ícone de filtro - CORREÇÃO */
+.filter-icon-container {
+  position: absolute;
+  right: 40px; /* Reduzi um pouco para dar mais espaço */
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 102; /* Garantir que fique acima de outros elementos */
+}
+
+.filter-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.3em;
+  cursor: pointer;
+  padding: 12px; /* Aumentei o padding para área maior */
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px; /* Largura fixa */
+  height: 44px; /* Altura fixa */
+  position: relative;
+}
+
+.filter-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.filter-btn:active {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Garantir que o ícone fique centralizado */
+.filter-btn i {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Modal de Filtro */
+.filter-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1003;
+  justify-content: center;
+  align-items: center;
+}
+
+.filter-modal.active {
+  display: flex;
+}
+
+.filter-modal-content {
+  background: var(--card-background);
+  border-radius: 16px;
+  width: 90%;
+  max-width: 400px;
+  max-height: 80%;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.filter-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--header-bg-color);
+  color: var(--header-text-color);
+}
+
+.filter-modal-header h3 {
+  margin: 0;
+  font-size: 1.2em;
+  font-weight: 600;
+}
+
+.filter-close {
+  background: none;
+  border: none;
+  color: var(--header-text-color);
+  font-size: 1.5em;
+  cursor: pointer;
+  padding: 5px;
+}
+
+.filter-options {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.filter-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  cursor: pointer;
+  font-size: 1em;
+  color: var(--text-color);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.filter-option:last-child {
+  border-bottom: none;
+}
+
+.filter-option input[type="checkbox"] {
+  display: none;
+}
+
+.checkmark {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-color);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.filter-option input[type="checkbox"]:checked + .checkmark {
+  background-color: var(--cor-principal);
+  border-color: var(--cor-principal);
+}
+
+.filter-option input[type="checkbox"]:checked + .checkmark::after {
+  content: "✓";
+  color: white;
+  font-size: 0.8em;
+  font-weight: bold;
+}
+
+.filter-card-section {
+  padding: 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.filter-card-section label {
+  display: block;
+  font-weight: 600;
+  color: var(--text-color);
+  margin-bottom: 10px;
+  font-size: 0.95em;
+}
+
+.filter-select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  font-size: 1em;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: var(--cor-principal);
+}
+
+.filter-actions {
+  display: flex;
+  justify-content: space-between;
+  padding: 15px 20px;
+  border-top: 1px solid var(--border-color);
+  gap: 10px;
+}
+
+.filter-actions .btn {
+  flex: 1;
+  padding: 12px;
+}
+
+/* Garantir que o ícone fique centralizado */
+.filter-btn i {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Garantir que nenhum outro elemento esteja sobrepondo - VERSÃO CORRIGIDA */
+.page-title-header * {
+  pointer-events: none; /* Desativa temporariamente para testar */
+}
+
+/* Reativar apenas os elementos que precisam ser clicáveis */
+.filter-icon-container,
+.filter-btn,
+.page-title,  /* ← ADICIONE ESTA LINHA */
+.dropdown-menu, /* ← ADICIONE ESTA LINHA */
+.dropdown-item /* ← ADICIONE ESTA LINHA */ {
+  pointer-events: auto; /* Reativa apenas para os elementos clicáveis */
+}
+
+/* Estilos para os botões de status do filtro */
+.filter-status-buttons {
+  display: flex;
+  gap: 8px;
+  padding: 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.status-filter-btn {
+  flex: 1;
+  padding: 12px 8px;
+  border: 1px solid var(--border-color);
+  background: #f8f9fa;
+  color: var(--text-color);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9em;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.status-filter-btn:hover {
+  background: #e9ecef;
+}
+
+.status-filter-btn.active {
+  background: var(--cor-principal);
+  color: white;
+  border-color: var(--cor-principal);
+}
+
+/* Ajuste nas ações do filtro */
+.filter-actions {
+  display: flex;
+  justify-content: space-between;
+  padding: 15px 20px;
+  gap: 10px;
+}
+
+/* Estilo para o ícone de filtro quando ativo */
+.filter-btn.active-filter i {
+    color: var(--cor-principal) !important;
+}
+
+/* Ou se preferir uma animação */
+.filter-btn i {
+    transition: color 0.3s ease, transform 0.2s ease;
+}
+
+.filter-btn:active i {
+    transform: scale(0.9);
+}
+
+/* Estilo para o campo de forma de pagamento */
+#formaPagamento {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: 1em;
+    color: var(--text-color);
+    background-color: var(--background-color);
+    outline: none;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+    display: none; /* Inicialmente escondido */
+}
+
+/* === MENU DE TRÊS PONTINHOS === */
+.menu-icon-container {
+  position: absolute;
+  right: 5px; /* CORRIGIDO: estava 65px */
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 102;
+}
+
+.menu-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.3em;
+  cursor: pointer;
+  padding: 12px;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  position: relative; /* ← ADICIONE esta linha */
+  z-index: 103; /* ← ADICIONE esta linha */
+}
+
+.menu-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.menu-btn:active {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Garantir que o menu fique acima de tudo */
+.menu-icon-container,
+.menu-btn {
+  pointer-events: auto !important;
+  z-index: 103 !important;
+}
+
+/* Menu dropdown */
+.menu-dropdown {
+  position: fixed;
+  top: 50px;
+  right: 15px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+  padding: 8px 0;
+  z-index: 103;
+  min-width: 180px;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.menu-dropdown.active {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.menu-item {
+  padding: 12px 20px;
+  cursor: pointer;
+  font-size: 1em;
+  font-weight: 500;
+  color: var(--text-color);
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.menu-item:hover {
+  background-color: var(--background-color);
+}
+
+.menu-item i {
+  font-size: 1.1em;
+  color: var(--secondary-color);
+}
+
+/* Container das ações */
+.transaction-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Ícone de cartão de crédito - AJUSTE DE ALINHAMENTO */
+.cartao-credito-icon {
+  width: 20px;
+  height: 20px;
+  background-color: #42a897;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e0e0e0;
+  flex-shrink: 0;
+  /* Ajuste fino de posição */
+  position: relative;
+  top: 3px; /* Move o ícone 3px para baixo */
+}
+
+.cartao-credito-icon i {
+  font-size: 13px;
+  color: white;
+  font-weight: 100;
+}
+
+/* Botão de status */
+.status-btn {
+  font-weight: 600;
+  cursor: default;
+  border: none;
+  width: 75px;
+  text-align: center;
+  flex-shrink: 0;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  font-size: 0.75em;
+  margin-top: 6px;
+  border-radius: 8px;
+  pointer-events: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  height: 24px;
+}
+
+/* No modal de detalhes */
+.transaction-detail-status .cartao-credito-icon {
+  width: 18px;
+  height: 18px;
+  background-color: #f8f9fa;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e9ecef;
+  flex-shrink: 0;
+  position: relative;
+  top: 1px; /* Ajuste menor para o modal */
+}
+
+.transaction-detail-status .cartao-credito-icon i {
+  font-size: 9px;
+  color: #6c757d;
+}
+
+/* Estilos para o modal de pagar cartão */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.form-select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  font-size: 1em;
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+.resumo-pagamento {
+  background-color: var(--background-color);
+  padding: 15px;
+  border-radius: var(--border-radius);
+  margin-bottom: 20px;
+  border-left: 4px solid var(--cor-principal);
+}
+
+.resumo-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.resumo-item span:first-child {
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.resumo-item span:last-child {
+  font-weight: 600;
+  color: var(--cor-principal);
+}
+
+#btnPagarCartao:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Toast Notification */
+.toast {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background-color: var(--cor-principal);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 25px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 10000;
+  opacity: 0;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  text-align: center;
+  max-width: 80%;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Estilos melhorados para o modal Pagar Cartão */
+#pagarCartaoModal .modal-content {
+  max-width: 380px;
+  padding: 25px;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+#pagarCartaoModal h2 {
+  text-align: center;
+  margin-bottom: 25px;
+  font-size: 1.4em;
+  font-weight: 600;
+  color: var(--text-color);
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+#pagarCartaoModal .form-group {
+  margin-bottom: 25px;
+}
+
+#pagarCartaoModal .form-group label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: 500;
+  color: var(--text-color);
+  font-size: 0.95em;
+}
+
+#pagarCartaoModal .form-select {
+  width: 100%;
+  padding: 14px;
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  font-size: 1em;
+  background-color: var(--card-background);
+  color: var(--text-color);
+  transition: border-color 0.2s ease;
+  font-family: 'Inter', sans-serif;
+}
+
+#pagarCartaoModal .form-select:focus {
+  outline: none;
+  border-color: var(--cor-principal);
+}
+
+#pagarCartaoModal .resumo-pagamento {
+  background: linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%);
+  padding: 20px;
+  border-radius: 14px;
+  margin-bottom: 25px;
+  border: 1px solid #e8ebff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+#pagarCartaoModal .resumo-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+#pagarCartaoModal .resumo-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+#pagarCartaoModal .resumo-item:first-child {
+  padding-top: 0;
+}
+
+#pagarCartaoModal .resumo-item span:first-child {
+  font-weight: 500;
+  color: var(--text-color);
+  font-size: 0.95em;
+}
+
+#pagarCartaoModal .resumo-item span:last-child {
+  font-weight: 700;
+  color: var(--cor-principal);
+  font-size: 1.1em;
+}
+
+#pagarCartaoModal .btn-group {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+#pagarCartaoModal .btn {
+  flex: 1;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 12px;
+  font-size: 1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Inter', sans-serif;
+}
+
+#pagarCartaoModal .btn-primary {
+  background: var(--cor-principal);
+  color: white;
+  box-shadow: 0 2px 8px rgba(33, 196, 93, 0.3);
+}
+
+#pagarCartaoModal .btn-primary:hover:not(:disabled) {
+  background: #1ea34e;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(33, 196, 93, 0.4);
+}
+
+#pagarCartaoModal .btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+#pagarCartaoModal .btn-primary:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+#pagarCartaoModal .btn-secondary {
+  background: #f8f9fa;
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+}
+
+#pagarCartaoModal .btn-secondary:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+}
+
+/* Indicador visual quando há transações */
+#pagarCartaoModal .resumo-pagamento.has-transactions {
+  border-left: 4px solid var(--cor-principal);
+}
+
+/* Estado vazio */
+#pagarCartaoModal .resumo-pagamento:not(.has-transactions) {
+  background: #f8f9fa;
+  border-left: 4px solid #adb5bd;
+}
+
+#pagarCartaoModal .resumo-pagamento:not(.has-transactions) .resumo-item span:last-child {
+  color: #6c757d;
+}
+
+/* Animação suave ao abrir o modal */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+#pagarCartaoModal .modal-content {
+  animation: slideInUp 0.3s ease-out;
+}
+
+.filter-modal {
+  transition: opacity 0.3s ease;
+}
+
+.filter-modal:not(.active) {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ////////////////////////////////BACKUP////////////////////////////////////////////// */
+
+/* Estilos para o modal de backup */
+#backupModal .modal-content {
+  max-width: 90%;
+  max-height: 80%;
+  overflow-y: auto;
+}
+
+.backup-options {
+  margin: 15px 0;
+}
+
+.backup-option {
+  display: flex;
+  align-items: flex-start;
+  padding: 12px;
+  margin-bottom: 10px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.backup-option:hover {
+  background-color: #f5f5f5;
+  border-color: #21c45d;
+}
+
+.backup-option i {
+  font-size: 24px;
+  margin-right: 12px;
+  color: #21c45d;
+  margin-top: 2px;
+}
+
+.backup-option h4 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  color: #333;
+}
+
+.backup-option p {
+  margin: 0;
+  font-size: 13px;
+  color: #666;
+  line-height: 1.4;
+}
+
+.backup-info {
+  background-color: #f9f9f9;
+  padding: 15px;
+  border-radius: 8px;
+  margin: 15px 0;
+  border-left: 4px solid #21c45d;
+}
+
+.backup-info p {
+  margin: 0 0 10px 0;
+}
+
+.backup-details {
+  font-size: 14px;
+  color: #555;
+}
+
+.backup-details p {
+  margin: 5px 0;
+}
+
+.error {
+  color: #f44336;
+  padding: 10px;
+  text-align: center;
+}
+
+/* Estilos para o modal de gerenciamento de backups */
+#gerenciarBackupModal .modal-content {
+  max-width: 95%;
+  max-height: 85%;
+  display: flex;
+  flex-direction: column;
+}
+
+.backup-stats {
+  margin-bottom: 20px;
+  padding: 15px;
+  background: linear-gradient(135deg, #21c45d, #1e9c4d);
+  border-radius: 10px;
+  color: white;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.stat-item i {
+  font-size: 24px;
+  opacity: 0.9;
+}
+
+.stat-value {
+  display: block;
+  font-size: 24px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.stat-label {
+  display: block;
+  font-size: 12px;
+  opacity: 0.9;
+  margin-top: 2px;
+}
+
+.backup-list-container {
+  flex: 1;
+  overflow: hidden;
+  margin-bottom: 20px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+}
+
+.backup-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 15px;
+  background-color: #f9f9f9;
+  border-bottom: 1px solid #e0e0e0;
+  font-weight: 600;
+}
+
+.backup-list-header .btn-small {
+  padding: 4px 10px;
+  font-size: 12px;
+  background-color: #21c45d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.backup-list {
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+}
+
+.empty-state i {
+  font-size: 48px;
+  margin-bottom: 10px;
+  opacity: 0.3;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.backup-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  margin-bottom: 8px;
+  background-color: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.backup-item:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border-color: #21c45d;
+}
+
+.backup-item-info {
+  flex: 1;
+  min-width: 0; /* Para permitir overflow do texto */
+}
+
+.backup-item-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.backup-item-header i {
+  font-size: 20px;
+  color: #21c45d;
+  margin-top: 2px;
+}
+
+.backup-item-header h4 {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.backup-item-header p {
+  margin: 0;
+  font-size: 12px;
+  color: #666;
+}
+
+.backup-item-size {
+  font-size: 12px;
+  color: #888;
+  font-weight: 500;
+}
+
+.backup-item-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: 10px;
+}
+
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid #ddd;
+  background-color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-icon:hover {
+  background-color: #f5f5f5;
+  border-color: #21c45d;
+  color: #21c45d;
+}
+
+.btn-icon.btn-danger {
+  color: #f44336;
+  border-color: #ffebee;
+}
+
+.btn-icon.btn-danger:hover {
+  background-color: #ffebee;
+  border-color: #f44336;
+}
+
+.backup-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.backup-actions .btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.backup-actions .btn-danger {
+  background-color: #f44336;
+  border-color: #f44336;
+}
+
+.backup-actions .btn-danger:hover {
+  background-color: #d32f2f;
+  border-color: #d32f2f;
+}
+
+/* Scrollbar personalizada */
+.backup-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.backup-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.backup-list::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.backup-list::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+/* ESTILOS PARA SALDO DIÁRIO */
+/* ESTILOS PARA SALDO DO DIA - COR NEUTRA COM BORDA DINÂMICA */
+.daily-balance-row {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    padding: 12px 20px;
+    margin: 0 0 12px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 4px solid #21c45d; /* Cor padrão (verde) */
+    transition: all 0.2s ease;
+}
+
+/* Borda para saldo negativo */
+.daily-balance-row.negative-border {
+    border-left-color: #f44336 !important; /* Vermelho */
+}
+
+/* Borda para saldo positivo (já é o padrão verde, mas mantemos para consistência) */
+.daily-balance-row.positive-border {
+    border-left-color: #21c45d !important; /* Verde */
+}
+
+/* Borda para saldo zero (neutro) */
+.daily-balance-row.zero-border {
+    border-left-color: #6c757d !important; /* Cinza */
+}
+
+.daily-balance-label {
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.9em;
+}
+
+.daily-balance-amount {
+    font-weight: 700;
+    font-size: 1.1em;
+    color: #212529; /* Cor neutra escura */
+}
+
+.daily-balance-row:hover {
+    background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+    transform: translateX(4px);
+}
+
+/* Responsividade para mobile */
+@media (max-width: 480px) {
+    .daily-balance-row {
+        padding: 6px 15px;
+    }
+    
+    .daily-balance-label {
+        font-size: 0.85em;
+    }
+    
+    .daily-balance-amount {
+        font-size: 1em;
+    }
+}
+
+/* ESTILOS PARA CABEÇALHO DE DATA */
+.date-header {
+    display: flex;
+    align-items: center;
+    margin: 8px 0 12px 0;
+    padding: 4px 0;
+    position: relative;
+}
+
+.date-header-text {
+    font-size: 0.75em;
+    font-weight: 500;
+    color: #6c757d;
+    background-color: #f8f9fa;
+    padding: 4px 12px;
+    border-radius: 20px;
+    letter-spacing: 0.3px;
+}
+
+.date-header-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, #e0e0e0, transparent);
+    margin-left: 12px;
+}
+
+/* Ajuste para o primeiro cabeçalho não ter margem superior extra */
+.transactions-container > .date-header:first-child {
+    margin-top: 0;
+}
+
+/* ===== TOPO COLORIDO DO MODAL ===== */
+.modal-top-header {
+  margin: -30px -30px 20px -30px;
+  padding: 25px 30px 20px 30px;
+  text-align: center;
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
+  transition: background 0.3s ease;
+}
+
+.modal-type-label {
+  font-size: 0.85em;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 15px;
+  opacity: 0.9;
+}
+
+.modal-amount-container {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 8px;
+}
+
+.currency-symbol {
+  font-size: 1.5em;
+  font-weight: 500;
+}
+
+/* Estilo do campo de valor dentro do topo */
+.modal-top-header #valor {
+  font-size: 2.5em;
+  font-weight: 700;
+  text-align: center;
+  border: none;
+  background: transparent;
+  padding: 5px;
+  width: auto;
+  min-width: 150px;
+  color: white;
+  margin: 0;
+}
+
+.modal-top-header #valor:focus {
+  outline: none;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.5);
+}
+
+.modal-top-header #valor::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Cores para RECEITA (verde) */
+#modal[data-tipo="receita"] .modal-top-header {
+  background: var(--positive-color);
+}
+
+#modal[data-tipo="receita"] .modal-type-label {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+#modal[data-tipo="receita"] .currency-symbol,
+#modal[data-tipo="receita"] .modal-top-header #valor {
+  color: white;
+}
+
+/* Cores para DESPESA (vermelho) */
+#modal[data-tipo="despesa"] .modal-top-header {
+  background: var(--negative-color);
+}
+
+#modal[data-tipo="despesa"] .modal-type-label {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+#modal[data-tipo="despesa"] .currency-symbol,
+#modal[data-tipo="despesa"] .modal-top-header #valor {
+  color: white;
+}
+
+/* REMOVA o display:none do h2 - ele precisa existir para o espaçamento */
+#modal .modal-content > h2 {
+  display: block; /* Volta a mostrar */
+  margin-top: 0; /* Remove margem superior extra */
+  margin-bottom: 20px; /* Mantém espaçamento original */
+  font-size: 1.5em;
+  font-weight: 600;
+}
+
+/* Cor do título baseado no tipo (mantém o estilo original) */
+#modal[data-tipo="receita"] .modal-content h2 {
+  color: var(--positive-color);
+}
+
+#modal[data-tipo="despesa"] .modal-content h2 {
+  color: var(--negative-color);
+}
+
+/* Garantir que o padding do modal continue igual */
+#modal .modal-content {
+  padding: 30px;
+  overflow: hidden;
+}
+
+/* Ajuste para o primeiro campo após o topo (add-entry-options) */
+.add-entry-options {
+  margin-top: 10px;
+}
+
+/* Esconder o título do modal */
+#modal .modal-content h2 {
+  display: none;
+}
+
+/* Alinhar o topo colorido à esquerda */
+.modal-top-header {
+  margin: -30px -30px 20px -30px;
+  padding: 25px 30px 20px 30px;
+  text-align: left; /* Mudar de center para left */
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
+  transition: background 0.3s ease;
+}
+
+.modal-type-label {
+  font-size: 0.85em;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 15px;
+  opacity: 0.9;
+  text-align: left; /* Garantir alinhamento à esquerda */
+}
+
+.modal-amount-container {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-start; /* Mudar de center para flex-start */
+  gap: 8px;
+}
+
+.currency-symbol {
+  font-size: 1.5em;
+  font-weight: 500;
+}
+
+/* Estilo do campo de valor dentro do topo */
+.modal-top-header #valor {
+  font-size: 2.5em;
+  font-weight: 700;
+  text-align: left; /* Mudar de center para left */
+  border: none;
+  background: transparent;
+  padding: 5px 0; /* Remover padding lateral, manter apenas vertical */
+  width: auto;
+  min-width: 150px;
+  color: white;
+  margin: 0;
+}
+
+/* SELECT PERSONALIZADO - ESTILO MODERNO */
+.custom-select-container {
+  position: relative;
+  width: 100%;
+  margin-bottom: 15px;
+}
+
+.custom-select-trigger {
+  width: 100%;
+  padding: 12px 15px;
+  background: var(--background-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  font-size: 1em;
+  color: var(--text-color);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s ease;
+  font-family: 'Inter', sans-serif;
+  box-sizing: border-box;
+}
+
+.custom-select-trigger:hover {
+  border-color: var(--cor-principal);
+}
+
+.custom-select-trigger.active {
+  border-color: var(--cor-principal);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.custom-select-trigger .trigger-text {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.custom-select-trigger .trigger-text i {
+  font-size: 1.2em;
+  color: var(--cor-principal);
+}
+
+.custom-select-trigger .trigger-arrow {
+  transition: transform 0.2s ease;
+}
+
+.custom-select-trigger.active .trigger-arrow {
+  transform: rotate(180deg);
+}
+
+.custom-select-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--card-background);
+  border: 1px solid var(--border-color);
+  border-top: none;
+  border-radius: 0 0 var(--border-radius) var(--border-radius);
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.custom-select-dropdown.show {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.custom-select-option {
+  padding: 12px 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background 0.2s ease;
+  font-size: 0.95em;
+  color: var(--text-color);
+}
+
+.custom-select-option:hover {
+  background: var(--background-color);
+}
+
+.custom-select-option.selected {
+  background: rgba(33, 196, 93, 0.1);
+  color: var(--cor-principal);
+}
+
+.custom-select-option i {
+  font-size: 1.2em;
+  width: 24px;
+  color: var(--cor-principal);
+}
+
+.custom-select-option .option-text {
+  flex: 1;
+}
+
+/* Scroll personalizado para o dropdown */
+.custom-select-dropdown::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-select-dropdown::-webkit-scrollbar-track {
+  background: var(--border-color);
+  border-radius: 2px;
+}
+
+.custom-select-dropdown::-webkit-scrollbar-thumb {
+  background: var(--cor-principal);
+  border-radius: 2px;
+}
+
+/* Para despesas (quando o modal está em modo despesa) */
+#modal[data-tipo="despesa"] .custom-select-trigger.active {
+  border-color: var(--negative-color);
+}
+
+#modal[data-tipo="despesa"] .custom-select-option.selected {
+  background: rgba(244, 67, 54, 0.1);
+  color: var(--negative-color);
+}
+
+#modal[data-tipo="despesa"] .custom-select-option i {
+  color: var(--negative-color);
+}
+
+/* Transição suave para a status bar (funciona em alguns dispositivos) */
+.status-bar-transition {
+    transition: background-color 0.3s ease;
+}
+
+/* Remove cantos arredondados APENAS do modal de lançamento */
+#modal .modal-content {
+  border-radius: 0;
+}
+
+#modal .modal-top-header {
+  border-radius: 0;
+}
+
+#modal .btn-group {
+  position: fixed;
+  bottom: 90px;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: 30px;
+  justify-content: center;
+  padding: 0 35px;
+  z-index: 999;
+}
+
+#modal .btn-group .btn {
+  flex: 1;
+  padding: 14px 20px;
+  font-size: 1em;
+  font-weight: 600;
+  text-align: center;
+  border-radius: 10px;
+}
+
+/* Botão Excluir AMARELO apenas no modal de lançamento em modo edição */
+#modal .btn-group .btn-danger {
+  background-color: #ffc107; /* Amarelo */
+  color: #ffffff; /* Texto escuro */
+  border: none;
+}
+
+#modal .btn-group .btn-danger:active {
+  background-color: #d39e00; /* Amarelo ainda mais escuro */
+}
+
+.calc-btn {
+  padding: 18px 8px;
+  border: none;
+  border-radius: 14px;
+  font-size: 1.25em;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.15s;
+}
+.calc-btn:active { opacity: 0.6; }
+.calc-num   { background: #f7f7f7; color: #1e1e2e; }
+.calc-func  { background: #f0f0f0; color: #555; }
+.calc-op    { background: #fde8e8; color: #e53935; font-weight: 700; }
+.calc-equal { background: #e53935; color: #fff; font-weight: 700; }
+
+@keyframes slideUpCalc {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+#calcModal > div {
+  animation: slideUpCalc 0.3s ease-out;
+}
+
+/* Restaurar tamanho normal para modais específicos */
+#monthYearPickerModal .modal-content,
+#pagarCartaoModal .modal-content,
+#deleteParceladoModal .modal-content,
+#backupModal .modal-content,
+#gerenciarBackupModal .modal-content {
+  height: auto;
+  max-height: 90vh;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 420px;
+}
+
+/* Linha separadora antes do botão Sair */
+.menu-item.divider-top {
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    margin-top: 8px;
+    padding-top: 12px;
+}
+
+/* Estilo especial para o botão Sair */
+.menu-item:last-child {
+    color: #e53935;
+}
+
+.menu-item:last-child i {
+    color: #e53935;
+}
+
+.menu-item:last-child:hover {
+    background-color: rgba(229, 57, 53, 0.1);
+}

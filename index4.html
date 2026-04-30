@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#21c45d">
+    <title>Gerenciador de Contas</title>
+    <link rel="manifest" href="manifest.json">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="css/index4.css">
+
+</head>
+<body>
+    <div class="container">
+        <button class="back-button" onclick="window.location.href='index2.html'">
+            <svg viewBox="0 0 24 24">
+                <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+            </svg>
+        </button>
+        <h1>Gerenciador de Contas</h1>
+        
+        <div class="total-section">
+            <div class="total-label">Saldo Total</div>
+            <div class="total-value" id="totalValue">R$ 0,00</div>
+        </div>
+
+        <div class="accounts-list" id="accountsList">
+            <div class="empty-state">Nenhuma conta cadastrada ainda</div>
+        </div>
+    </div>
+
+    <!-- Botão Flutuante -->
+    <button class="fab-button" onclick="openModal()">+</button>
+
+    <!-- Modal -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="modalTitle">Nova Conta</div>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="input-group">
+                <label for="description">Descrição</label>
+                <input type="text" id="description" placeholder="Ex: Salário, Conta de Luz...">
+            </div>
+            <div class="input-group">
+                <label for="value">Valor (R$)</label>
+                <input type="text" id="value" placeholder="0,00">
+            </div>
+            <button class="btn-save" onclick="saveAccount()">Salvar</button>
+            <button class="btn-delete" id="deleteButton" onclick="deleteAccount()">Excluir Conta</button>
+        </div>
+    </div>
+
+    <script>
+        let accounts = [];
+        let editingId = null;
+
+        // Carregar dados do localStorage
+        function loadFromStorage() {
+            const saved = localStorage.getItem('bankAccounts');
+            if (saved) {
+                accounts = JSON.parse(saved);
+            }
+        }
+
+        // Salvar dados no localStorage
+        function saveToStorage() {
+            localStorage.setItem('bankAccounts', JSON.stringify(accounts));
+        }
+
+        // Formatar número para moeda brasileira
+        function formatCurrency(value) {
+            return value.toLocaleString('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        // Formatar input enquanto digita
+        function formatInputValue(input) {
+            let value = input.value.replace(/\D/g, '');
+            value = (parseInt(value) / 100).toFixed(2);
+            
+            if (value === '0.00') {
+                input.value = '';
+                return;
+            }
+
+            const parts = value.split('.');
+            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            input.value = parts.join(',');
+        }
+
+        // Converter valor formatado para número
+        function parseFormattedValue(formattedValue) {
+            if (!formattedValue) return 0;
+            return parseFloat(formattedValue.replace(/\./g, '').replace(',', '.'));
+        }
+
+        // Adicionar formatação ao input de valor
+        document.getElementById('value').addEventListener('input', function(e) {
+            formatInputValue(e.target);
+        });
+
+        function openModal() {
+            document.getElementById('modal').classList.add('active');
+            document.getElementById('description').focus();
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+            document.getElementById('description').value = '';
+            document.getElementById('value').value = '';
+            editingId = null;
+            document.getElementById('modalTitle').textContent = 'Nova Conta';
+            document.getElementById('deleteButton').style.display = 'none';
+        }
+
+        function saveAccount() {
+            const desc = document.getElementById('description').value.trim();
+            const valInput = document.getElementById('value').value;
+            const val = parseFormattedValue(valInput);
+
+            if (!desc || val === 0 || isNaN(val)) {
+                alert('Por favor, preencha todos os campos corretamente!');
+                return;
+            }
+
+            if (editingId !== null) {
+                const idx = accounts.findIndex(a => a.id === editingId);
+                accounts[idx] = { id: editingId, description: desc, value: val };
+            } else {
+                const account = {
+                    id: Date.now(),
+                    description: desc,
+                    value: val
+                };
+                accounts.push(account);
+            }
+
+            saveToStorage();
+            closeModal();
+            renderAccounts();
+        }
+
+        function editAccount(id) {
+            const account = accounts.find(a => a.id === id);
+            document.getElementById('description').value = account.description;
+            document.getElementById('value').value = formatCurrency(account.value);
+            editingId = id;
+            document.getElementById('modalTitle').textContent = 'Editar Conta';
+            document.getElementById('deleteButton').style.display = 'block';
+            openModal();
+        }
+
+        function deleteAccount() {
+            if (confirm('Tem certeza que deseja excluir esta conta?')) {
+                accounts = accounts.filter(a => a.id !== editingId);
+                saveToStorage();
+                closeModal();
+                renderAccounts();
+            }
+        }
+
+        function renderAccounts() {
+            const list = document.getElementById('accountsList');
+            
+            if (accounts.length === 0) {
+                list.innerHTML = '<div class="empty-state">Nenhuma conta cadastrada ainda</div>';
+                updateTotal();
+                return;
+            }
+
+            list.innerHTML = accounts.map(acc => `
+                <div class="account-item" onclick="editAccount(${acc.id})">
+                    <div class="account-info">
+                        <div class="account-description">${acc.description}</div>
+                        <div class="account-value">R$ ${formatCurrency(acc.value)}</div>
+                    </div>
+                    <div class="account-actions">
+                        <button class="btn-edit" onclick="event.stopPropagation(); editAccount(${acc.id})">Editar</button>
+                    </div>
+                </div>
+            `).join('');
+
+            updateTotal();
+        }
+
+        function updateTotal() {
+            const total = accounts.reduce((sum, acc) => sum + acc.value, 0);
+            document.getElementById('totalValue').textContent = 
+                `R$ ${formatCurrency(total)}`;
+        }
+
+        // Fechar modal ao clicar fora
+        document.getElementById('modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // Fechar modal com tecla ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        // Carregar dados ao iniciar
+        loadFromStorage();
+        renderAccounts();
+    </script>
+<script type="module">
+  import { supabase } from './js/supabase-config.js';
+  import { startSingleSessionGuard } from './js/single-session.js';
+
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    window.location.href = 'login.html';
+  } else {
+    startSingleSessionGuard();
+  }
+</script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    });
+  }
+</script>
+</body>
+</html>

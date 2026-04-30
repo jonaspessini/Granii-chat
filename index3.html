@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#009587">
+  <title>Gerenciar Cartões</title>
+  <link rel="manifest" href="manifest.json">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/remixicon/remixicon.css">
+  <link rel="stylesheet" href="css/index3.css">
+</head>
+<body>
+
+<div class="header-purple" style="margin-top: 0px; top: 0;">
+  <div class="month-navigation-header">
+    <button class="month-btn" onclick="navigateToTransacoes()">
+      <i class="ri-arrow-left-line"></i>
+    </button>
+    <div class="month-display-header">
+      <span>Gerenciar Cartões</span>
+    </div>
+    <div></div>
+  </div>
+</div>
+
+<!-- Conteúdo Principal -->
+<div class="main-container">
+  <div class="cartoes-container">
+      <!-- Adicione esta div para mostrar o total -->
+  <div class="total-limites-card">
+    <div class="total-limites-content">
+      <i class="ri-wallet-3-line"></i>
+      <div class="total-info">
+        <span class="total-label">Limite Total</span>
+        <span class="total-value" id="totalLimites">R$ 0,00</span>
+      </div>
+    </div>
+  </div>
+    <div id="listaCartoes">
+      <!-- Os cartões serão carregados aqui -->
+    </div>
+    
+    <div class="empty-state" id="emptyState" style="display: none;">
+      <i class="ri-bank-card-line"></i>
+      <h3>Nenhum cartão cadastrado</h3>
+      <p>Adicione seu primeiro cartão para usar nas despesas</p>
+    </div>
+  </div>
+
+  <!-- FAB para adicionar cartão -->
+  <button class="fab-button" onclick="abrirModalCartao()">
+    <i class="ri-add-line"></i>
+  </button>
+</div>
+
+<!-- Modal para adicionar/editar cartão -->
+<div id="modalCartao" class="modal-cartao">
+  <div class="modal-cartao-content">
+    <h2 id="modalCartaoTitulo">Adicionar Cartão</h2>
+    
+    <div class="form-group">
+      <label for="nomeCartao">Nome do Cartão</label>
+      <input type="text" id="nomeCartao" placeholder="Ex: Nubank, Inter, etc." class="input-field">
+    </div>
+    
+    <div class="form-group">
+      <label for="limiteCartao">Limite do Cartão (R$)</label>
+      <input type="text" id="limiteCartao" placeholder="0,00" 
+             class="input-field" oninput="formatarLimite(this)">
+    </div>
+    
+    <div class="form-group">
+      <label for="diaVencimento">Dia do Vencimento</label>
+      <input type="number" id="diaVencimento" placeholder="10" 
+             min="1" max="31" class="input-field">
+    </div>
+    
+    <div class="btn-group">
+      <button class="btn btn-secondary" onclick="fecharModalCartao()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarCartao()">Salvar Cartão</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Notification -->
+<div id="toastNotification" class="toast-notification">
+  <div class="toast-content">
+    <i class="ri-check-line"></i>
+    <span id="toastMessage"></span>
+  </div>
+</div>
+
+
+<script>
+  let cartaoEditando = null;
+  let cartoes = [];
+
+  // Funções de navegação
+  function navigateTo(pagina) {
+    if (pagina === 'home') {
+      window.location.href = 'index.html';
+    } else if (pagina === 'transacoes') {
+      navigateToTransacoes();
+    }
+  }
+
+  function navigateToTransacoes() {
+    window.location.href = 'index2.html';
+  }
+
+  // Carregar cartões ao iniciar
+  document.addEventListener('DOMContentLoaded', function() {
+    carregarCartoes();
+  });
+
+  // Carregar cartões
+  function carregarCartoes() {
+    cartoes = JSON.parse(localStorage.getItem('cartoes_credito') || '[]');
+    renderizarCartoes();
+  }
+
+// Renderizar lista de cartões
+function renderizarCartoes() {
+  const listaCartoes = document.getElementById('listaCartoes');
+  const emptyState = document.getElementById('emptyState');
+  const totalLimitesElement = document.getElementById('totalLimites');
+  
+  listaCartoes.innerHTML = '';
+  
+  // Calcular o total dos limites
+  let totalLimites = 0;
+  cartoes.forEach(cartao => {
+    totalLimites += cartao.limite;
+  });
+  
+  // Atualizar o elemento de total
+  totalLimitesElement.textContent = `R$ ${formatToBRL(totalLimites)}`;
+  
+  if (cartoes.length === 0) {
+    emptyState.style.display = 'block';
+    // Esconder o card de total quando não há cartões
+    document.querySelector('.total-limites-card').style.display = 'none';
+    return;
+  }
+  
+  emptyState.style.display = 'none';
+  // Mostrar o card de total quando há cartões
+  document.querySelector('.total-limites-card').style.display = 'block';
+  
+  cartoes.forEach((cartao, index) => {
+    const cartaoElement = document.createElement('div');
+    cartaoElement.className = 'cartao-item';
+    cartaoElement.innerHTML = `
+      <div class="cartao-header">
+        <div class="cartao-info">
+          <div class="cartao-nome">${cartao.nome}</div>
+          <div class="cartao-digitos">Limite: R$ ${formatToBRL(cartao.limite)}</div>
+          <div class="cartao-vencimento">
+            <i class="ri-calendar-line"></i>
+            Vence no dia ${cartao.diaVencimento}
+          </div>
+        </div>
+        <div class="cartao-actions">
+          <button class="btn-icone editar" onclick="editarCartao(${index})">
+            <i class="ri-edit-line"></i>
+          </button>
+          <button class="btn-icone excluir" onclick="excluirCartao(${index})">
+            <i class="ri-delete-bin-line"></i>
+          </button>
+        </div>
+      </div>
+    `;
+    listaCartoes.appendChild(cartaoElement);
+  });
+}
+
+  // Funções do modal
+  function abrirModalCartao(cartaoIndex = null) {
+    const modal = document.getElementById('modalCartao');
+    const titulo = document.getElementById('modalCartaoTitulo');
+    
+    if (cartaoIndex !== null) {
+      cartaoEditando = cartaoIndex;
+      const cartao = cartoes[cartaoIndex];
+      titulo.textContent = 'Editar Cartão';
+      document.getElementById('nomeCartao').value = cartao.nome;
+      document.getElementById('limiteCartao').value = cartao.limiteFormatado; // CORRIGIDO
+      document.getElementById('diaVencimento').value = cartao.diaVencimento; // CORRIGIDO
+    } else {
+      cartaoEditando = null;
+      titulo.textContent = 'Adicionar Cartão';
+      document.getElementById('nomeCartao').value = '';
+      document.getElementById('limiteCartao').value = ''; // CORRIGIDO
+      document.getElementById('diaVencimento').value = ''; // CORRIGIDO
+    }
+    
+    modal.style.display = 'flex';
+  }
+
+  function fecharModalCartao() {
+    document.getElementById('modalCartao').style.display = 'none';
+    cartaoEditando = null;
+  }
+
+  // Formatação de campos
+  function formatarLimite(input) {
+    let value = input.value.replace(/\D/g, '');
+    if (value === '') { 
+      input.value = ''; 
+      return; 
+    }
+    value = (parseInt(value, 10) / 100).toFixed(2);
+    input.value = formatToBRL(parseFloat(value));
+  }
+
+  function formatToBRL(value) {
+    if (isNaN(value)) return '0,00';
+    return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function parseBRL(value) {
+    if (typeof value !== 'string') return value;
+    let cleanValue = value.replace(/\./g, '').replace(',', '.');
+    return parseFloat(cleanValue);
+  }
+
+// Função para mostrar toast notification
+function mostrarToast(mensagem) {
+  const toast = document.getElementById('toastNotification');
+  const toastMessage = document.getElementById('toastMessage');
+  
+  toastMessage.textContent = mensagem;
+  toast.classList.add('show');
+  
+  setTimeout(() => {
+    toast.classList.remove('show');
+  }, 3000);
+}
+
+// Salvar cartão COM TOAST
+// Salvar cartão COM TOAST E ATUALIZAÇÃO NAS TRANSAÇÕES
+function salvarCartao() {
+  const nome = document.getElementById('nomeCartao').value.trim();
+  const limite = document.getElementById('limiteCartao').value;
+  const diaVencimento = document.getElementById('diaVencimento').value;
+  
+  if (!nome) {
+    alert('Por favor, informe um nome para o cartão');
+    return;
+  }
+  
+  if (!limite || parseBRL(limite) <= 0) {
+    alert('Por favor, informe um limite válido');
+    return;
+  }
+  
+  if (!diaVencimento || diaVencimento < 1 || diaVencimento > 31) {
+    alert('Informe um dia de vencimento válido (1-31)');
+    return;
+  }
+  
+  const id = cartaoEditando !== null ? cartoes[cartaoEditando].id : 'cartao_' + Date.now();
+  const limiteNumerico = parseBRL(limite);
+  
+  const dadosCartao = {
+    id: id,
+    nome: nome,
+    limite: limiteNumerico,
+    limiteFormatado: document.getElementById('limiteCartao').value,
+    diaVencimento: parseInt(diaVencimento)
+  };
+  
+  // Se estiver editando, atualizar nas transações
+  if (cartaoEditando !== null) {
+    const cartaoAntigo = cartoes[cartaoEditando];
+    const transacoesAtualizadas = atualizarCartaoNasTransacoes(cartaoAntigo.id, dadosCartao);
+    
+    cartoes[cartaoEditando] = dadosCartao;
+    mostrarToast('Cartão atualizado com sucesso!' + (transacoesAtualizadas > 0 ? ` ${transacoesAtualizadas} transações atualizadas.` : ''));
+  } else {
+    cartoes.push(dadosCartao);
+    mostrarToast('Cartão cadastrado com sucesso!');
+  }
+  
+localStorage.setItem('cartoes_credito', JSON.stringify(cartoes));
+  renderizarCartoes();
+  fecharModalCartao();
+
+  // Sincronizar com Supabase imediatamente
+  import('./js/supabase-sync.js').then(({ saveUserCardsToSupabase }) => {
+    saveUserCardsToSupabase()
+      .then(() => console.log('✅ Cartões sincronizados com Supabase'))
+      .catch(err => console.error('Erro ao sincronizar cartões:', err));
+  });
+}
+
+// Função para atualizar o cartão em todas as transações
+function atualizarCartaoNasTransacoes(cartaoId, novosDadosCartao) {
+  let transacoesAtualizadas = 0;
+  
+  // Percorre todos os meses no localStorage
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    
+    // Verifica se é uma chave de lançamentos (lancamentos_YYYY-MM)
+    if (key.startsWith('lancamentos_')) {
+      const data = localStorage.getItem(key);
+      const lancamentos = data ? JSON.parse(data) : [];
+      
+      let houveAlteracao = false;
+      
+      // Percorre os lançamentos do mês
+      lancamentos.forEach(lancamento => {
+        // Se o lançamento usa este cartão, atualiza o nome do cartão
+        if (lancamento.formaPagamento === cartaoId) {
+          // Aqui você pode adicionar mais campos se necessário
+          // Por enquanto só atualizamos a referência, pois o ID permanece o mesmo
+          // Se quiser atualizar outros dados, pode adicionar aqui
+          houveAlteracao = true;
+          transacoesAtualizadas++;
+        }
+      });
+      
+      // Se houve alterações neste mês, salva de volta
+      if (houveAlteracao) {
+        localStorage.setItem(key, JSON.stringify(lancamentos));
+      }
+    }
+  }
+  
+  return transacoesAtualizadas;
+}
+
+// Excluir cartão COM TOAST
+function excluirCartao(index) {
+  const cartao = cartoes[index];
+  
+  // Mostra mensagem de confirmação (ESTE PERMANECE)
+  const confirmar = confirm(`Deseja realmente excluir o cartão "${cartao.nome}"?`);
+  
+  if (confirmar) {
+    cartoes.splice(index, 1);
+    localStorage.setItem('cartoes_credito', JSON.stringify(cartoes));
+    renderizarCartoes();
+    mostrarToast('Cartão excluído com sucesso');
+  }
+}
+
+  // Editar cartão
+  function editarCartao(index) {
+    abrirModalCartao(index);
+  }
+
+// Excluir cartão com confirmação
+function excluirCartao(index) {
+  const cartao = cartoes[index];
+  
+  // Mostra mensagem de confirmação
+  const confirmar = confirm(`Deseja realmente excluir o cartão "${cartao.nome}"?`);
+  
+  if (confirmar) {
+cartoes.splice(index, 1);
+    localStorage.setItem('cartoes_credito', JSON.stringify(cartoes));
+    renderizarCartoes();
+    mostrarToast('Cartão excluído com sucesso', 'info');
+
+    // Sincronizar com Supabase imediatamente
+    import('./js/supabase-sync.js').then(({ saveUserCardsToSupabase }) => {
+      saveUserCardsToSupabase()
+        .then(() => console.log('✅ Cartões sincronizados após exclusão'))
+        .catch(err => console.error('Erro ao sincronizar cartões:', err));
+    });
+  }
+}
+
+  // Fechar modal ao clicar fora
+  window.onclick = function(event) {
+    const modal = document.getElementById('modalCartao');
+    if (event.target === modal) {
+      fecharModalCartao();
+    }
+  }
+
+  // Função para mostrar notificação toast
+function mostrarToast(mensagem, tipo = 'success') {
+  const toast = document.getElementById('toastNotification');
+  const toastMessage = document.getElementById('toastMessage');
+  const toastIcon = toast.querySelector('i');
+  
+  // Define o ícone baseado no tipo
+  if (tipo === 'success') {
+    toastIcon.className = 'ri-check-line';
+    toast.classList.add('success');
+  } else if (tipo === 'error') {
+    toastIcon.className = 'ri-error-warning-line';
+    toast.classList.add('error');
+  } else {
+    toastIcon.className = 'ri-information-line';
+    toast.classList.add('info');
+  }
+  
+  toastMessage.textContent = mensagem;
+  toast.classList.add('show');
+  
+  // Remove após 3 segundos
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => {
+      toast.classList.remove('success', 'error', 'info');
+    }, 300);
+  }, 3000);
+}
+
+</script>
+
+<script type="module">
+  import { supabase } from './js/supabase-config.js';
+  import { startSingleSessionGuard } from './js/single-session.js';
+
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    window.location.href = 'login.html';
+  } else {
+    startSingleSessionGuard();
+  }
+</script>
+
+  <!-- STATUS BAR -->
+  <!-- <script src="cordova.js"></script> -->
+  <script>
+    document.addEventListener('deviceready', function() {
+      if (typeof StatusBar !== 'undefined') {
+        setTimeout(function() {
+          StatusBar.overlaysWebView(false);
+          StatusBar.backgroundColorByHexString("#009587"); //Cor da StatusBar
+          StatusBar.styleLightContent();
+        }, 300);
+      }
+    }, false);
+    </script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    });
+  }
+</script>
+</body>
+</html>

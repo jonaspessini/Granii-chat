@@ -1,0 +1,4603 @@
+index2
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#21c45d">
+  <title>Controle Financeiro Mensal</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Icones do Remixicon -->
+  <link rel="stylesheet" href="css/remixicon/remixicon.css"> 
+  <!-- Link para os estilos CSS -->
+  <link rel="stylesheet" href="css/index2.css">
+
+</head>
+<body>
+
+<!-- supabase-sync carregado via import dinamico -->
+<!-- <script src="js/auth-guard.js"></script> -->
+
+<!-- ADICIONE ESTE CÓDIGO NO TOPO (antes do header-purple) -->
+<div class="page-title-header">
+  <div class="page-title" id="pageTitle">
+    Transações
+    <i class="ri-arrow-down-s-line"></i>
+  </div>
+  
+  <!-- BOTÃO DE MENU (3 PONTINHOS) - DIREITA -->
+  <div class="menu-icon-container">
+    <button class="menu-btn" id="menuBtn">
+      <i class="ri-more-2-line"></i>
+    </button>
+  </div>
+  
+  <!-- BOTÃO DE FILTRO - ESQUERDA DO MENU -->
+  <div class="filter-icon-container">
+    <button class="filter-btn" id="filterBtn">
+      <i class="ri-filter-line"></i>
+    </button>
+  </div>
+</div>
+
+<!-- Menu dropdown -->
+<div class="dropdown-menu" id="dropdownMenu">
+  <div class="dropdown-item active" data-value="transacoes">Transações</div>
+  <div class="dropdown-item" data-value="receitas">Receitas</div>
+  <div class="dropdown-item" data-value="despesas">Despesas</div>
+</div>
+
+<div class="header-purple">
+  <div class="month-navigation-header">
+    <button class="month-btn" id="prevMonthHeader">❮</button>
+    <div class="month-display-header" id="monthDisplayHeader">
+      <span id="currentMonthTextHeader"></span>
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 2 24 24" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-left: 5px;">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+        <line x1="16" y1="2" x2="16" y2="6"></line>
+        <line x1="8" y1="2" x2="8" y2="6"></line>
+        <line x1="3" y1="10" x2="21" y2="10"></line>
+      </svg>
+    </div>
+    <button class="month-btn" id="nextMonthHeader">❯</button>
+  </div>
+</div>
+
+<div class="header-balance-card">
+  <div class="pendencia hidden"> <i class="ri-arrow-left-line"></i> Pendências</div>
+  <div class="balance-label hidden">Saldo atual</div>
+  <div class="balance-value hidden" id="currentBalanceDisplay">R$ 0,00</div>
+  <div class="olho hidden"><i class="ri-eye-line"></i></div>
+  <div class="balance-summary-row">
+    <div class="summary-item">
+      <div class="summary-item-label" id="receitasLabel">Receitas</div>
+      <div class="summary-item-value">
+        <span class="summary-item-icon income-icon"><i class="ri-lock-2-line"></i></span>
+        <span class="value-text income-value" id="headerReceitasTotais">0,00</span>
+      </div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-item-label" id="despesasLabel">Despesas</div>
+      <div class="summary-item-value">
+        <span class="summary-item-icon expense-icon"><i class="ri-wallet-line"></i></span>
+        <span class="value-text expense-value" id="headerDespesasTotais">0,00</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- === MENU DROPDOWN === -->
+<div class="menu-dropdown" id="menuDropdown">
+
+  <!-- ADICIONE ESTE NOVO ITEM -->
+  <div class="menu-item" onclick="abrirModalPagarCartao()">
+    <i class="ri-bank-card-line"></i>
+    Pagar Cartão
+  </div>
+
+  <div class="menu-item" onclick="navigateToCartoes()">
+    <i class="ri-bank-card-line"></i>
+    Gerenciar Cartões
+  </div>
+  
+  <div class="menu-item" onclick="navigateToContas()">
+    <i class="ri-bank-line"></i> <!-- Ou outro ícone que prefira -->
+    Gerenciar contas
+  </div>
+
+    <div class="menu-item" onclick="limparDados()">
+      <i class="ri-delete-bin-line"></i>
+      Limpar Dados
+    </div>
+
+    <!-- ========== BOTÃO DE SAIR - ADICIONE AQUI ========== -->
+  <div class="menu-item divider-top" onclick="sairDoApp()">
+    <i class="ri-logout-box-r-line"></i>
+    Sair da conta
+  </div>
+
+  </div>
+
+<!-- Modal para seleção de arquivo de backup -->
+<div class="modal" id="backupModal">
+  <div class="modal-content">
+    <h2 id="backupModalTitle">Backup / Restauração</h2>
+    
+    <div class="backup-options" id="backupOptions">
+      <!-- Opções serão preenchidas dinamicamente -->
+    </div>
+    
+    <div class="backup-info" id="backupInfo" style="display: none;">
+      <p id="backupMessage"></p>
+      <div class="backup-details" id="backupDetails"></div>
+    </div>
+    
+    <div class="btn-group">
+      <button class="btn btn-secondary" onclick="fecharModalBackup()">Cancelar</button>
+      <button class="btn btn-primary" id="backupActionBtn" onclick="executarAcaoBackup()" disabled>
+        Executar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para gerenciamento de backups -->
+<div class="modal" id="gerenciarBackupModal">
+  <div class="modal-content">
+    <h2>Gerenciar Backups</h2>
+    
+    <div class="backup-stats" id="backupStats">
+      <p>Carregando informações...</p>
+    </div>
+    
+    <div class="backup-list-container">
+      <div class="backup-list-header">
+        <span>Arquivos de Backup</span>
+        <button class="btn-small" onclick="atualizarListaBackups()">
+          <i class="ri-refresh-line"></i> Atualizar
+        </button>
+      </div>
+      
+      <div class="backup-list" id="backupList">
+        <!-- Lista de backups será preenchida aqui -->
+      </div>
+    </div>
+    
+    <div class="backup-actions">
+      <button class="btn btn-danger" onclick="excluirTodosBackups()" id="btnExcluirTodos" disabled>
+        <i class="ri-delete-bin-line"></i> Excluir Todos
+      </button>
+      <button class="btn btn-secondary" onclick="fecharModalGerenciamento()">
+        Fechar
+      </button>
+    </div>
+  </div>
+</div>
+
+  <!-- Overlay para o modal -->
+  <div class="overlay" id="balanceDetailsOverlay"></div>
+
+<!-- Modal de Detalhes do Saldo -->
+<div class="balance-details-modal" id="balanceDetailsModal">
+  <div class="balance-details-header">
+    <div class="balance-details-title">Detalhes do Saldo</div>
+    <button class="balance-details-close" onclick="closeBalanceDetails()">×</button>
+  </div>
+  <div class="balance-details-content">
+    <div class="balance-details-totals">
+      <div class="balance-detail-section">
+        <div class="balance-detail-section-title">Receitas</div>
+        <div class="balance-detail-item">
+          <div class="balance-detail-label">Total de Receitas</div>
+          <div class="balance-detail-value balance-detail-positive" id="detailTotalReceitas">R$ 0,00</div>
+        </div>
+        <div class="balance-detail-subitem">
+          <div class="balance-detail-label">Receitas Recebidas</div>
+          <div class="balance-detail-value balance-detail-positive" id="detailReceitasPagas">R$ 0,00</div>
+        </div>
+        <div class="balance-detail-subitem">
+          <div class="balance-detail-label">Receitas a Receber</div>
+          <div class="balance-detail-value balance-detail-positive" id="detailReceitasAbertas">R$ 0,00</div>
+        </div>
+      </div>
+
+      <div class="balance-detail-section">
+        <div class="balance-detail-section-title">Despesas</div>
+        <div class="balance-detail-item">
+          <div class="balance-detail-label">Total de Despesas</div>
+          <div class="balance-detail-value balance-detail-negative" id="detailTotalDespesas">R$ 0,00</div>
+        </div>
+        <div class="balance-detail-subitem">
+          <div class="balance-detail-label">Despesas Pagas</div>
+          <div class="balance-detail-value balance-detail-negative" id="detailDespesasPagas">R$ 0,00</div>
+        </div>
+        <div class="balance-detail-subitem">
+          <div class="balance-detail-label">Despesas a Pagar</div>
+          <div class="balance-detail-value balance-detail-negative" id="detailDespesasAbertas">R$ 0,00</div>
+        </div>
+      </div>
+
+      <div class="balance-details-highlight">
+        <div class="balance-detail-item">
+          <div class="balance-detail-label" style="font-weight: 600;">Fluxo de Caixa</div>
+          <div class="balance-detail-value" id="detailFluxoCaixa" style="font-size: 1.3em;">R$ 0,00</div>
+        </div>
+        <div class="balance-detail-item">
+          <div class="balance-detail-label" style="font-weight: 600;">Saldo Previsto</div>
+          <div class="balance-detail-value" id="detailSaldoPrevisto" style="font-size: 1.3em;">R$ 0,00</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Balanço Mensal com Gráfico -->
+<div class="balance-chart-modal" id="balanceChartModal">
+  <div class="balance-chart-header">
+    <div class="balance-chart-title">Balanço Mensal</div>
+    <button class="balance-chart-close" onclick="closeBalanceChart()">×</button>
+  </div>
+  <div class="balance-chart-content">
+    <div class="balance-chart-container">
+      <div class="chart-section">
+        <div class="chart-bars">
+          <div class="chart-bar-container">
+            <div class="chart-bar income-bar" id="incomeBar">
+              <div class="chart-bar-value" id="incomeBarValue">R$ 0,00</div>
+            </div>
+            <div class="chart-bar-label">Receitas</div>
+          </div>
+          <div class="chart-bar-container">
+            <div class="chart-bar expense-bar" id="expenseBar">
+              <div class="chart-bar-value" id="expenseBarValue">R$ 0,00</div>
+            </div>
+            <div class="chart-bar-label">Despesas</div>
+          </div>
+        </div>
+        
+        <div class="balance-chart-totals">
+          <div class="chart-total-item">
+            <div class="chart-total-label">Receitas</div>
+            <div class="chart-total-value income-value" id="chartTotalIncome">R$ 0,00</div>
+          </div>
+          <div class="chart-total-item">
+            <div class="chart-total-label">Despesas</div>
+            <div class="chart-total-value expense-value" id="chartTotalExpense">R$ 0,00</div>
+          </div>
+          <div class="chart-balance-item">
+            <div class="chart-balance-label">Balanço</div>
+            <div class="chart-balance-value" id="chartBalance">R$ 0,00</div>
+          </div>
+          <!-- ADICIONE ESTE NOVO ITEM -->
+          <div class="chart-balance-item">
+            <div class="chart-balance-label">Saldo Previsto</div>
+            <div class="chart-balance-value" id="chartSaldoPrevisto">R$ 0,00</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Detalhes da Transação -->
+<div class="transaction-details-modal" id="transactionDetailsModal">
+  <div class="transaction-details-header">
+    <div class="transaction-details-title">Detalhes da Transação</div>
+    <button class="transaction-details-close" onclick="closeTransactionDetails()">×</button>
+  </div>
+  <div class="transaction-details-content">
+    <div class="transaction-detail-section">
+      <div class="transaction-detail-section-title">Informações</div>
+      
+      <div class="transaction-detail-item">
+        <div class="transaction-detail-label">Descrição</div>
+        <div class="transaction-detail-value" id="detailDescricao">-</div>
+      </div>
+      
+      <div class="transaction-detail-item">
+        <div class="transaction-detail-label">Valor</div>
+        <div class="transaction-detail-value" id="detailValor">-</div>
+      </div>
+      
+      <div class="transaction-detail-item">
+        <div class="transaction-detail-label">Data</div>
+        <div class="transaction-detail-value" id="detailData">-</div>
+      </div>
+      
+      <div class="transaction-detail-item">
+        <div class="transaction-detail-label">Categoria</div>
+        <div class="transaction-detail-value" id="detailCategoria">-</div>
+      </div>
+
+      <!-- ADICIONE ESTE CAMPO PARA FORMA DE PAGAMENTO -->
+      <div class="transaction-detail-item" id="detailFormaPagamentoItem">
+        <div class="transaction-detail-label">Forma de Pagamento</div>
+        <div class="transaction-detail-value" id="detailFormaPagamento">-</div>
+      </div>
+      
+<div class="transaction-detail-item">
+  <div class="transaction-detail-label">Status</div>
+  <div class="transaction-detail-value" id="detailStatusContainer">
+    <!-- O ícone do cartão e status serão inseridos aqui via JavaScript -->
+    <span class="transaction-detail-status" id="detailStatus">-</span>
+  </div>
+</div>
+    </div>
+
+    <div class="transaction-detail-actions">
+      <button class="transaction-action-btn primary" id="detailPagarBtn" onclick="toggleTransactionStatus()">
+        PAGAR
+      </button>
+      <button class="transaction-action-btn secondary" onclick="editTransaction()" id="detailEditarBtn">
+        EDITAR
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Filtro -->
+<div class="filter-modal" id="filterModal">
+  <div class="filter-modal-content">
+    <div class="filter-modal-header">
+      <h3>Filtrar Transações</h3>
+      <button class="filter-close" id="filterClose">×</button>
+    </div>
+    
+    <!-- Botões de status -->
+    <div class="filter-status-buttons">
+      <button class="status-filter-btn active" data-status="all">Todos</button>
+      <button class="status-filter-btn" data-status="pending">Pendentes</button>
+      <button class="status-filter-btn" data-status="completed">Efetuadas</button>
+    </div>
+
+    <!-- Filtro por Cartão -->
+    <div class="filter-card-section">
+      <label for="filterCartao">Filtrar por Cartão:</label>
+      <select id="filterCartao" class="filter-select">
+        <option value="">Todos os Cartões</option>
+      </select>
+    </div>
+    
+    <div class="filter-actions">
+      <button class="btn btn-secondary" id="filterClear">Limpar</button>
+      <button class="btn btn-primary" id="filterApply">Aplicar</button>
+    </div>
+  </div>
+</div>
+
+  <div class="main-container">
+    <div class="section-block" style="display: none;">
+      <h1>Controle Financeiro Mensal</h1>
+      <div class="month-navigation">
+        <button class="month-btn" id="prevMonth">❮</button>
+        <div class="month-display" id="monthDisplay">
+          <span id="currentMonthText"></span>
+        </div>
+        <button class="month-btn" id="nextMonth">❯</button>
+      </div>
+    </div>
+
+    <div class="transactions-container" id="transactionsContainer"></div>
+
+    <div class="totais" id="totais">
+      <div class="receitas-totais-cor">Receita Total: <span id="totalReceitas">0,00</span></div>
+      <div class="total-detail">Receita Recebida: <span id="totalReceitasPagas">0,00</span></div>
+      <div class="total-detail">Receita a Receber: <span id="totalReceitasAbertas">0,00</span></div>
+      <div class="despesas-totais-cor">Despesa Total: <span id="totalDespesas">0,00</span></div>
+      <div class="total-detail">Despesas Pagas: <span id="totalDespesasPagas">0,00</span></div>
+      <div class="total-detail">Despesas a Pagar: <span id="totalDespesasAbertas">0,00</span></div>
+      <div class="fluxo-caixa-destaque">Saldo do Mês: <span id="fluxoCaixa">0,00</span></div>
+    </div>
+
+<!-- Modal Calculadora -->
+<div id="calcModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:2000;justify-content:center;align-items:flex-end;">
+  <div style="background:#fff;width:100%;max-width:420px;border-radius:20px 20px 0 0;padding:20px 20px 10px 20px;box-sizing:border-box;">
+
+<!-- Display -->
+<div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:20px;padding:0 4px;">
+  <span style="font-size:0.95em;font-weight:500;color:#aaa;padding-bottom:6px;">R$</span>
+  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
+    <span id="calcExpression" style="font-size:0.82em;color:#bbb;min-height:18px;"></span>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span id="calcDisplay" style="font-size:2em;font-weight:600;color:#1e1e2e;letter-spacing:1px;">0,0</span>
+      <button id="calcDeleteBtn" onclick="calcApagar()" style="background:none;border:none;padding:4px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.6em;color:#aaa;"><i class="ri-delete-back-2-fill"></i></button>
+    </div>
+  </div>
+</div>
+
+    <!-- Grade de botões -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
+
+      <!-- Linha 1 -->
+      <button class="calc-btn calc-num" onclick="calcInput('7')">7</button>
+      <button class="calc-btn calc-num" onclick="calcInput('8')">8</button>
+      <button class="calc-btn calc-num" onclick="calcInput('9')">9</button>
+      <button class="calc-btn calc-op" onclick="calcInput('/')">÷</button>
+
+      <!-- Linha 2 -->
+      <button class="calc-btn calc-num" onclick="calcInput('4')">4</button>
+      <button class="calc-btn calc-num" onclick="calcInput('5')">5</button>
+      <button class="calc-btn calc-num" onclick="calcInput('6')">6</button>
+      <button class="calc-btn calc-op" onclick="calcInput('*')">×</button>
+
+      <!-- Linha 3 -->
+      <button class="calc-btn calc-num" onclick="calcInput('1')">1</button>
+      <button class="calc-btn calc-num" onclick="calcInput('2')">2</button>
+      <button class="calc-btn calc-num" onclick="calcInput('3')">3</button>
+      <button class="calc-btn calc-op" onclick="calcInput('-')">−</button>
+
+      <!-- Linha 4 -->
+      <button class="calc-btn calc-num" onclick="calcInput('0')">0</button>
+      <button class="calc-btn calc-num" onclick="calcInput(',')">,</button>
+      <button class="calc-btn calc-equal" onclick="calcInput('=')">=</button>
+      <button class="calc-btn calc-op" onclick="calcInput('+')">+</button>
+
+    </div>
+
+    <!-- Botões finais -->
+    <div style="display:flex;gap:10px;margin-top:16px;margin-bottom:6px;">
+      <button onclick="fecharCalculadora()" style="flex:1;padding:15px;background:#fff;color:#e53935;border:1px solid #e53935;border-radius:25px;font-size:0.9em;font-weight:700;cursor:pointer;letter-spacing:0.5px;text-transform:uppercase;">
+        Cancelar
+      </button>
+      <button onclick="calcConcluir()" style="flex:1;padding:15px;background:#e53935;color:#fff;border:none;border-radius:25px;font-size:0.9em;font-weight:700;cursor:pointer;letter-spacing:0.5px;text-transform:uppercase;">
+        Concluído
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Adição/Edição de Lançamento -->
+<div id="modal" class="modal">
+  <div class="modal-content">
+    <!-- TOPO COLORIDO (NOVO) -->
+    <div class="modal-top-header" id="modalTopHeader">
+<div class="modal-type-label" id="modalTypeLabel">Despesa</div>
+      <div class="modal-amount-container">
+        <span class="currency-symbol">R$</span>
+        <input type="text" inputmode="none" id="valor" placeholder="0,00" readonly style="cursor:pointer;" />
+      </div>
+    </div>
+
+    <!-- TÍTULO MANTIDO PARA ESPAÇAMENTO (agora fica abaixo do topo colorido) -->
+    <h2 id="modalTitle">Novo Lançamento</h2>
+
+    <div class="add-entry-options" id="addEntryOptions">
+      <button class="btn" id="btnLancamentoUnico" onclick="selectEntryType('unico')">Uma vez</button>
+      <button class="btn" id="btnLancamentoParcelado" onclick="selectEntryType('parcelado')">Parcelado</button>
+      <button class="btn" id="btnLancamentoFixo" onclick="selectEntryType('fixo')">Fixo</button>
+    </div>
+
+    <!-- O RESTO PERMANECE IGUAL -->
+    <input type="text" id="descricao" placeholder="Descrição" />
+    <select id="tipo">
+      <option value="despesa" selected>Despesa</option>
+      <option value="receita">Receita</option>
+    </select>
+    <input type="date" id="dataVencimento" />
+
+    <select id="formaPagamento" style="display: none;">
+      <option value="debito_pix">Débito/Pix</option>
+    </select>
+
+    <div class="pago-toggle-group">
+      <label for="pagoToggle" class="pago-toggle-label">
+        <span id="pagoToggleText">Não foi pago</span>
+      </label>
+      <label class="toggle-switch">
+        <input type="checkbox" id="pagoToggle" onchange="atualizarTextoPago()">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+
+    <div class="parcelamento-checkbox-group">
+      <input type="checkbox" id="isParcelado" onchange="toggleParcelamentoFields()">
+      <label for="isParcelado">Lançamento Parcelado?</label>
+    </div>
+
+    <div id="parcelamentoFields" class="parcelamento-fields">
+      <div>
+        <label for="totalParcelas">Total de Parcelas:
+          <input type="number" id="totalParcelas" min="1" value="1">
+        </label>
+        <label for="parcelaAtual">Parcela Atual:
+          <input type="number" id="parcelaAtual" min="1" value="1">
+        </label>
+      </div>
+    </div>
+
+    <div id="lancamentoFixoFields" class="parcelamento-fields">
+      <label for="mesesFixo">Repetir por quantos meses?
+        <input type="number" id="mesesFixo" min="1" value="1">
+      </label>
+    </div>
+
+    <div class="btn-group">
+      <button id="deleteBtn" class="btn btn-danger" style="display:none;" onclick="handleDeleteClick()">Excluir</button>
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarLancamento()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+    <!-- Modal: Confirmação de Exclusão de Lançamento Parcelado -->
+    <div id="deleteParceladoModal" class="modal">
+      <div class="modal-content">
+        <h2>Excluir Lançamento Parcelado</h2>
+        <p>Este é um lançamento parcelado. Qual tipo de exclusão você gostaria de fazer?</p>
+        <div class="btn-group">
+          <button class="btn btn-danger" onclick="excluirLancamentoConfirmado('current')">Apagar somente esta</button>
+          <button class="btn btn-danger" onclick="excluirLancamentoConfirmado('future')">Apagar esta e futuras</button>
+          <button class="btn btn-danger" onclick="excluirLancamentoConfirmado('all')">Apagar todas</button>
+          <button class="btn btn-secondary" onclick="closeDeleteParceladoModal()">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Seleção de Mês e Ano -->
+    <div id="monthYearPickerModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button class="nav-btn" onclick="changeYearPicker(-1)">❮</button>
+          <span class="current-year-display" id="pickerYearDisplay">2025</span>
+          <button class="nav-btn" onclick="changeYearPicker(1)">❯</button>
+        </div>
+        <div class="months-grid" id="monthsGrid"></div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="closeMonthYearPickerModal()">CANCELAR</button>
+          <button class="btn btn-primary" onclick="goToCurrentMonth()">MÊS ATUAL</button>
+        </div>
+      </div>
+    </div>
+
+<!-- Modal para Pagar Cartão -->
+<div class="modal" id="pagarCartaoModal">
+  <div class="modal-content">
+    <h2>Pagar Cartão</h2>
+    
+    <div class="form-group">
+      <label for="selecionarCartao">Selecionar Cartão:</label>
+      <select id="selecionarCartao" class="form-select">
+        <option value="">Selecione um cartão</option>
+        <!-- Os cartões serão carregados dinamicamente -->
+      </select>
+    </div>
+    
+    <div class="resumo-pagamento" id="resumoPagamento" style="display: none;">
+      <div class="resumo-item">
+        <span>Total a pagar:</span>
+        <span id="totalPagar">R$ 0,00</span>
+      </div>
+      <div class="resumo-item">
+        <span>Quantidade de transações:</span>
+        <span id="quantidadeTransacoes">0</span>
+      </div>
+    </div>
+    
+    <div class="btn-group">
+      <button class="btn btn-secondary" onclick="fecharModalPagarCartao()">Cancelar</button>
+      <button class="btn btn-primary" onclick="pagarCartao()" id="btnPagarCartao" disabled>Pagar Cartão</button>
+    </div>
+  </div>
+</div>
+
+    <!-- FAB (Floating Action Button) -->
+    <button class="fab-button" id="mainFab" onclick="toggleFabOptions()">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+      </svg>
+    </button>
+
+    <!-- Bolinhas de Opção (Receita/Despesa) -->
+    <div class="fab-options" id="fabOptions">
+      <button class="fab-option-btn receita" onclick="openModal('receita')">Receita</button>
+      <button class="fab-option-btn despesa" onclick="openModal('despesa')">Despesa</button>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+<div id="toast" class="toast">
+  <span id="toastMessage"></span>
+</div>
+
+
+<!-- SCRIPT DE AUTENTICACAO E CARREGAMENTO DE DADOS -->
+<script type="module">
+    import { supabase, getCurrentUser } from './js/supabase-config.js';
+    import { loadUserData } from './js/supabase-sync.js';
+    import { startSingleSessionGuard } from './js/single-session.js';
+
+    async function initPage() {
+        // getSession garante a sessao real atual do Supabase
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (!session) {
+            window.location.href = 'login.html';
+            return;
+        }
+
+        const user = session.user;
+        const lastUserId = localStorage.getItem('_last_user_id');
+
+        if (lastUserId !== user.id) {
+            console.log('Novo usuario: ' + user.email + '. Limpando dados antigos...');
+            const keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && (key.startsWith('lancamentos_') || key === 'cartoes_credito')) {
+                    keysToRemove.push(key);
+                }
+            }
+            keysToRemove.forEach(key => localStorage.removeItem(key));
+            localStorage.setItem('_last_user_id', user.id);
+            console.log('Carregando dados do Supabase para: ' + user.email);
+            await loadUserData();
+            location.reload();
+            return;
+        }
+
+        console.log('Usuario carregado: ' + user.email);
+        startSingleSessionGuard();
+    }
+
+    initPage();
+</script>
+
+
+
+
+
+
+
+  <script>
+
+    // Dados e configurações
+    let lancamentos = [];
+    let editIndex = null;
+let currentDate = (() => {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+})();
+
+const today = (() => {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+})();
+    let pickerCurrentYear = today.getFullYear();
+    let pickerSelectedMonth = today.getMonth();
+    let selectedEntryType = 'unico';
+    let preselectedType = null;
+    let currentTransactionIndex = null;
+    let currentFilter = 'transacoes'; // Valor padrão
+
+    const monthNames = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+    const monthNamesShort = ['JAN.','FEV.','MAR.','ABR.','MAI.','JUN.','JUL.','AGO.','SET.','OUT.','NOV.','DEZ.'];
+
+// ADICIONAR ESTAS FUNÇÕES AUXILIARES
+function getHojeZerado() {
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  return hoje;
+}
+
+function getDataHoje() {
+  const hoje = getHojeZerado();
+  const ano = hoje.getFullYear();
+  const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+  const dia = String(hoje.getDate()).padStart(2, '0');
+  return `${ano}-${mes}-${dia}`;
+}
+    
+    // Elementos DOM
+    const tabela = document.querySelector('#tabela tbody');
+    const totalReceitasEl = document.getElementById('totalReceitas');
+    const totalReceitasPagasEl = document.getElementById('totalReceitasPagas');
+    const totalReceitasAbertasEl = document.getElementById('totalReceitasAbertas');
+    const totalDespesasEl = document.getElementById('totalDespesas');
+    const totalDespesasPagasEl = document.getElementById('totalDespesasPagas');
+    const totalDespesasAbertasEl = document.getElementById('totalDespesasAbertas');
+    const fluxoCaixaEl = document.getElementById('fluxoCaixa');
+    const modal = document.getElementById('modal');
+    const deleteParceladoModal = document.getElementById('deleteParceladoModal');
+    const monthYearPickerModal = document.getElementById('monthYearPickerModal');
+    const descricaoInput = document.getElementById('descricao');
+    const tipoInput = document.getElementById('tipo');
+    const valorInput = document.getElementById('valor');
+    const deleteBtn = document.getElementById('deleteBtn');
+    const totaisBox = document.getElementById('totais');
+    const isParceladoCheckbox = document.getElementById('isParcelado');
+    const parcelamentoFieldsDiv = document.getElementById('parcelamentoFields');
+    const totalParcelasInput = document.getElementById('totalParcelas');
+    const parcelaAtualInput = document.getElementById('parcelaAtual');
+    const lancamentoFixoFieldsDiv = document.getElementById('lancamentoFixoFields');
+    const mesesFixoInput = document.getElementById('mesesFixo');
+    const dataVencimentoInput = document.getElementById('dataVencimento');
+    const currentMonthTextHeader = document.getElementById('currentMonthTextHeader');
+    const currentBalanceDisplay = document.getElementById('currentBalanceDisplay');
+    const headerReceitasTotaisEl = document.getElementById('headerReceitasTotais');
+    const headerDespesasTotaisEl = document.getElementById('headerDespesasTotais');
+    const prevMonthHeaderBtn = document.getElementById('prevMonthHeader');
+    const nextMonthHeaderBtn = document.getElementById('nextMonthHeader');
+    const pickerYearDisplay = document.getElementById('pickerYearDisplay');
+    const monthsGrid = document.getElementById('monthsGrid');
+    const addEntryOptionsDiv = document.getElementById('addEntryOptions');
+    const btnLancamentoUnico = document.getElementById('btnLancamentoUnico');
+    const btnLancamentoParcelado = document.getElementById('btnLancamentoParcelado');
+    const btnLancamentoFixo = document.getElementById('btnLancamentoFixo');
+    const mainFab = document.getElementById('mainFab');
+    const fabOptions = document.getElementById('fabOptions');
+    const balanceDetailsModal = document.getElementById('balanceDetailsModal');
+    const balanceDetailsOverlay = document.getElementById('balanceDetailsOverlay');
+    const headerBalanceCard = document.querySelector('.header-balance-card');
+    const balanceChartModal = document.getElementById('balanceChartModal');
+    
+
+// Eventos
+document.getElementById('monthDisplayHeader').addEventListener('click', openMonthYearPickerModal);
+document.querySelector('.olho').addEventListener('click', toggleValoresVisiveis); // Adicione esta linha
+prevMonthHeaderBtn.addEventListener('click', () => changeMonth(-1));
+nextMonthHeaderBtn.addEventListener('click', () => changeMonth(1));
+currentBalanceDisplay.addEventListener('click', openBalanceDetails);
+// Adicionar event listener para o header-balance-card
+headerBalanceCard.addEventListener('click', openBalanceChart);
+
+// Variáveis para o filtro - VERSÃO ATUALIZADA
+// E SUBSTITUA por:
+let activeStatusFilter = 'all'; // 'all', 'pending', 'completed'
+let activeCardFilter = ''; // '' para todos os cartões, ou ID do cartão
+
+// Elementos DOM do filtro - ATUALIZADO
+const filterBtn = document.getElementById('filterBtn');
+const filterModal = document.getElementById('filterModal');
+const filterClose = document.getElementById('filterClose');
+const filterClear = document.getElementById('filterClear');
+const filterApply = document.getElementById('filterApply');
+const statusFilterBtns = document.querySelectorAll('.status-filter-btn');
+const filterCartaoSelect = document.getElementById('filterCartao');
+
+// Eventos do filtro - ATUALIZADO
+filterBtn.addEventListener('click', openFilterModal);
+filterClose.addEventListener('click', closeFilterModal);
+filterClear.addEventListener('click', clearFilters);
+filterApply.addEventListener('click', applyFilters);
+
+// Novo: Eventos para os botões de status
+statusFilterBtns.forEach(btn => {
+  btn.addEventListener('click', function() {
+    // Remove a classe active de todos os botões
+    statusFilterBtns.forEach(b => b.classList.remove('active'));
+    // Adiciona a classe active ao botão clicado
+    this.classList.add('active');
+  });
+});
+
+
+// Funções do filtro - ATUALIZADAS
+// Funções do filtro - SIMPLIFICADAS
+function openFilterModal() {
+  // Atualizar botões de status com o estado atual
+  statusFilterBtns.forEach(btn => {
+    btn.classList.remove('active');
+    if (btn.dataset.status === activeStatusFilter) {
+      btn.classList.add('active');
+    }
+  });
+  
+  // Carregar cartões no select de filtro
+  carregarCartoesFiltro();
+  
+  // Restaurar o valor do filtro de cartão anterior
+  filterCartaoSelect.value = activeCardFilter;
+  
+  filterModal.classList.add('active');
+}
+
+function carregarCartoesFiltro() {
+  // Limpa opções existentes (exceto a primeira)
+  while (filterCartaoSelect.children.length > 1) {
+    filterCartaoSelect.removeChild(filterCartaoSelect.lastChild);
+  }
+  
+  // Carrega cartões do localStorage
+  const cartoesCadastrados = JSON.parse(localStorage.getItem('cartoes_credito') || '[]');
+  
+  // Adiciona os cartões ao select
+  cartoesCadastrados.forEach(cartao => {
+    const option = document.createElement('option');
+    option.value = cartao.id;
+    option.textContent = cartao.nome;
+    filterCartaoSelect.appendChild(option);
+  });
+}
+
+function closeFilterModal() {
+  filterModal.classList.remove('active');
+  // Garantir que o overlay também seja removido se existir
+  document.getElementById('balanceDetailsOverlay').classList.remove('active');
+}
+
+function clearFilters() {
+  // Resetar para "Todos"
+  statusFilterBtns.forEach(btn => btn.classList.remove('active'));
+  document.querySelector('.status-filter-btn[data-status="all"]').classList.add('active');
+  
+  // Resetar filtro de cartão
+  filterCartaoSelect.value = '';
+  
+  // Resetar as variáveis globais
+  activeStatusFilter = 'all';
+  activeCardFilter = '';
+  
+  // Fechar modal e reaplicar filtros
+  closeFilterModal();
+  applyCombinedFilters();
+  updateFilterIcon();
+}
+
+function applyFilters() {
+  // Atualizar filtro de status
+  const activeStatusBtn = document.querySelector('.status-filter-btn.active');
+  activeStatusFilter = activeStatusBtn ? activeStatusBtn.dataset.status : 'all';
+  
+  // Atualizar filtro de cartão
+  activeCardFilter = filterCartaoSelect.value;
+  
+  console.log('Novo filtro aplicado:', { status: activeStatusFilter, cartao: activeCardFilter });
+  
+  closeFilterModal();
+  
+  // Força a reaplicação de TODOS os filtros
+  applyCombinedFilters();
+  
+  // Atualiza o ícone do filtro
+  updateFilterIcon();
+}
+
+// Nova função que combina ambos os filtros - VERSÃO MELHORADA
+function applyCombinedFilters() {
+  console.log('Aplicando filtros combinados:', {
+    tipo: currentFilter,
+    status: activeStatusFilter
+  });
+  
+  let filteredLancamentos = lancamentos;
+  
+  // Primeiro aplica o filtro principal (tipo)
+  switch(currentFilter) {
+    case 'receitas':
+      filteredLancamentos = filteredLancamentos.filter(l => l.tipo === 'receita');
+      console.log('Filtrado por receitas:', filteredLancamentos.length);
+      break;
+    case 'despesas':
+      filteredLancamentos = filteredLancamentos.filter(l => l.tipo === 'despesa');
+      console.log('Filtrado por despesas:', filteredLancamentos.length);
+      break;
+    case 'transacoes':
+    default:
+      // Mantém todos os tipos
+      console.log('Filtrado por transações (todos tipos):', filteredLancamentos.length);
+      break;
+  }
+  
+  // Depois aplica o filtro de status (se não for "all")
+  if (activeStatusFilter !== 'all') {
+    const filteredBeforeStatus = filteredLancamentos.length;
+    
+    switch(activeStatusFilter) {
+      case 'pending':
+        filteredLancamentos = filteredLancamentos.filter(l => !l.pago);
+        break;
+      case 'completed':
+        filteredLancamentos = filteredLancamentos.filter(l => l.pago);
+        break;
+    }
+    
+    console.log('Filtrado por status:', activeStatusFilter, 'de', filteredBeforeStatus, 'para', filteredLancamentos.length);
+  } else {
+    console.log('Sem filtro de status (all)');
+  }
+  
+  // Aplica o filtro de cartão (se não estiver vazio)
+  if (activeCardFilter !== '') {
+    const filteredBeforeCard = filteredLancamentos.length;
+    
+    filteredLancamentos = filteredLancamentos.filter(l => {
+      // Apenas filtra despesas com cartão específico
+      return l.tipo === 'despesa' && l.formaPagamento === activeCardFilter;
+    });
+    
+    console.log('Filtrado por cartão:', activeCardFilter, 'de', filteredBeforeCard, 'para', filteredLancamentos.length);
+  }
+  
+  console.log('Total final:', filteredLancamentos.length);
+  renderFilteredTransactions(filteredLancamentos);
+}
+
+function filterTransactions(filter) {
+  console.log('Filtrando por:', filter, 'com status:', activeStatusFilter);
+  
+  // Salva o filtro atual
+  currentFilter = filter;
+  
+  // Aplica os filtros combinados (mantém o status atual)
+  applyCombinedFilters();
+  atualizarTotais();
+  
+  // Atualiza o ícone do filtro
+  updateFilterIcon();
+}
+
+// Função para atualizar o ícone do filtro baseado no status ativo
+function updateFilterIcon() {
+  const filterIcon = document.querySelector('.filter-btn i');
+  
+  // Verifica se há algum filtro de status ativo (diferente de "all")
+  if (activeStatusFilter !== 'all') {
+    // Filtro ativo - muda para ícone preenchido
+    filterIcon.className = 'ri-filter-fill';
+    filterIcon.style.color = '#fffff';
+  } else {
+    // Filtro inativo (Todos) - volta para ícone vazio
+    filterIcon.className = 'ri-filter-line';
+    filterIcon.style.color = '';
+  }
+}
+
+// Prevenir que o clique dentro do modal feche ele
+balanceChartModal.addEventListener('click', (e) => {
+  e.stopPropagation();
+});
+balanceDetailsOverlay.addEventListener('click', closeBalanceDetails);
+balanceDetailsModal.addEventListener('click', (e) => {
+  e.stopPropagation();
+});
+document.querySelector('.pendencia').addEventListener('click', navigateToOldestPendingMonth);
+
+    // Funções de formatação
+    function formatToBRL(value) {
+      if (isNaN(value)) return '0,00';
+      return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+function calcularDiasAteVencimento(dataVencimento) {
+  if (!dataVencimento) return null;
+  
+  const hoje = getHojeZerado(); // ALTERAÇÃO AQUI
+  
+  const vencimento = new Date(dataVencimento + 'T00:00:00');
+  vencimento.setHours(0, 0, 0, 0);
+  
+  const diffTime = vencimento - hoje;
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  return diffDays;
+}
+
+    function parseBRL(value) {
+      if (typeof value !== 'string') return value;
+      let cleanValue = value.replace(/\./g, '').replace(',', '.');
+      return parseFloat(cleanValue);
+    }
+
+    function formatCurrency(input) {
+      let value = input.value.replace(/\D/g, '');
+      if (value === '') { input.value = ''; return; }
+      value = (parseInt(value, 10) / 100).toFixed(2);
+      input.value = formatToBRL(parseFloat(value));
+    }
+
+    // Funções de navegação de mês
+function updateMonthDisplay() {
+  const month = currentDate.getMonth();
+  const year = currentDate.getFullYear();
+  
+  currentMonthTextHeader.textContent = `${monthNames[month]} ${year}`;
+  
+  loadLancamentos();
+  
+  // ATUALIZAR A VISIBILIDADE DO BOTÃO DE PENDÊNCIAS
+  updatePendenciaButtonVisibility();
+  
+  // === ADICIONE ESTA LINHA AQUI ===
+  setTimeout(() => aplicarEstadoVisibilidade(), 100);
+}
+
+    function changeMonth(direction) {
+      currentDate.setMonth(currentDate.getMonth() + direction);
+      updateMonthDisplay();
+    }
+
+    function getMonthKey(date = currentDate) {
+      return date.toISOString().slice(0,7);
+    }
+
+function getSaldoMesAnterior() {
+  const mesAnterior = new Date(currentDate);
+  mesAnterior.setMonth(mesAnterior.getMonth() - 1);
+  
+  const keyMesAnterior = 'lancamentos_' + getMonthKey(mesAnterior);
+  const dataMesAnterior = localStorage.getItem(keyMesAnterior);
+  const lancamentosMesAnterior = dataMesAnterior ? JSON.parse(dataMesAnterior) : [];
+  
+  // Calcular saldo do mês anterior (receitas - despesas)
+  const totalReceitasMesAnterior = lancamentosMesAnterior
+    .filter(l => l.valor > 0)
+    .reduce((a, b) => a + b.valor, 0);
+  
+  const totalDespesasMesAnterior = lancamentosMesAnterior
+    .filter(l => l.valor < 0)
+    .reduce((a, b) => a + b.valor, 0);
+  
+  return totalReceitasMesAnterior + totalDespesasMesAnterior;
+}
+
+function getSaldoAcumuladoMesesAnteriores() {
+  let saldoAcumulado = 0;
+  const dataAtual = new Date(currentDate);
+  
+  // Voltar mês a mês até o início (ou até onde houver dados)
+  let dataMes = new Date(dataAtual);
+  dataMes.setMonth(dataMes.getMonth() - 1); // Começa no mês anterior
+  
+  // Limitar para não voltar indefinidamente (últimos 2 anos por exemplo)
+  const limite = new Date(dataAtual);
+  limite.setFullYear(limite.getFullYear() - 2);
+  
+  while (dataMes >= limite) {
+    const keyMes = 'lancamentos_' + getMonthKey(dataMes);
+    const dataMesLancamentos = localStorage.getItem(keyMes);
+    const lancamentosMes = dataMesLancamentos ? JSON.parse(dataMesLancamentos) : [];
+    
+    // Calcular saldo do mês (receitas - despesas)
+    const totalReceitasMes = lancamentosMes
+      .filter(l => l.valor > 0)
+      .reduce((a, b) => a + b.valor, 0);
+    
+    const totalDespesasMes = lancamentosMes
+      .filter(l => l.valor < 0)
+      .reduce((a, b) => a + b.valor, 0);
+    
+    const saldoMes = totalReceitasMes + totalDespesasMes;
+    saldoAcumulado += saldoMes;
+    
+    // Ir para o mês anterior
+    dataMes.setMonth(dataMes.getMonth() - 1);
+  }
+  
+  return saldoAcumulado;
+}
+
+    // Funções de gerenciamento de tipo de lançamento
+function toggleEntryTypeFields() {
+    parcelamentoFieldsDiv.style.display = 'none';
+    lancamentoFixoFieldsDiv.style.display = 'none';
+
+    btnLancamentoUnico.classList.remove('active');
+    btnLancamentoParcelado.classList.remove('active');
+    btnLancamentoFixo.classList.remove('active');
+
+    if (selectedEntryType === 'parcelado') {
+        parcelamentoFieldsDiv.style.display = 'flex';
+        btnLancamentoParcelado.classList.add('active');
+        totalParcelasInput.value = 1;
+        parcelaAtualInput.value = 1;
+    } else if (selectedEntryType === 'fixo') {
+        lancamentoFixoFieldsDiv.style.display = 'flex';
+        btnLancamentoFixo.classList.add('active');
+        mesesFixoInput.value = 1;
+    } else {
+        btnLancamentoUnico.classList.add('active');
+    }
+    
+    atualizarEstadoToggle(); // Adiciona esta linha
+}
+
+function selectEntryType(type) {
+    selectedEntryType = type;
+    toggleEntryTypeFields();
+    atualizarEstadoToggle(); // Adiciona esta linha
+}
+
+    // Funções do modal de detalhes do saldo
+    function openBalanceDetails() {
+      updateBalanceDetails();
+      balanceDetailsOverlay.classList.add('active');
+      balanceDetailsModal.style.display = 'block';
+      setTimeout(() => {
+        balanceDetailsModal.classList.add('active');
+      }, 10);
+    }
+
+    function closeBalanceDetails() {
+      balanceDetailsModal.classList.remove('active');
+      balanceDetailsOverlay.classList.remove('active');
+      setTimeout(() => {
+        balanceDetailsModal.style.display = 'none';
+      }, 300);
+    }
+
+function updateBalanceDetails() {
+  // Atualiza os valores no modal de detalhes
+  document.getElementById('detailTotalReceitas').textContent = 'R$ ' + document.getElementById('totalReceitas').textContent;
+  document.getElementById('detailReceitasPagas').textContent = 'R$ ' + document.getElementById('totalReceitasPagas').textContent;
+  document.getElementById('detailReceitasAbertas').textContent = 'R$ ' + document.getElementById('totalReceitasAbertas').textContent;
+  
+  document.getElementById('detailTotalDespesas').textContent = 'R$ ' + document.getElementById('totalDespesas').textContent;
+  document.getElementById('detailDespesasPagas').textContent = 'R$ ' + document.getElementById('totalDespesasPagas').textContent;
+  document.getElementById('detailDespesasAbertas').textContent = 'R$ ' + document.getElementById('totalDespesasAbertas').textContent;
+  
+  document.getElementById('detailFluxoCaixa').textContent = 'R$ ' + document.getElementById('fluxoCaixa').textContent;
+  // document.getElementById('detailSaldoAtual').textContent = document.getElementById('currentBalanceDisplay').textContent;
+
+  // CALCULAR E MOSTRAR O SALDO PREVISTO
+  const saldoAcumuladoAnterior = getSaldoAcumuladoMesesAnteriores();
+  const saldoTotalMes = parseFloat(document.getElementById('fluxoCaixa').textContent.replace(/\./g, '').replace(',', '.'));
+  const saldoPrevisto = saldoTotalMes + saldoAcumuladoAnterior;
+  
+  document.getElementById('detailSaldoPrevisto').textContent = 'R$ ' + formatToBRL(saldoPrevisto);
+
+  // Aplica as cores corretas
+  const fluxoCaixaEl = document.getElementById('detailFluxoCaixa');
+  const saldoPrevistoEl = document.getElementById('detailSaldoPrevisto');
+  
+  fluxoCaixaEl.classList.remove('balance-detail-positive', 'balance-detail-negative');
+  saldoPrevistoEl.classList.remove('balance-detail-positive', 'balance-detail-negative');
+  
+  if (saldoTotalMes < 0) {
+    fluxoCaixaEl.classList.add('balance-detail-negative');
+  } else if (saldoTotalMes > 0) {
+    fluxoCaixaEl.classList.add('balance-detail-positive');
+  }
+  
+  if (saldoPrevisto < 0) {
+    saldoPrevistoEl.classList.add('balance-detail-negative');
+  } else if (saldoPrevisto > 0) {
+    saldoPrevistoEl.classList.add('balance-detail-positive');
+  }
+}
+
+// Funções para abrir/fechar o modal do gráfico
+function openBalanceChart() {
+  updateBalanceChart();
+  balanceDetailsOverlay.classList.add('active');
+  balanceChartModal.style.display = 'block';
+  setTimeout(() => {
+    balanceChartModal.classList.add('active');
+  }, 10);
+}
+
+function closeBalanceChart() {
+  balanceChartModal.classList.remove('active');
+  balanceDetailsOverlay.classList.remove('active');
+  setTimeout(() => {
+    balanceChartModal.style.display = 'none';
+  }, 300);
+}
+
+function updateBalanceChart() {
+  const totalReceitas = lancamentos.filter(l => l.valor > 0).reduce((a, b) => a + b.valor, 0);
+  const totalDespesas = Math.abs(lancamentos.filter(l => l.valor < 0).reduce((a, b) => a + b.valor, 0));
+  const saldoTotalMes = totalReceitas - totalDespesas;
+  
+  // CORREÇÃO: Usar saldo acumulado de TODOS os meses anteriores
+  const saldoAcumuladoAnterior = getSaldoAcumuladoMesesAnteriores();
+  const saldoPrevisto = saldoAcumuladoAnterior + saldoTotalMes;
+  
+  // Atualizar os valores totais
+  document.getElementById('chartTotalIncome').textContent = 'R$ ' + formatToBRL(totalReceitas);
+  document.getElementById('chartTotalExpense').textContent = 'R$ ' + formatToBRL(totalDespesas);
+  document.getElementById('chartBalance').textContent = 'R$ ' + formatToBRL(saldoTotalMes);
+  document.getElementById('chartSaldoPrevisto').textContent = 'R$ ' + formatToBRL(saldoPrevisto);
+  
+  // Aplicar cor ao balanço
+  const balanceElement = document.getElementById('chartBalance');
+  const saldoPrevistoElement = document.getElementById('chartSaldoPrevisto');
+  
+  balanceElement.classList.remove('income-value', 'expense-value');
+  saldoPrevistoElement.classList.remove('income-value', 'expense-value');
+  
+  if (saldoTotalMes > 0) {
+    balanceElement.classList.add('income-value');
+  } else if (saldoTotalMes < 0) {
+    balanceElement.classList.add('expense-value');
+  }
+  
+  if (saldoPrevisto > 0) {
+    saldoPrevistoElement.classList.add('income-value');
+  } else if (saldoPrevisto < 0) {
+    saldoPrevistoElement.classList.add('expense-value');
+  }
+  
+  // Calcular alturas das barras (máximo de 90px para o novo tamanho)
+  const maxVal = Math.max(totalReceitas, totalDespesas, 1);
+  const incomeHeight = maxVal > 0 ? (totalReceitas / maxVal) * 90 : 15;
+  const expenseHeight = maxVal > 0 ? (totalDespesas / maxVal) * 90 : 15;
+  
+  // Atualizar barras do gráfico
+  const incomeBar = document.getElementById('incomeBar');
+  const expenseBar = document.getElementById('expenseBar');
+  
+  incomeBar.style.height = Math.max(incomeHeight, 15) + 'px';
+  expenseBar.style.height = Math.max(expenseHeight, 15) + 'px';
+  
+  // Atualizar valores nas barras
+  document.getElementById('incomeBarValue').textContent = 'R$ ' + formatToBRL(totalReceitas);
+  document.getElementById('expenseBarValue').textContent = 'R$ ' + formatToBRL(totalDespesas);
+}
+
+function openTransactionDetails(index) {
+  currentTransactionIndex = index;
+  const transaction = lancamentos[index];
+  
+  // Remove classes anteriores e adiciona a classe baseada no tipo
+  const modal = document.getElementById('transactionDetailsModal');
+  modal.classList.remove('receita', 'despesa');
+  modal.classList.add(transaction.tipo);
+  
+  // VERIFICAR SE É CARTÃO DE CRÉDITO
+  const isCartaoCredito = transaction.formaPagamento && transaction.formaPagamento !== 'debito_pix';
+  const cartaoIcon = isCartaoCredito ? '<div class="cartao-credito-icon"><i class="ri-bank-card-line"></i></div>' : '';
+  
+  // Preenche os detalhes da transação
+  document.getElementById('detailDescricao').textContent = transaction.descricao;
+  document.getElementById('detailValor').textContent = `R$ ${formatToBRL(Math.abs(transaction.valor))}`;
+  document.getElementById('detailValor').className = `transaction-detail-value ${transaction.valor >= 0 ? 'valor-positivo' : 'valor-negativo'}`;
+
+  // Formata a data
+  if (transaction.dataVencimento) {
+    const data = new Date(transaction.dataVencimento + 'T00:00:00');
+    document.getElementById('detailData').textContent = data.toLocaleDateString('pt-BR');
+  } else {
+    document.getElementById('detailData').textContent = 'Sem data';
+  }
+  
+  document.getElementById('detailCategoria').textContent = transaction.tipo === 'receita' ? 'Receita' : 'Despesa';
+  
+  // NOVO: Preencher forma de pagamento
+  const formaPagamentoItem = document.getElementById('detailFormaPagamentoItem');
+  const formaPagamentoValue = document.getElementById('detailFormaPagamento');
+  
+  if (transaction.tipo === 'despesa' && transaction.formaPagamento) {
+    let formaPagamentoText = '';
+    
+    if (transaction.formaPagamento === 'debito_pix') {
+      formaPagamentoText = 'Débito/Pix';
+    } else {
+      // É cartão de crédito - buscar nome do cartão
+      const cartoesCadastrados = JSON.parse(localStorage.getItem('cartoes_credito') || '[]');
+      const cartaoEncontrado = cartoesCadastrados.find(cartao => cartao.id === transaction.formaPagamento);
+      formaPagamentoText = cartaoEncontrado ? cartaoEncontrado.nome : 'Cartão de Crédito';
+    }
+    
+    formaPagamentoValue.textContent = formaPagamentoText;
+    formaPagamentoItem.style.display = 'flex'; // Mostra o campo
+  } else {
+    formaPagamentoItem.style.display = 'none'; // Esconde o campo para receitas
+  }
+  
+  // Status com ícone de cartão separado se aplicável
+  const statusElement = document.getElementById('detailStatus');
+  if (transaction.pago) {
+    statusElement.innerHTML = `${cartaoIcon}<span>${transaction.tipo === 'receita' ? 'Recebido' : 'Pago'}</span>`;
+    statusElement.className = 'transaction-detail-status paid';
+    document.getElementById('detailPagarBtn').textContent = transaction.tipo === 'receita' ? 'MARCAR COMO NÃO RECEBIDO' : 'MARCAR COMO NÃO PAGO';
+  } else {
+    statusElement.innerHTML = `${cartaoIcon}<span>${transaction.tipo === 'receita' ? 'A Receber' : 'A Pagar'}</span>`;
+    statusElement.className = 'transaction-detail-status unpaid';
+    document.getElementById('detailPagarBtn').textContent = transaction.tipo === 'receita' ? 'RECEBER' : 'PAGAR';
+  }
+  
+  // Atualiza a cor do botão baseado no tipo
+  const pagarBtn = document.getElementById('detailPagarBtn');
+  pagarBtn.classList.remove('despesa', 'receita');
+  pagarBtn.classList.add(transaction.tipo === 'receita' ? 'receita' : 'despesa');
+  
+  // Atualiza o texto do botão editar
+  document.getElementById('detailEditarBtn').textContent = transaction.tipo === 'receita' ? 'EDITAR RECEITA' : 'EDITAR DESPESA';
+
+  // Mostra o modal e o overlay
+  document.getElementById('balanceDetailsOverlay').classList.add('active');
+  document.getElementById('transactionDetailsModal').style.display = 'block';
+  setTimeout(() => {
+    document.getElementById('transactionDetailsModal').classList.add('active');
+  }, 10);
+}
+
+    function closeTransactionDetails() {
+      document.getElementById('transactionDetailsModal').classList.remove('active');
+      setTimeout(() => {
+        document.getElementById('transactionDetailsModal').style.display = 'none';
+        document.getElementById('balanceDetailsOverlay').classList.remove('active');
+        currentTransactionIndex = null;
+      }, 300);
+    }
+
+    function toggleTransactionStatus() {
+      if (currentTransactionIndex !== null) {
+        toggleStatus(currentTransactionIndex);
+        closeTransactionDetails();
+      }
+    }
+
+    function editTransaction() {
+      if (currentTransactionIndex !== null) {
+        closeTransactionDetails();
+        openModal(null, currentTransactionIndex);
+      }
+    }
+
+function openModal(typeToPreselect = null, originalIndex = null) {
+    fabOptions.classList.remove('active');
+    modal.style.display = 'flex';
+    mainFab.style.display = 'none'; // Esconder botão de + ao abrir modal
+    
+    // ALTERAR COR DA STATUS BAR BASEADO NO TIPO
+    if (typeToPreselect === 'despesa') {
+        updateStatusBarColor('despesa');
+    } else if (typeToPreselect === 'receita') {
+        updateStatusBarColor('receita');
+    } else {
+        updateStatusBarColor('despesa'); // Padrão
+    }
+    
+    // PRIMEIRO: Define o tipo no select
+    if (typeToPreselect) {
+        tipoInput.value = typeToPreselect;
+        modal.setAttribute('data-tipo', typeToPreselect);
+    } else {
+        tipoInput.value = 'despesa';
+        modal.setAttribute('data-tipo', 'despesa');
+    }
+    
+    // SEGUNDO: Atualiza o label do topo com o tipo correto
+    atualizarLabelTopo();
+    
+    if (originalIndex !== null) {
+        editIndex = originalIndex;
+        const lanc = lancamentos[editIndex];
+        document.getElementById('modalTitle').textContent = 'Editar Lançamento';
+        descricaoInput.value = lanc.descricao;
+        tipoInput.value = lanc.tipo === 'receita' ? 'receita' : 'despesa';
+        valorInput.value = formatToBRL(Math.abs(lanc.valor));
+        dataVencimentoInput.value = lanc.dataVencimento || '';
+        
+        // Atualizar cor baseada no tipo do lançamento sendo editado
+        if (lanc.tipo === 'despesa') {
+            updateStatusBarColor('despesa');
+        } else {
+            updateStatusBarColor('receita');
+        }
+        
+        // Atualiza novamente após definir o tipo do lançamento sendo editado
+        atualizarLabelTopo();
+        
+        // Carrega as opcoes antes de selecionar a forma salva.
+        toggleFormaPagamento();
+        carregarFormasPagamento();
+        document.getElementById('formaPagamento').value = lanc.formaPagamento || 'debito_pix';
+
+        const pagoToggle = document.getElementById('pagoToggle');
+        pagoToggle.checked = !!lanc.pago;
+        pagoToggle.disabled = false;
+        atualizarTextoPago();
+        
+        // Verifica se é parcelado ou fixo para desabilitar o toggle
+        if (lanc.parcelamento) {
+            selectedEntryType = lanc.parcelamento.isFixo ? 'fixo' : 'parcelado';
+            atualizarEstadoToggle();
+        } else {
+            selectedEntryType = 'unico';
+            // ATUALIZA O TOGGLE DO STATUS PAGO BASEADO NA DATA (não pelo valor salvo)
+            atualizarTextoPago();
+        }
+
+        // Define o tipo para cores no modo edição
+        modal.setAttribute('data-tipo', lanc.tipo);
+
+        addEntryOptionsDiv.style.display = 'none';
+        parcelamentoFieldsDiv.style.display = 'none';
+        lancamentoFixoFieldsDiv.style.display = 'none';
+        deleteBtn.style.display = 'inline-block';
+
+        modal.classList.add('edit-mode');
+        tipoInput.style.display = 'block';
+        
+        // NÃO FOCA NO CAMPO VALOR QUANDO FOR EDIÇÃO
+        // REMOVA ou COMENTE a linha abaixo se existir
+        // document.getElementById('valor').focus();
+        
+    } else {
+        dataVencimentoInput.value = getDataHoje();
+        deleteBtn.style.display = 'none';
+        editIndex = null;
+
+        // Reseta para unico e atualiza o estado
+        selectedEntryType = 'unico';
+        atualizarEstadoToggle();
+        atualizarTogglePagoPorData();
+
+        modal.classList.remove('edit-mode');
+        tipoInput.style.display = 'none';
+        addEntryOptionsDiv.style.display = 'flex';
+        
+        if (typeToPreselect) {
+            preselectedType = typeToPreselect;
+            tipoInput.value = typeToPreselect;
+            modal.setAttribute('data-tipo', typeToPreselect);
+            
+            // Atualiza o título do modal baseado no tipo
+            if (typeToPreselect === 'receita') {
+                document.getElementById('modalTitle').textContent = 'Cadastrar Receita';
+            } else {
+                document.getElementById('modalTitle').textContent = 'Cadastrar Despesa';
+            }
+        } else {
+            preselectedType = 'despesa';
+            tipoInput.value = 'despesa';
+            modal.setAttribute('data-tipo', 'despesa');
+            document.getElementById('modalTitle').textContent = 'Nova Despesa';
+        }
+
+        toggleEntryTypeFields();
+        
+// ABRE A CALCULADORA PARA NOVO LANÇAMENTO
+setTimeout(() => abrirCalculadora(), 100);
+    }
+    
+    // Controla a visibilidade da forma de pagamento
+    toggleFormaPagamento();
+    carregarFormasPagamento(); // Carrega os cartões atualizados
+    if (originalIndex !== null) {
+        const lanc = lancamentos[editIndex];
+        document.getElementById('formaPagamento').value = lanc.formaPagamento || 'debito_pix';
+        document.getElementById('pagoToggle').checked = !!lanc.pago;
+        atualizarTextoPago();
+    }
+}
+
+function closeModal() {
+    modal.style.display = 'none';
+    mainFab.style.display = 'flex'; // Mostrar botão de + ao fechar modal
+    modal.classList.remove('edit-mode');
+    preselectedType = null;
+    editIndex = null;
+    modal.removeAttribute('data-tipo');
+    
+    // RESTAURAR COR ORIGINAL DA STATUS BAR
+    restoreStatusBarColor();
+    
+    descricaoInput.value = '';
+    valorInput.value = '';
+    dataVencimentoInput.value = '';
+    totalParcelasInput.value = 1;
+    parcelaAtualInput.value = 1;
+    mesesFixoInput.value = 1;
+    
+    // Reseta a forma de pagamento
+    document.getElementById('formaPagamento').value = 'debito_pix';
+    document.getElementById('formaPagamento').style.display = 'none';
+    
+    // Reseta o toggle
+    const pagoToggle = document.getElementById('pagoToggle');
+    pagoToggle.checked = false;
+    pagoToggle.disabled = false;
+    atualizarTextoPago();
+    
+    selectedEntryType = 'unico'; 
+    toggleEntryTypeFields();
+}
+
+    function closeDeleteParceladoModal() { 
+      deleteParceladoModal.style.display = 'none'; 
+    }
+
+    // Funções do modal de seleção de mês/ano
+    function openMonthYearPickerModal() {
+      pickerCurrentYear = currentDate.getFullYear();
+      pickerSelectedMonth = currentDate.getMonth();
+      renderMonthPickerGrid();
+      monthYearPickerModal.style.display = 'flex';
+    }
+
+    function closeMonthYearPickerModal() {
+      monthYearPickerModal.style.display = 'none';
+    }
+
+    function renderMonthPickerGrid() {
+      pickerYearDisplay.textContent = pickerCurrentYear;
+      monthsGrid.innerHTML = '';
+
+      const currentYear = today.getFullYear();
+      const currentMonth = today.getMonth();
+
+      monthNamesShort.forEach((monthName, index) => {
+        const monthItem = document.createElement('div');
+        monthItem.classList.add('month-item');
+        monthItem.textContent = monthName;
+        monthItem.dataset.monthIndex = index;
+
+        if (pickerCurrentYear === currentDate.getFullYear() && index === currentDate.getMonth()) {
+          monthItem.classList.add('selected');
+        }
+
+        if (pickerCurrentYear === currentYear && index === currentMonth) {
+          monthItem.classList.add('current-month');
+        }
+
+        monthItem.addEventListener('click', () => {
+          document.querySelectorAll('.month-item').forEach(item => item.classList.remove('selected'));
+          monthItem.classList.add('selected');
+          pickerSelectedMonth = index;
+          goToSelectedMonth();
+        });
+        monthsGrid.appendChild(monthItem);
+      });
+    }
+
+    function changeYearPicker(direction) {
+      pickerCurrentYear += direction;
+      renderMonthPickerGrid();
+    }
+
+    function goToSelectedMonth() {
+      currentDate.setFullYear(pickerCurrentYear, pickerSelectedMonth, 1);
+      updateMonthDisplay();
+      closeMonthYearPickerModal();
+    }
+
+    function goToCurrentMonth() {
+      currentDate = new Date(today.getFullYear(), today.getMonth(), 1);
+      updateMonthDisplay();
+      closeMonthYearPickerModal();
+    }
+
+// ADICIONE ESTA FUNÇÃO AUXILIAR (coloque antes da função salvarLancamento)
+function calcularDataVencimentoProximoMes(dataAtual, mesesAdicionais) {
+  // Extrair dia, mês e ano da data atual
+  const dataParts = dataAtual.split('-');
+  const diaOriginal = parseInt(dataParts[2], 10);
+  const mesAtual = parseInt(dataParts[1], 10);
+  const anoAtual = parseInt(dataParts[0], 10);
+  
+  // Criar nova data começando no primeiro dia do mês de destino
+  const mesDestino = mesAtual + mesesAdicionais;
+  let anoDestino = anoAtual;
+  let mesDestinoFinal = mesDestino;
+  
+  // Ajustar ano se necessário
+  while (mesDestinoFinal > 12) {
+    mesDestinoFinal -= 12;
+    anoDestino += 1;
+  }
+  
+  while (mesDestinoFinal < 1) {
+    mesDestinoFinal += 12;
+    anoDestino -= 1;
+  }
+  
+  // Criar data no primeiro dia do mês destino
+  const dataMesDestino = new Date(anoDestino, mesDestinoFinal - 1, 1);
+  
+  // Tentar usar o dia original
+  dataMesDestino.setDate(diaOriginal);
+  
+  // Se o dia resultante não for o esperado (porque o mês não tem esse dia)
+  // usar o último dia do mês anterior
+  if (dataMesDestino.getMonth() !== mesDestinoFinal - 1) {
+    // Voltar um dia para pegar o último dia do mês anterior
+    dataMesDestino.setDate(0);
+  }
+  
+  // Formatar de volta para YYYY-MM-DD
+  const ano = dataMesDestino.getFullYear();
+  const mes = String(dataMesDestino.getMonth() + 1).padStart(2, '0');
+  const dia = String(dataMesDestino.getDate()).padStart(2, '0');
+  
+  return `${ano}-${mes}-${dia}`;
+}
+
+// Funções de lançamentos
+function salvarLancamento() {
+  const descricaoBase = descricaoInput.value.trim();
+  const valor = parseBRL(valorInput.value);
+  const tipo = tipoInput.value;
+  const dataVencimento = document.getElementById('dataVencimento').value;
+  const pago = document.getElementById('pagoToggle').checked;
+  const formaPagamento = tipo === 'despesa' ? document.getElementById('formaPagamento').value : null;
+
+  if (!descricaoBase || isNaN(valor) || valor <= 0) { 
+    alert('Preencha a descrição e valor válido.'); 
+    return; 
+  }
+  
+  if (!dataVencimento) {
+    alert('Preencha a data de vencimento.');
+    return;
+  }
+
+  const valorFinal = tipo === 'despesa' ? -Math.abs(valor) : Math.abs(valor);
+  
+  // OBTER O MÊS DO VENCIMENTO PARA SALVAR A TRANSAÇÃO
+  const dataVenc = new Date(dataVencimento + 'T12:00:00');
+  const mesVencimento = new Date(dataVenc.getFullYear(), dataVenc.getMonth(), 1);
+
+  if (editIndex !== null) { 
+    lancamentos[editIndex] = {
+      ...lancamentos[editIndex],
+      descricao: lancamentos[editIndex].parcelamento && lancamentos[editIndex].parcelamento.isFixo ? descricaoBase : descricaoBase,
+      tipo: tipo,
+      valor: valorFinal,
+      dataVencimento: dataVencimento,
+      pago: pago,
+      formaPagamento: formaPagamento,
+      ultimaModificacao: lancamentos[editIndex].ultimaModificacao || (pago ? Date.now() : undefined)
+    };
+    
+    if (lancamentos[editIndex].parcelamento) {
+      lancamentos[editIndex].parcelamento.valorOriginal = valorFinal;
+      if (lancamentos[editIndex].parcelamento.isFixo) {
+        lancamentos[editIndex].parcelamento.baseDescription = descricaoBase;
+      }
+    }
+    salvarLocal(currentDate);
+  } else { 
+ if (selectedEntryType === 'parcelado') {
+  const totalParcelas = parseInt(totalParcelasInput.value);
+  const parcelaAtual = parseInt(parcelaAtualInput.value);
+  
+  if (isNaN(totalParcelas) || totalParcelas <= 0 || isNaN(parcelaAtual) || parcelaAtual <= 0 || parcelaAtual > totalParcelas) {
+    alert('Preencha um número de parcelas válido.');
+    return;
+  }
+  
+  for (let i = parcelaAtual; i <= totalParcelas; i++) {
+    const descParcela = `${descricaoBase} (${i}/${totalParcelas})`;
+    
+    // NOVA LÓGICA: Usar a função auxiliar para calcular a data
+    const mesesAdicionais = i - parcelaAtual;
+    const dataVencimentoParcelada = calcularDataVencimentoProximoMes(dataVencimento, mesesAdicionais);
+    
+    // Obter o mês correto baseado na data de vencimento da parcela
+    const mesDestino = new Date(dataVencimentoParcelada + 'T12:00:00');
+    const monthKey = getMonthKey(mesDestino);
+    
+    // APENAS A PRIMEIRA PARCELA (i === parcelaAtual) HERDA O STATUS PAGO
+    const statusPago = (i === parcelaAtual) ? pago : false;
+    
+    let futureLancamentos = JSON.parse(localStorage.getItem('lancamentos_' + monthKey)) || [];
+    futureLancamentos.push({
+      descricao: descParcela,
+      tipo: tipo,
+      valor: valorFinal,
+      pago: statusPago,
+      dataVencimento: dataVencimentoParcelada,
+      formaPagamento: formaPagamento,
+      parcelamento: {
+        total: totalParcelas,
+        atual: i,
+        baseDescription: descricaoBase,
+        valorOriginal: valorFinal,
+        isFixo: false
+      }
+    });
+    localStorage.setItem('lancamentos_' + monthKey, JSON.stringify(futureLancamentos));
+    syncLancamentosToSupabase(monthKey);
+  }
+}
+
+// Para LANÇAMENTO FIXO:
+else if (selectedEntryType === 'fixo') {
+  const mesesFixo = parseInt(mesesFixoInput.value);
+  if (isNaN(mesesFixo) || mesesFixo <= 0) {
+    alert('Preencha um número de meses válido para o lançamento fixo.');
+    return;
+  }
+  
+  for (let i = 1; i <= mesesFixo; i++) {
+    // NOVA LÓGICA: Usar a função auxiliar para calcular a data
+    const mesesAdicionais = i - 1;
+    const dataVencimentoFixa = calcularDataVencimentoProximoMes(dataVencimento, mesesAdicionais);
+    
+    // Obter o mês correto baseado na data de vencimento
+    const mesDestino = new Date(dataVencimentoFixa + 'T12:00:00');
+    const monthKey = getMonthKey(mesDestino);
+    
+    // APENAS O PRIMEIRO MÊS (i === 1) HERDA O STATUS PAGO
+    const statusPago = (i === 1) ? pago : false;
+    
+    let futureLancamentos = JSON.parse(localStorage.getItem('lancamentos_' + monthKey)) || [];
+    futureLancamentos.push({
+      descricao: descricaoBase,
+      tipo: tipo,
+      valor: valorFinal,
+      pago: statusPago,
+      dataVencimento: dataVencimentoFixa,
+      formaPagamento: formaPagamento,
+      parcelamento: {
+        total: mesesFixo,
+        atual: i,
+        baseDescription: descricaoBase,
+        valorOriginal: valorFinal,
+        isFixo: true
+      }
+    });
+    localStorage.setItem('lancamentos_' + monthKey, JSON.stringify(futureLancamentos));
+    syncLancamentosToSupabase(monthKey);
+  }
+}else { 
+      // LANÇAMENTO ÚNICO: Salvar no mês do vencimento
+      const monthKeyVencimento = getMonthKey(mesVencimento);
+      let lancamentosMesVencimento = JSON.parse(localStorage.getItem('lancamentos_' + monthKeyVencimento)) || [];
+      
+      lancamentosMesVencimento.push({
+        descricao: descricaoBase,
+        tipo: tipo,
+        valor: valorFinal,
+        pago: pago,
+        dataVencimento: dataVencimento,
+        formaPagamento: formaPagamento,
+        ultimaModificacao: pago ? Date.now() : undefined
+      });
+      
+      localStorage.setItem('lancamentos_' + monthKeyVencimento, JSON.stringify(lancamentosMesVencimento));
+      syncLancamentosToSupabase(monthKeyVencimento);
+    }
+  }
+
+  loadLancamentos();
+  closeModal();
+}
+
+    async function handleDeleteClick() {
+      if (editIndex === null) return;
+      const lancamentoToDelete = lancamentos[editIndex];
+
+      if (!lancamentoToDelete.parcelamento) {
+        if (confirm('Tem certeza que deseja excluir este lançamento?')) {
+          lancamentos.splice(editIndex, 1);
+          await salvarLocal(currentDate);
+          loadLancamentos();
+          closeModal();
+        }
+      } else {
+        modal.style.display = 'none';
+        mainFab.style.display = 'flex'; // Mostrar botão de +
+        deleteParceladoModal.style.display = 'flex';
+      }
+    }
+
+    async function excluirLancamentoConfirmado(option) {
+      if (editIndex === null) return;
+
+      const lancamentoToDelete = lancamentos[editIndex];
+      const baseDescription = lancamentoToDelete.parcelamento.baseDescription;
+      const totalParcelas = lancamentoToDelete.parcelamento.total;
+      const parcelaAtualDoLancamento = lancamentoToDelete.parcelamento.atual;
+      const isFixo = lancamentoToDelete.parcelamento.isFixo;
+      const touchedMonthKeys = new Set();
+
+      switch (option) {
+        case 'current':
+          lancamentos.splice(editIndex, 1);
+          await salvarLocal(currentDate);
+          break;
+
+        case 'future':
+          let tempDateForFuture = new Date(currentDate);
+
+          for (let i = parcelaAtualDoLancamento; i <= totalParcelas; i++) {
+            const monthKey = getMonthKey(tempDateForFuture);
+            let monthLancamentos = JSON.parse(localStorage.getItem('lancamentos_' + monthKey)) || [];
+
+            monthLancamentos = monthLancamentos.filter(l =>
+              !(l.parcelamento &&
+                l.parcelamento.baseDescription === baseDescription &&
+                l.parcelamento.total === totalParcelas &&
+                l.parcelamento.atual === i &&
+                l.parcelamento.isFixo === isFixo)
+            );
+            localStorage.setItem('lancamentos_' + monthKey, JSON.stringify(monthLancamentos));
+            touchedMonthKeys.add(monthKey);
+            tempDateForFuture.setMonth(tempDateForFuture.getMonth() + 1);
+          }
+          break;
+
+        case 'all':
+          let tempDateForAll = new Date(currentDate);
+          tempDateForAll.setMonth(tempDateForAll.getMonth() - (parcelaAtualDoLancamento - 1));
+
+          for (let i = 1; i <= totalParcelas; i++) {
+            const monthKey = getMonthKey(tempDateForAll);
+            let monthLancamentos = JSON.parse(localStorage.getItem('lancamentos_' + monthKey)) || [];
+
+            monthLancamentos = monthLancamentos.filter(l =>
+              !(l.parcelamento &&
+                l.parcelamento.baseDescription === baseDescription &&
+                l.parcelamento.total === totalParcelas &&
+                l.parcelamento.isFixo === isFixo)
+            );
+            localStorage.setItem('lancamentos_' + monthKey, JSON.stringify(monthLancamentos));
+            touchedMonthKeys.add(monthKey);
+            tempDateForAll.setMonth(tempDateForAll.getMonth() + 1);
+          }
+          break;
+      }
+
+      for (const monthKey of touchedMonthKeys) {
+        await syncLancamentosToSupabase(monthKey);
+      }
+
+      loadLancamentos();
+      closeDeleteParceladoModal();
+    }
+
+function toggleStatus(index) {
+    if (index === -1) return;
+    lancamentos[index].pago = !lancamentos[index].pago;
+    
+    // Registrar o timestamp quando for marcado como pago
+    if (lancamentos[index].pago) {
+        lancamentos[index].ultimaModificacao = Date.now();
+    }
+    
+    salvarLocal(currentDate);
+    
+    // CORREÇÃO: Recarregar os lançamentos para forçar o recálculo completo
+    loadLancamentos();
+    
+    // CORREÇÃO ADICIONAL: Atualizar também o gráfico se estiver aberto
+    if (balanceChartModal.classList.contains('active')) {
+        updateBalanceChart();
+    }
+}
+
+function addRowToTable(lanc, originalIndex) {
+    const transactionsContainer = document.getElementById('transactionsContainer');
+    
+    const card = document.createElement('div');
+    card.className = 'transaction-card';
+    
+    // ADICIONAR ATRIBUTOS IMPORTANTES
+    if (lanc.dataVencimento) {
+        card.setAttribute('data-date', lanc.dataVencimento);
+    }
+    // Adicionar índice para referência
+    card.setAttribute('data-index', originalIndex);
+    
+    // Garantir que estamos usando o índice correto
+    const correctIndex = originalIndex !== undefined ? originalIndex : lanc._idx;
+    card.addEventListener('click', () => openTransactionDetails(correctIndex));
+    
+    const valorClass = lanc.valor >= 0 ? 'valor-positivo' : 'valor-negativo';
+    let valorFormatado = formatToBRL(Math.abs(lanc.valor));
+    
+    let descricaoDisplay = lanc.descricao;
+    const statusText = lanc.pago ? 'Pago' : 'A Pagar';
+    const statusClass = lanc.pago ? 'paid' : 'unpaid';
+
+    // Calcular dias até o vencimento e definir texto e cor
+    let vencimentoText = '';
+    let vencimentoClass = '';
+    
+    if (lanc.pago) {
+        vencimentoText = 'Sem pendência';
+        vencimentoClass = 'pago';
+    } else if (lanc.dataVencimento) {
+        const diasAteVencimento = calcularDiasAteVencimento(lanc.dataVencimento);
+        
+        if (diasAteVencimento === null) {
+            vencimentoText = 'Sem data';
+            vencimentoClass = 'sem-data';
+        } else if (diasAteVencimento < 0) {
+            vencimentoText = 'Vencido';
+            vencimentoClass = 'vencido';
+        } else if (diasAteVencimento === 0) {
+            vencimentoText = 'Vence hoje';
+            vencimentoClass = 'vence-hoje';
+        } else if (diasAteVencimento <= 3) {
+            vencimentoText = `Vence em ${diasAteVencimento} ${diasAteVencimento === 1 ? 'dia' : 'dias'}`;
+            vencimentoClass = 'proximo-vencimento';
+        } else {
+            vencimentoText = `Vence em ${diasAteVencimento} dias`;
+            vencimentoClass = 'normal';
+        }
+    } else {
+        vencimentoText = 'Sem data';
+        vencimentoClass = 'sem-data';
+    }
+
+    // VERIFICAR SE É CARTÃO DE CRÉDITO E ADICIONAR ÍCONE SEPARADO
+    const isCartaoCredito = lanc.formaPagamento && lanc.formaPagamento !== 'debito_pix';
+    const cartaoIcon = isCartaoCredito ? '<div class="cartao-credito-icon"><i class="ri-bank-card-line"></i></div>' : '';
+
+    card.innerHTML = `
+        <div class="transaction-header">
+            <div class="transaction-desc">${descricaoDisplay}</div>
+            <div class="transaction-value ${valorClass}">R$ ${valorFormatado}</div>
+        </div>
+        <div class="transaction-footer">
+            <div class="transaction-date ${vencimentoClass}">
+                ${vencimentoText}
+            </div>
+            <div class="transaction-actions">
+                ${cartaoIcon}
+                <div class="status-btn ${statusClass}">${statusText}</div>
+            </div>
+        </div>
+    `;
+    
+    transactionsContainer.appendChild(card);
+}
+function renderTabela() {
+  const transactionsContainer = document.getElementById('transactionsContainer');
+  transactionsContainer.innerHTML = '';
+
+  // Criar uma cópia dos lançamentos com índice original
+  const allTransactions = lancamentos.map((l, i) => ({...l, _idx: i}));
+
+  // Ordenar as transações:
+  // 1. Primeiro por status: A Pagar (false) vem antes de Pago (true)
+  // 2. Para transações A Pagar: ordenar por data de vencimento (mais próxima primeiro)
+  // 3. Para transações Pagas: ordenar por data de pagamento (mais recente primeiro)
+  allTransactions.sort((a, b) => {
+    // Ordenar por status: A Pagar (false) primeiro, Pago (true) depois
+    if (!a.pago && b.pago) return -1;
+    if (a.pago && !b.pago) return 1;
+    
+    // Se ambos têm o mesmo status
+    const dataA = a.dataVencimento ? new Date(a.dataVencimento + 'T00:00:00') : new Date('9999-12-31');
+    const dataB = b.dataVencimento ? new Date(b.dataVencimento + 'T00:00:00') : new Date('9999-12-31');
+    
+    if (!a.pago && !b.pago) {
+      // Ambos A Pagar: ordenar da menor para a maior data (mais próxima primeiro)
+      return dataA - dataB;
+    } else {
+      // Ambos Pagos: ordenar por data de modificação (mais recente primeiro)
+      // Se não houver data de modificação, usar o índice como fallback
+      const timestampA = a.ultimaModificacao || a._idx;
+      const timestampB = b.ultimaModificacao || b._idx;
+      return timestampB - timestampA; // Ordem decrescente (mais recente primeiro)
+    }
+  });
+
+  allTransactions.forEach(lanc => addRowToTable(lanc, lanc._idx));
+
+  atualizarTotais();
+}
+
+function atualizarTotais() {
+  const totalReceitas = lancamentos.filter(l => l.valor > 0).reduce((a,b) => a + b.valor, 0);
+  const totalDespesas = lancamentos.filter(l => l.valor < 0).reduce((a,b) => a + b.valor, 0);
+
+  const totalReceitasPagas = lancamentos.filter(l => l.valor > 0 && l.pago).reduce((a,b) => a + b.valor, 0);
+  const totalReceitasAbertas = lancamentos.filter(l => l.valor > 0 && !l.pago).reduce((a,b) => a + b.valor, 0);
+
+  const totalDespesasPagas = lancamentos.filter(l => l.valor < 0 && l.pago).reduce((a,b) => a + b.valor, 0);
+  const totalDespesasAbertas = lancamentos.filter(l => l.valor < 0 && !l.pago).reduce((a,b) => a + b.valor, 0);
+
+  // === CÁLCULO CORRIGIDO DO SALDO ATUAL - CONSIDERA TODOS OS MESES ===
+  let totalReceitasPagasGlobal = 0;
+  let totalDespesasPagasGlobal = 0;
+
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key.startsWith('lancamentos_')) {
+      const data = localStorage.getItem(key);
+      const allMonthLancamentos = data ? JSON.parse(data) : [];
+
+      allMonthLancamentos.forEach(lanc => {
+        const pago = lanc.hasOwnProperty('pago') ? lanc.pago : false;
+
+        if (pago) {
+          if (lanc.valor > 0) {
+            totalReceitasPagasGlobal += lanc.valor;
+          } else {
+            totalDespesasPagasGlobal += lanc.valor;
+          }
+        }
+      });
+    }
+  }
+
+  const saldoFluxoCaixa = totalReceitasPagasGlobal + totalDespesasPagasGlobal;
+  const saldoTotalMes = totalReceitas + totalDespesas;
+
+  // Atualizar totais do mês atual
+  totalReceitasEl.textContent = formatToBRL(totalReceitas);
+  totalReceitasPagasEl.textContent = formatToBRL(totalReceitasPagas);
+  totalReceitasAbertasEl.textContent = formatToBRL(totalReceitasAbertas);
+
+  totalDespesasEl.textContent = formatToBRL(Math.abs(totalDespesas));
+  totalDespesasPagasEl.textContent = formatToBRL(Math.abs(totalDespesasPagas));
+  totalDespesasAbertasEl.textContent = formatToBRL(Math.abs(totalDespesasAbertas));
+
+  // Atualizar saldo atual (GLOBAL)
+  currentBalanceDisplay.textContent = `R$ ${formatToBRL(saldoFluxoCaixa)}`;
+
+  // === ATUALIZAR HEADER BASEADO NO FILTRO ATUAL ===
+  const pageTitle = document.getElementById('pageTitle');
+  const receitasLabel = document.getElementById('receitasLabel');
+  const despesasLabel = document.getElementById('despesasLabel');
+
+  // Verificar qual view está ativa e atualizar labels e valores
+  if (pageTitle.textContent.includes('Transações')) {
+    // View Transações
+    receitasLabel.textContent = 'Saldo Atual';
+    despesasLabel.textContent = 'Balanço Mensal';
+    headerReceitasTotaisEl.textContent = 'R$ ' + formatToBRL(saldoFluxoCaixa);
+    headerDespesasTotaisEl.textContent = 'R$ ' + formatToBRL(saldoTotalMes);
+    
+  } else if (pageTitle.textContent.includes('Receitas')) {
+    // View Receitas
+    receitasLabel.textContent = 'Receitas Recebidas';
+    despesasLabel.textContent = 'Receitas Pendentes';
+    headerReceitasTotaisEl.textContent = 'R$ ' + formatToBRL(totalReceitasPagas);
+    headerDespesasTotaisEl.textContent = 'R$ ' + formatToBRL(totalReceitasAbertas);
+    
+  } else if (pageTitle.textContent.includes('Despesas')) {
+    // View Despesas
+    receitasLabel.textContent = 'Despesas Pagas';
+    despesasLabel.textContent = 'Despesas Pendentes';
+    headerReceitasTotaisEl.textContent = 'R$ ' + formatToBRL(Math.abs(totalDespesasPagas));
+    headerDespesasTotaisEl.textContent = 'R$ ' + formatToBRL(Math.abs(totalDespesasAbertas));
+    
+  } else {
+    // View padrão (fallback)
+    receitasLabel.textContent = 'Receitas';
+    despesasLabel.textContent = 'Despesas';
+    headerReceitasTotaisEl.textContent = 'R$ ' + formatToBRL(totalReceitas);
+    headerDespesasTotaisEl.textContent = 'R$ ' + formatToBRL(Math.abs(totalDespesas));
+  }
+
+  // Atualizar fluxo de caixa (saldo do mês)
+  fluxoCaixaEl.textContent = formatToBRL(saldoTotalMes);
+  fluxoCaixaEl.classList.remove('valor-positivo', 'valor-negativo');
+  if (saldoTotalMes < 0) fluxoCaixaEl.classList.add('valor-negativo');
+  else if (saldoTotalMes > 0) fluxoCaixaEl.classList.add('valor-positivo');
+
+  // Controlar visibilidade da seção de totais
+  if (lancamentos.length > 0) {
+    totaisBox.style.display = 'flex';
+  } else {
+    totaisBox.style.display = 'none';
+  }
+
+  // === APLICAR CORES CONFORME O FILTRO ATUAL ===
+  
+  // REMOVER TODAS AS CLASSES DE COR EXISTENTES
+  currentBalanceDisplay.classList.remove('valor-positivo', 'valor-negativo');
+  headerReceitasTotaisEl.classList.remove('valor-positivo', 'valor-negativo');
+  headerDespesasTotaisEl.classList.remove('valor-positivo', 'valor-negativo');
+  
+  // APLICAR CORES DIRETAMENTE VIA JAVASCRIPT
+  if (currentFilter === 'transacoes') {
+    // Saldo atual SEMPRE verde
+    currentBalanceDisplay.classList.add('valor-positivo');
+    
+    // Balanço mensal - verde se positivo, vermelho se negativo
+    if (saldoTotalMes >= 0) {
+      headerDespesasTotaisEl.classList.add('valor-positivo');
+    } else {
+      headerDespesasTotaisEl.classList.add('valor-negativo');
+    }
+    
+    // Receitas totais (Saldo Atual) sempre verde
+    headerReceitasTotaisEl.classList.add('valor-positivo');
+    
+  } else if (currentFilter === 'receitas') {
+    // Receitas: TUDO verde
+    currentBalanceDisplay.classList.add('valor-positivo');
+    headerReceitasTotaisEl.classList.add('valor-positivo');
+    headerDespesasTotaisEl.classList.add('valor-positivo');
+    
+  } else if (currentFilter === 'despesas') {
+    // Despesas: TUDO vermelho
+    currentBalanceDisplay.classList.add('valor-negativo');
+    headerReceitasTotaisEl.classList.add('valor-negativo');
+    headerDespesasTotaisEl.classList.add('valor-negativo');
+  }
+
+  // Atualizar os detalhes se o modal estiver aberto
+  if (balanceDetailsModal.classList.contains('active')) {
+    updateBalanceDetails();
+  }
+  
+  // Atualizar o gráfico se o modal estiver aberto
+  if (balanceChartModal.classList.contains('active')) {
+    updateBalanceChart();
+  }
+
+  // Salvar textos originais para funcionalidade do "olho"
+  salvarTextosOriginais();
+  
+  // Aplicar estado de visibilidade (funcionalidade do "olho")
+  aplicarEstadoVisibilidade();
+}
+
+
+async function salvarLocal(date) {
+    const key = 'lancamentos_' + getMonthKey(date);
+    localStorage.setItem(key, JSON.stringify(lancamentos));
+    return syncLancamentosToSupabase(getMonthKey(date));
+}
+
+async function syncLancamentosToSupabase(monthKey) {
+    try {
+        const { saveMonthTransactionsToSupabase, ensureLocalId } = await import('./js/supabase-sync.js');
+
+        // Garantir que todas as transações do mês têm local_id antes de sincronizar
+        const key = 'lancamentos_' + monthKey;
+        const transactions = JSON.parse(localStorage.getItem(key) || '[]');
+        let needsSave = false;
+        transactions.forEach(t => {
+            if (!t.local_id) {
+                ensureLocalId(t);
+                needsSave = true;
+            }
+        });
+        if (needsSave) {
+            localStorage.setItem(key, JSON.stringify(transactions));
+        }
+
+        return await saveMonthTransactionsToSupabase(monthKey);
+    } catch (error) {
+        console.error('Erro na sincronizacao:', error);
+        return false;
+    }
+}
+
+function loadLancamentos() {
+    const key = 'lancamentos_' + getMonthKey(currentDate);
+    const data = localStorage.getItem(key);
+    
+    if (!data) {
+        lancamentos = [];
+        if (typeof applyCombinedFilters === 'function') applyCombinedFilters();
+        if (typeof atualizarTotais === 'function') atualizarTotais();
+        return;
+    }
+    
+    try {
+        let parsedData = JSON.parse(data);
+        
+        if (!Array.isArray(parsedData)) {
+            lancamentos = [];
+            return;
+        }
+        
+        lancamentos = parsedData.filter(lanc => lanc !== null && typeof lanc === 'object').map(lanc => ({
+            descricao: lanc.descricao || 'Sem descrição',
+            valor: typeof lanc.valor === 'number' ? lanc.valor : 0,
+            tipo: lanc.tipo || 'despesa',
+            pago: lanc.pago === true,
+            dataVencimento: lanc.dataVencimento || new Date().toISOString().split('T')[0],
+            formaPagamento: lanc.formaPagamento || null,
+            parcelamento: lanc.parcelamento || undefined,
+            ultimaModificacao: lanc.ultimaModificacao || undefined
+        }));
+        
+    } catch (error) {
+        console.error('Erro ao carregar lançamentos:', error);
+        lancamentos = [];
+    }
+    
+    if (typeof applyCombinedFilters === 'function') applyCombinedFilters();
+    if (typeof atualizarTotais === 'function') atualizarTotais();
+}
+
+    // Funções FAB
+    function toggleFabOptions() {
+      fabOptions.classList.toggle('active');
+    }
+
+    // Adicionar evento de clique no overlay para fechar ambos os modais
+document.getElementById('balanceDetailsOverlay').addEventListener('click', function(e) {
+  if (document.getElementById('transactionDetailsModal').classList.contains('active')) {
+    closeTransactionDetails();
+  }
+  if (document.getElementById('balanceDetailsModal').classList.contains('active')) {
+    closeBalanceDetails();
+  }
+  if (document.getElementById('balanceChartModal').classList.contains('active')) {
+    closeBalanceChart();
+  }
+});
+
+    // Prevenir que o clique dentro do modal feche ele
+    document.getElementById('transactionDetailsModal').addEventListener('click', function(e) {
+      e.stopPropagation();
+    });
+
+// Adicionar event listener para o campo de data
+dataVencimentoInput.addEventListener('change', function() {
+    atualizarTogglePagoPorData();
+    atualizarTextoPago(); // Atualiza o texto quando a data mudar
+});
+
+function atualizarTogglePagoPorData() {
+  const dataVencimento = dataVencimentoInput.value;
+  const pagoToggle = document.getElementById('pagoToggle');
+
+  if (editIndex !== null) {
+    atualizarTextoPago();
+    return;
+  }
+  
+  if (!dataVencimento) {
+    pagoToggle.checked = false;
+    atualizarTextoPago();
+    return;
+  }
+  
+  const hoje = getHojeZerado(); // ALTERAÇÃO AQUI
+  
+  const dataVenc = new Date(dataVencimento + 'T00:00:00');
+  dataVenc.setHours(0, 0, 0, 0);
+  
+  pagoToggle.checked = dataVenc <= hoje;
+  atualizarTextoPago();
+}
+
+// Também vamos chamar essa função quando abrir o modal para edição
+// para garantir que o status esteja correto baseado na data
+
+// Função para atualizar o texto do toggle baseado no tipo
+function atualizarTextoPago() {
+    const pagoToggle = document.getElementById('pagoToggle');
+    const pagoToggleText = document.getElementById('pagoToggleText');
+    const tipo = document.getElementById('tipo').value;
+    
+    if (pagoToggle.checked) {
+        pagoToggleText.textContent = tipo === 'receita' ? 'Recebido' : 'Pago';
+    } else {
+        pagoToggleText.textContent = tipo === 'receita' ? 'Não foi recebido' : 'Não foi pago';
+    }
+}
+
+// Adicionar event listener para quando o tipo mudar
+tipoInput.addEventListener('change', atualizarTextoPago);
+
+
+// Função para controlar o estado do toggle baseado no tipo de lançamento
+function atualizarEstadoToggle() {
+    const pagoToggle = document.getElementById('pagoToggle');
+    
+    // AGORA O TOGGLE FICA SEMPRE HABILITADO
+    pagoToggle.disabled = false;
+    atualizarTextoPago();
+}
+
+// Função para navegar para o mês mais antigo com pendências
+function navigateToOldestPendingMonth() {
+    console.log('Buscando mês mais antigo com pendências...');
+    
+    const today = getHojeZerado(); // ALTERAÇÃO AQUI
+    let oldestPendingMonth = null;
+    
+    // Buscar do mais antigo para o mais recente
+    for (let i = 23; i >= 0; i--) {
+        const checkDate = new Date(today);
+        checkDate.setMonth(today.getMonth() - i);
+        
+        const monthKey = getMonthKey(checkDate);
+        const data = localStorage.getItem('lancamentos_' + monthKey);
+        
+        if (data) {
+            const lancamentosMes = JSON.parse(data);
+            const hasPendingTransactions = lancamentosMes.some(lanc => 
+                lanc.hasOwnProperty('pago') && !lanc.pago
+            );
+            
+            if (hasPendingTransactions) {
+                oldestPendingMonth = new Date(checkDate);
+                break; // Para no primeiro (mais antigo) encontrado
+            }
+        }
+    }
+    
+    if (oldestPendingMonth) {
+        currentDate.setFullYear(oldestPendingMonth.getFullYear(), oldestPendingMonth.getMonth(), 1);
+        updateMonthDisplay();
+    } else {
+        alert('Não foram encontradas pendências em outros meses.');
+    }
+}
+
+// Função para atualizar a visibilidade do botão de pendências
+// Função otimizada para verificar e atualizar a visibilidade do botão
+function updatePendenciaButtonVisibility() {
+    const pendenciaBtn = document.querySelector('.pendencia');
+    const currentMonthKey = getMonthKey();
+    const today = new Date();
+    
+    let hasPendingInPreviousMonths = false;
+    let oldestPendingMonthKey = null;
+    
+    // Encontrar o mês mais antigo com pendências
+    for (let i = 1; i <= 24; i++) {
+        const checkDate = new Date(today);
+        checkDate.setMonth(today.getMonth() - i);
+        
+        const monthKey = getMonthKey(checkDate);
+        const data = localStorage.getItem('lancamentos_' + monthKey);
+        
+        if (data) {
+            const lancamentosMes = JSON.parse(data);
+            const hasPendingTransactions = lancamentosMes.some(lanc => 
+                lanc.hasOwnProperty('pago') && !lanc.pago
+            );
+            
+            if (hasPendingTransactions) {
+                hasPendingInPreviousMonths = true;
+                // Para encontrar o mais antigo, continuamos até o final
+                oldestPendingMonthKey = monthKey;
+            }
+        }
+    }
+    
+    // Se não há pendências em meses anteriores, esconder o botão
+    if (!hasPendingInPreviousMonths) {
+        pendenciaBtn.style.display = 'none';
+        return;
+    }
+    
+    // Se há pendências, verificar se o mês atual é o mais antigo
+    const isOldestMonth = oldestPendingMonthKey === currentMonthKey;
+    
+    // Mostrar o botão apenas se NÃO estamos no mês mais antigo com pendências
+    pendenciaBtn.style.display = isOldestMonth ? 'none' : 'block';
+    
+    console.log('Mostrar botão de pendências?', !isOldestMonth);
+    console.log('Mês atual:', currentMonthKey, 'Mês mais antigo:', oldestPendingMonthKey);
+}
+
+document.querySelector('.olho').addEventListener('click', toggleValoresVisiveis);
+
+// Variável para controlar o estado de visibilidade
+let valoresVisiveis = true;
+
+function toggleValoresVisiveis() {
+    valoresVisiveis = !valoresVisiveis;
+    
+    // Elementos que devem ser ocultados/mostrados
+    const elementosParaOcultar = [
+        { element: document.getElementById('currentBalanceDisplay'), originalText: document.getElementById('currentBalanceDisplay').textContent },
+        { element: document.getElementById('headerReceitasTotais'), originalText: document.getElementById('headerReceitasTotais').textContent },
+        { element: document.getElementById('headerDespesasTotais'), originalText: document.getElementById('headerDespesasTotais').textContent }
+    ];
+    
+    // Alternar entre valores reais e tracinhos
+    elementosParaOcultar.forEach(item => {
+        if (item.element) {
+            if (valoresVisiveis) {
+                // Mostrar valor real
+                item.element.textContent = item.originalText;
+                item.element.classList.remove('valor-oculto');
+            } else {
+                // Mostrar tracinhos
+                item.element.textContent = '---';
+                item.element.classList.add('valor-oculto');
+            }
+        }
+    });
+    
+    // Alternar ícone do olho
+    const olhoIcon = document.querySelector('.olho i');
+    if (valoresVisiveis) {
+        olhoIcon.className = 'ri-eye-line';
+    } else {
+        olhoIcon.className = 'ri-eye-off-line';
+    }
+    
+    // Salvar preferência no localStorage
+    localStorage.setItem('valoresVisiveis', valoresVisiveis);
+}
+
+// Carregar preferência salva ao iniciar
+function carregarPreferenciaVisibilidade() {
+    const preferenciaSalva = localStorage.getItem('valoresVisiveis');
+    if (preferenciaSalva !== null) {
+        valoresVisiveis = JSON.parse(preferenciaSalva);
+        // Aplica o estado salvo
+        aplicarEstadoVisibilidade();
+    }
+}
+
+// Salvar textos originais globalmente
+let textosOriginais = {};
+
+function salvarTextosOriginais() {
+    textosOriginais = {
+        currentBalanceDisplay: document.getElementById('currentBalanceDisplay').textContent,
+        headerReceitasTotais: document.getElementById('headerReceitasTotais').textContent,
+        headerDespesasTotais: document.getElementById('headerDespesasTotais').textContent
+    };
+}
+
+// Atualize a função aplicarEstadoVisibilidade para usar os textos salvos
+function aplicarEstadoVisibilidade() {
+    const elementos = [
+        { id: 'currentBalanceDisplay', element: document.getElementById('currentBalanceDisplay') },
+        { id: 'headerReceitasTotais', element: document.getElementById('headerReceitasTotais') },
+        { id: 'headerDespesasTotais', element: document.getElementById('headerDespesasTotais') }
+    ];
+    
+    elementos.forEach(item => {
+        if (item.element) {
+            if (valoresVisiveis) {
+                // Restaurar texto original
+                item.element.textContent = textosOriginais[item.id] || item.element.textContent;
+                item.element.classList.remove('valor-oculto');
+            } else {
+                // Salvar texto atual antes de ocultar (se ainda não foi salvo)
+                if (!textosOriginais[item.id]) {
+                    textosOriginais[item.id] = item.element.textContent;
+                }
+                item.element.textContent = '---';
+                item.element.classList.add('valor-oculto');
+            }
+        }
+    });
+    
+    // Alternar ícone do olho
+    const olhoIcon = document.querySelector('.olho i');
+    olhoIcon.className = valoresVisiveis ? 'ri-eye-line' : 'ri-eye-off-line';
+}
+
+function toggleFormaPagamento() {
+    const formaPagamentoSelect = document.getElementById('formaPagamento');
+    const tipo = document.getElementById('tipo').value;
+    
+    // Mostra forma de pagamento apenas para despesas
+    if (tipo === 'despesa') {
+        formaPagamentoSelect.style.display = 'block';
+        // Garante que os cartões estão carregados
+        carregarFormasPagamento();
+    } else {
+        formaPagamentoSelect.style.display = 'none';
+    }
+}
+
+// Atualize a função toggleValoresVisiveis para ser mais simples
+function toggleValoresVisiveis() {
+    valoresVisiveis = !valoresVisiveis;
+    aplicarEstadoVisibilidade();
+    localStorage.setItem('valoresVisiveis', valoresVisiveis);
+}
+    // Eventos globais
+window.onclick = (e) => {
+  if (e.target == modal) closeModal();
+  if (e.target == deleteParceladoModal) closeDeleteParceladoModal();
+  if (e.target == monthYearPickerModal) {
+    pickerCurrentYear = currentDate.getFullYear();
+    pickerSelectedMonth = currentDate.getMonth();
+    closeMonthYearPickerModal();
+  }
+  if (e.target == document.getElementById('pagarCartaoModal')) {
+    fecharModalPagarCartao();
+  }
+  if (!e.target.closest('.fab-options') && !e.target.closest('.fab-button')) {
+    fabOptions.classList.remove('active');
+  }
+};
+
+// Elementos DOM para o dropdown
+const pageTitle = document.getElementById('pageTitle');
+const dropdownMenu = document.getElementById('dropdownMenu');
+
+// Eventos para o dropdown
+pageTitle.addEventListener('click', toggleDropdown);
+
+// Fechar dropdown ao clicar fora
+document.addEventListener('click', (e) => {
+  if (!pageTitle.contains(e.target) && !dropdownMenu.contains(e.target)) {
+    closeDropdown();
+  }
+});
+
+// ========== FUNÇÕES PARA CARTÕES ==========
+
+// Função para navegar para a tela de cartões
+function navigateToCartoes() {
+    window.location.href = 'index3.html';
+}
+
+// Função para carregar os cartões cadastrados
+function carregarFormasPagamento() {
+    const formaPagamentoSelect = document.getElementById('formaPagamento');
+    
+    // Limpa opções existentes (exceto Débito/Pix)
+    while (formaPagamentoSelect.children.length > 1) {
+        formaPagamentoSelect.removeChild(formaPagamentoSelect.lastChild);
+    }
+    
+    // Carrega cartões do localStorage
+    const cartoesCadastrados = JSON.parse(localStorage.getItem('cartoes_credito') || '[]');
+    
+    // Adiciona os cartões ao select
+    cartoesCadastrados.forEach(cartao => {
+        const option = document.createElement('option');
+        option.value = cartao.id;
+        option.textContent = cartao.nome; // APENAS O NOME DO CARTÃO
+        formaPagamentoSelect.appendChild(option);
+    });
+}
+
+// Funções do dropdown
+function toggleDropdown() {
+  dropdownMenu.classList.toggle('active');
+  pageTitle.classList.toggle('active');
+}
+
+function closeDropdown() {
+  dropdownMenu.classList.remove('active');
+  pageTitle.classList.remove('active');
+}
+
+// Eventos para os itens do menu
+document.querySelectorAll('.dropdown-item').forEach(item => {
+  item.addEventListener('click', function() {
+    const value = this.getAttribute('data-value');
+    
+    // Remove a classe active de todos os itens
+    document.querySelectorAll('.dropdown-item').forEach(i => i.classList.remove('active'));
+    // Adiciona a classe active ao item clicado
+    this.classList.add('active');
+    
+    // Atualiza o texto do título
+    pageTitle.innerHTML = `${this.textContent} <i class="ri-arrow-down-s-line dropdown-arrow"></i>`;
+    
+    // Fecha o dropdown
+    closeDropdown();
+    
+    // Aqui você pode adicionar a lógica para filtrar as transações
+    filterTransactions(value);
+  });
+});
+
+function renderFilteredTransactions(filteredLancamentos) {
+  const transactionsContainer = document.getElementById('transactionsContainer');
+  transactionsContainer.innerHTML = '';
+
+  // Criar um mapa para encontrar o índice original baseado na descrição e valor
+  const lancamentosMap = new Map();
+  lancamentos.forEach((lanc, index) => {
+    const key = `${lanc.descricao}-${lanc.valor}-${lanc.dataVencimento}`;
+    lancamentosMap.set(key, index);
+  });
+
+  const allTransactions = filteredLancamentos.map((l, i) => ({
+    ...l, 
+    _idx: i,
+    // Encontrar o índice original no array completo
+    originalIndex: lancamentosMap.get(`${l.descricao}-${l.valor}-${l.dataVencimento}`)
+  }));
+
+  // Aplica a mesma ordenação
+  allTransactions.sort((a, b) => {
+    if (!a.pago && b.pago) return -1;
+    if (a.pago && !b.pago) return 1;
+    
+    const dataA = a.dataVencimento ? new Date(a.dataVencimento + 'T00:00:00') : new Date('9999-12-31');
+    const dataB = b.dataVencimento ? new Date(b.dataVencimento + 'T00:00:00') : new Date('9999-12-31');
+    
+    if (!a.pago && !b.pago) {
+      return dataA - dataB;
+    } else {
+      const timestampA = a.ultimaModificacao || a._idx;
+      const timestampB = b.ultimaModificacao || b._idx;
+      return timestampB - timestampA;
+    }
+  });
+
+  allTransactions.forEach(lanc => addRowToTable(lanc, lanc.originalIndex));
+}
+
+// === FUNÇÕES DO MENU DE TRÊS PONTINHOS ===
+
+// Elementos DOM do menu
+const menuBtn = document.getElementById('menuBtn');
+const menuDropdown = document.getElementById('menuDropdown');
+
+// Eventos do menu
+menuBtn.addEventListener('click', toggleMenu);
+
+// Funções do menu
+function toggleMenu() {
+  menuDropdown.classList.toggle('active');
+}
+
+// Fechar menu ao clicar fora
+document.addEventListener('click', (e) => {
+  if (!menuBtn.contains(e.target) && !menuDropdown.contains(e.target)) {
+    menuDropdown.classList.remove('active');
+  }
+});
+
+// Funções das opções do menu
+function exportarDados() {
+  alert('Funcionalidade de exportação em desenvolvimento!');
+  menuDropdown.classList.remove('active');
+}
+
+function limparDados() {
+  if (confirm('Tem certeza que deseja limpar todos os dados? Esta ação não pode ser desfeita.')) {
+    localStorage.clear();
+    alert('Todos os dados foram limpos!');
+    location.reload();
+  }
+  menuDropdown.classList.remove('active');
+}
+
+// Funções para pagar cartão
+function limparDadosLocaisDoApp() {
+  const keysToRemove = [];
+
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+
+    if (key && (
+      key.startsWith('lancamentos_') ||
+      key.includes('_lancamentos_') ||
+      key.startsWith('cartoes_') ||
+      key.endsWith('_cartoes_credito') ||
+      key.startsWith('contas_') ||
+      key.includes('_contas_') ||
+      key === 'cartoes_credito' ||
+      key === 'contas_bancarias' ||
+      key === 'contas_config' ||
+      key === 'nextContaId' ||
+      key === 'valoresVisiveis'
+    )) {
+      keysToRemove.push(key);
+    }
+  }
+
+  keysToRemove.forEach(key => localStorage.removeItem(key));
+}
+
+async function limparDados() {
+  menuDropdown.classList.remove('active');
+
+  if (!confirm('Tem certeza que deseja limpar todos os dados? Esta acao nao pode ser desfeita.')) {
+    return;
+  }
+
+  try {
+    const { deleteAllUserDataFromSupabase } = await import('./js/supabase-sync.js');
+    const deletedFromSupabase = await deleteAllUserDataFromSupabase();
+
+    if (!deletedFromSupabase) {
+      alert('Nao foi possivel apagar os dados do Supabase. Verifique sua conexao e tente novamente.');
+      return;
+    }
+
+    limparDadosLocaisDoApp();
+    alert('Todos os dados foram limpos!');
+    location.reload();
+  } catch (error) {
+    console.error('Erro ao limpar dados:', error);
+    alert('Erro ao limpar dados: ' + error.message);
+  }
+}
+
+function abrirModalPagarCartao() {
+  const modal = document.getElementById('pagarCartaoModal');
+  const selectCartao = document.getElementById('selecionarCartao');
+  const resumoPagamento = document.getElementById('resumoPagamento');
+  const btnPagar = document.getElementById('btnPagarCartao');
+  
+  // Fechar o menu dropdown
+  menuDropdown.classList.remove('active');
+  
+  // Carregar cartões disponíveis
+  carregarCartoesParaPagamento();
+  
+  // Resetar estado
+  resumoPagamento.style.display = 'none';
+  btnPagar.disabled = true;
+  
+  // Mostrar modal
+  modal.style.display = 'flex';
+}
+
+function fecharModalPagarCartao() {
+  const modal = document.getElementById('pagarCartaoModal');
+  modal.style.display = 'none';
+}
+
+function carregarCartoesParaPagamento() {
+  const selectCartao = document.getElementById('selecionarCartao');
+  const cartoesCadastrados = JSON.parse(localStorage.getItem('cartoes_credito') || '[]');
+  
+  // Limpar opções existentes (exceto a primeira)
+  while (selectCartao.children.length > 1) {
+    selectCartao.removeChild(selectCartao.lastChild);
+  }
+  
+  // Adicionar cartões
+  cartoesCadastrados.forEach(cartao => {
+    const option = document.createElement('option');
+    option.value = cartao.id;
+    option.textContent = cartao.nome;
+    selectCartao.appendChild(option);
+  });
+  
+  // Adicionar event listener para quando selecionar um cartão
+  selectCartao.addEventListener('change', function() {
+    calcularTotalPagar(this.value);
+  });
+}
+
+function calcularTotalPagar(cartaoId) {
+  const resumoPagamento = document.getElementById('resumoPagamento');
+  const totalPagarEl = document.getElementById('totalPagar');
+  const quantidadeTransacoesEl = document.getElementById('quantidadeTransacoes');
+  const btnPagar = document.getElementById('btnPagarCartao');
+  
+  if (!cartaoId) {
+    resumoPagamento.style.display = 'none';
+    btnPagar.disabled = true;
+    return;
+  }
+  
+  // Buscar todas as transações em aberto do cartão selecionado no mês atual
+  const transacoesCartao = lancamentos.filter(lanc => 
+    lanc.tipo === 'despesa' && 
+    !lanc.pago && 
+    lanc.formaPagamento === cartaoId
+  );
+  
+  if (transacoesCartao.length === 0) {
+    resumoPagamento.style.display = 'block';
+    totalPagarEl.textContent = 'R$ 0,00';
+    quantidadeTransacoesEl.textContent = '0';
+    btnPagar.disabled = true;
+    resumoPagamento.classList.remove('has-transactions');
+    return;
+  }
+  
+  // Calcular total
+  const total = Math.abs(transacoesCartao.reduce((sum, trans) => sum + trans.valor, 0));
+  const quantidade = transacoesCartao.length;
+  
+  // Atualizar resumo
+  resumoPagamento.style.display = 'block';
+  resumoPagamento.classList.add('has-transactions');
+  totalPagarEl.textContent = 'R$ ' + formatToBRL(total);
+  quantidadeTransacoesEl.textContent = quantidade;
+  btnPagar.disabled = false;
+}
+
+function pagarCartao() {
+  const selectCartao = document.getElementById('selecionarCartao');
+  const cartaoId = selectCartao.value;
+  
+  if (!cartaoId) {
+    alert('Selecione um cartão para pagar.');
+    return;
+  }
+  
+  // Buscar transações em aberto do cartão selecionado
+  const transacoesParaPagar = lancamentos.filter(lanc => 
+    lanc.tipo === 'despesa' && 
+    !lanc.pago && 
+    lanc.formaPagamento === cartaoId
+  );
+  
+  if (transacoesParaPagar.length === 0) {
+    alert('Não há transações em aberto para este cartão.');
+    return;
+  }
+  
+  // Confirmar ação (ESTE PERMANECE COM BOTÃO DE CONFIRMAR)
+  if (!confirm(`Deseja marcar ${transacoesParaPagar.length} transações como pagas?`)) {
+    return;
+  }
+  
+  // Marcar todas as transações como pagas
+  transacoesParaPagar.forEach(transacao => {
+    const index = lancamentos.indexOf(transacao);
+    if (index !== -1) {
+      lancamentos[index].pago = true;
+      lancamentos[index].ultimaModificacao = Date.now();
+    }
+  });
+  
+  // Salvar alterações
+  salvarLocal(currentDate);
+  
+  // Recarregar a lista
+  loadLancamentos();
+  
+  // Fechar modal
+  fecharModalPagarCartao();
+  
+  // Mostrar toast notification (opcional - sem botão de confirmação)
+  showToast(`${transacoesParaPagar.length} transações pagas com sucesso!`);
+}
+
+function showToast(message) {
+  const toast = document.getElementById('toast');
+  const toastMessage = document.getElementById('toastMessage');
+  
+  toastMessage.textContent = message;
+  toast.classList.add('show');
+  
+  setTimeout(() => {
+    toast.classList.remove('show');
+  }, 3000);
+}
+
+// Fechar modal de filtro ao clicar no overlay
+document.addEventListener('click', (e) => {
+  if (filterModal.classList.contains('active') && e.target === filterModal) {
+    closeFilterModal();
+  }
+});
+
+// ========== FUNÇÕES DE BACKUP E RESTAURAÇÃO ==========
+
+// Função para formatar data para exibição amigável
+function formatarDataExibicao(timestamp) {
+  const data = new Date(timestamp);
+  const hoje = new Date();
+  const ontem = new Date(hoje);
+  ontem.setDate(hoje.getDate() - 1);
+  
+  const dia = String(data.getDate()).padStart(2, '0');
+  const mes = String(data.getMonth() + 1).padStart(2, '0');
+  const ano = data.getFullYear();
+  const hora = String(data.getHours()).padStart(2, '0');
+  const minuto = String(data.getMinutes()).padStart(2, '0');
+  
+  // Verificar se é hoje
+  if (data.toDateString() === hoje.toDateString()) {
+    return `Hoje, ${hora}:${minuto}`;
+  }
+  
+  // Verificar se é ontem
+  if (data.toDateString() === ontem.toDateString()) {
+    return `Ontem, ${hora}:${minuto}`;
+  }
+  
+  return `${dia}/${mes}/${ano}, ${hora}:${minuto}`;
+}
+
+// Função para formatar data/hora no fuso horário local
+function formatarDataHoraLocal(data = new Date()) {
+  const ano = data.getFullYear();
+  const mes = String(data.getMonth() + 1).padStart(2, '0');
+  const dia = String(data.getDate()).padStart(2, '0');
+  const hora = String(data.getHours()).padStart(2, '0');
+  const minuto = String(data.getMinutes()).padStart(2, '0');
+  const segundo = String(data.getSeconds()).padStart(2, '0');
+  
+  return `${ano}-${mes}-${dia}T${hora}-${minuto}-${segundo}`;
+}
+
+let backupActionType = ''; // 'export' ou 'import'
+let selectedBackupFile = null;
+
+// Função para abrir o modal de backup/restauração
+function fazerBackup() {
+  menuDropdown.classList.remove('active');
+  backupActionType = 'export';
+  abrirModalBackup();
+}
+
+function restaurarBackup() {
+  menuDropdown.classList.remove('active');
+  backupActionType = 'import';
+  abrirModalBackup();
+}
+
+function abrirModalBackup() {
+  const modal = document.getElementById('backupModal');
+  const title = document.getElementById('backupModalTitle');
+  const optionsDiv = document.getElementById('backupOptions');
+  const infoDiv = document.getElementById('backupInfo');
+  const actionBtn = document.getElementById('backupActionBtn');
+  
+  // Configurar título
+  title.textContent = backupActionType === 'export' ? 'Fazer Backup' : 'Restaurar Backup';
+  
+  // Limpar conteúdos anteriores
+  optionsDiv.innerHTML = '';
+  infoDiv.style.display = 'none';
+  actionBtn.disabled = true;
+  
+  if (backupActionType === 'export') {
+    // Opções para exportação
+    optionsDiv.innerHTML = `
+      <div class="backup-option" onclick="selecionarOpcaoBackup('full')">
+        <i class="ri-database-line"></i>
+        <div>
+          <h4>Backup Completo</h4>
+          <p>Salva todas as transações, cartões e configurações</p>
+        </div>
+      </div>
+      <div class="backup-option" onclick="selecionarOpcaoBackup('current')">
+        <i class="ri-calendar-line"></i>
+        <div>
+          <h4>Apenas Mês Atual</h4>
+          <p>Salva apenas as transações do mês corrente</p>
+        </div>
+      </div>
+    `;
+  } else {
+    // Para importação, vamos buscar arquivos existentes
+    buscarBackupsDisponiveis();
+  }
+  
+  modal.style.display = 'flex';
+}
+
+function fecharModalBackup() {
+  const modal = document.getElementById('backupModal');
+  modal.style.display = 'none';
+  selectedBackupFile = null;
+}
+
+function selecionarOpcaoBackup(opcao) {
+  const actionBtn = document.getElementById('backupActionBtn');
+  const infoDiv = document.getElementById('backupInfo');
+  const message = document.getElementById('backupMessage');
+  const details = document.getElementById('backupDetails');
+  
+  if (backupActionType === 'export') {
+    // Preparar para exportação
+    infoDiv.style.display = 'block';
+    
+    if (opcao === 'full') {
+      message.textContent = 'Preparando backup completo de todos os dados...';
+      actionBtn.textContent = 'Gerar Backup';
+    } else {
+      message.textContent = 'Preparando backup do mês atual...';
+      actionBtn.textContent = 'Gerar Backup';
+    }
+    
+    // Salvar a opção selecionada
+    selectedBackupFile = opcao;
+    actionBtn.disabled = false;
+  }
+}
+
+async function buscarBackupsDisponiveis() {
+  const optionsDiv = document.getElementById('backupOptions');
+  const actionBtn = document.getElementById('backupActionBtn');
+  
+  optionsDiv.innerHTML = '<div class="loading"><p>Buscando backups disponíveis...</p></div>';
+  
+  try {
+    if (!window.resolveLocalFileSystemURL) {
+      optionsDiv.innerHTML = '<p class="error">Plugin de arquivos não disponível.</p>';
+      return;
+    }
+    
+    const dirEntry = await criarDiretorioBackup();
+    const reader = dirEntry.createReader();
+    const entries = await new Promise((resolve, reject) => {
+      reader.readEntries(resolve, reject);
+    });
+    
+    const backupFiles = entries.filter(entry => 
+      entry.isFile && entry.name.endsWith('.json')
+    );
+    
+    if (backupFiles.length === 0) {
+      optionsDiv.innerHTML = `
+        <div class="backup-option" onclick="selecionarArquivoBackup(null)">
+          <i class="ri-file-upload-line"></i>
+          <div>
+            <h4>Nenhum backup local encontrado</h4>
+            <p>Clique aqui para selecionar um arquivo manualmente</p>
+          </div>
+        </div>
+        <div class="backup-option" onclick="gerenciarBackups()" style="margin-top: 10px;">
+          <i class="ri-folder-open-line"></i>
+          <div>
+            <h4>Gerenciar Backups</h4>
+            <p>Ver e organizar todos os backups</p>
+          </div>
+        </div>
+      `;
+    } else {
+      optionsDiv.innerHTML = '';
+      
+      // Ordenar por data (mais recente primeiro)
+      backupFiles.sort((a, b) => {
+        try {
+          const dateA = extrairDataDoNome(a.name) || 0;
+          const dateB = extrairDataDoNome(b.name) || 0;
+          return dateB - dateA;
+        } catch (e) {
+          return 0;
+        }
+      });
+      
+      backupFiles.forEach(fileEntry => {
+        const option = document.createElement('div');
+        option.className = 'backup-option';
+        option.onclick = () => selecionarArquivoBackup(fileEntry);
+        
+        const info = extrairInfoBackup(fileEntry.name);
+        
+        option.innerHTML = `
+          <i class="ri-file-text-line"></i>
+          <div>
+            <h4>${info.type}</h4>
+            <p>${info.date} ${info.time ? '• ' + info.time : ''}</p>
+          </div>
+        `;
+        
+        optionsDiv.appendChild(option);
+      });
+      
+      // Adicionar opção de gerenciamento
+      const manageOption = document.createElement('div');
+      manageOption.className = 'backup-option';
+      manageOption.onclick = () => {
+        fecharModalBackup();
+        gerenciarBackups();
+      };
+      manageOption.innerHTML = `
+        <i class="ri-folder-open-line"></i>
+        <div>
+          <h4>Ver todos os backups</h4>
+          <p>Gerenciar e organizar</p>
+        </div>
+      `;
+      optionsDiv.appendChild(manageOption);
+    }
+    
+  } catch (error) {
+    console.error('Erro ao buscar backups:', error);
+    optionsDiv.innerHTML = `<p class="error">Erro: ${error.message}</p>`;
+  }
+}
+
+function selecionarArquivoBackup(fileEntry) {
+  selectedBackupFile = fileEntry;
+  const actionBtn = document.getElementById('backupActionBtn');
+  const infoDiv = document.getElementById('backupInfo');
+  const message = document.getElementById('backupMessage');
+  const details = document.getElementById('backupDetails');
+  
+  infoDiv.style.display = 'block';
+  
+  if (fileEntry) {
+    // Mostrar informações do arquivo selecionado
+    fileEntry.file(file => {
+      const size = (file.size / 1024).toFixed(2);
+      const date = new Date(file.lastModified).toLocaleDateString('pt-BR');
+      
+      message.textContent = 'Arquivo selecionado:';
+      details.innerHTML = `
+        <p><strong>Nome:</strong> ${fileEntry.name}</p>
+        <p><strong>Tamanho:</strong> ${size} KB</p>
+        <p><strong>Modificado:</strong> ${date}</p>
+      `;
+    }, () => {
+      message.textContent = 'Arquivo selecionado:';
+      details.innerHTML = `<p><strong>Nome:</strong> ${fileEntry.name}</p>`;
+    });
+  } else {
+    message.textContent = 'Você selecionou enviar um arquivo manualmente.';
+    details.innerHTML = '<p>Clique em "Executar" para selecionar um arquivo.</p>';
+  }
+  
+  actionBtn.disabled = false;
+  actionBtn.textContent = 'Restaurar Backup';
+}
+
+async function criarDiretorioBackup() {
+  return new Promise((resolve, reject) => {
+    window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, (fs) => {
+      fs.root.getDirectory('FinancasBackup', { create: true, exclusive: false }, resolve, reject);
+    }, reject);
+  });
+}
+
+async function executarAcaoBackup() {
+  if (backupActionType === 'export') {
+    await exportarBackup();
+  } else {
+    await importarBackup();
+  }
+}
+
+// Substitua a parte da função exportarBackup que coleta chaves:
+
+// NOVA VERSÃO MAIS ABRANGENTE:
+async function exportarBackup() {
+  try {
+    // Coletar todos os dados do localStorage
+    const backupData = {
+      version: '1.2', // Nova versão
+      exportDate: new Date().toISOString(),
+      localTime: formatarDataHoraLocal(),
+      data: {}
+    };
+    
+    // Coletar TODAS as chaves do localStorage (exceto backups antigos)
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      
+      // NÃO incluir backups antigos salvos no localStorage
+      if (key.startsWith('backup_') || key === 'backup_emergencial') {
+        continue;
+      }
+      
+      // Incluir TODAS as outras chaves
+      try {
+        const valor = localStorage.getItem(key);
+        // Tentar parsear como JSON, se falhar, salvar como string
+        try {
+          backupData.data[key] = JSON.parse(valor);
+        } catch (e) {
+          backupData.data[key] = valor;
+        }
+      } catch (e) {
+        console.warn(`Erro ao processar chave ${key}:`, e);
+      }
+    }
+    
+    // Se for backup apenas do mês atual
+    if (selectedBackupFile === 'current') {
+      const currentMonthKey = getMonthKey(currentDate);
+      const filteredData = {};
+      
+      // Filtrar mantendo apenas o essencial
+      Object.keys(backupData.data).forEach(key => {
+        // Manter: mês atual, cartões, contas, configurações
+        if (key === 'lancamentos_' + currentMonthKey || 
+            key.startsWith('cartoes') ||
+            key.includes('conta') ||
+            key.includes('banco') ||
+            key === 'valoresVisiveis' ||
+            key === 'config' ||
+            key === 'settings') {
+          filteredData[key] = backupData.data[key];
+        }
+      });
+      
+      backupData.data = filteredData;
+      backupData.scope = 'current_month';
+    } else {
+      backupData.scope = 'full';
+    }
+    
+    // Criar nome do arquivo
+    const dateStr = formatarDataHoraLocal();
+    const scopeStr = selectedBackupFile === 'current' ? 'mes_atual' : 'completo';
+    const fileName = `backup_financas_${scopeStr}_${dateStr}.json`;
+    
+    // Criar diretório se não existir
+    const dirEntry = await criarDiretorioBackup();
+    
+    // Criar arquivo
+    const fileEntry = await new Promise((resolve, reject) => {
+      dirEntry.getFile(fileName, { create: true, exclusive: false }, resolve, reject);
+    });
+    
+    // Escrever dados no arquivo
+    await new Promise((resolve, reject) => {
+      fileEntry.createWriter((fileWriter) => {
+        fileWriter.onwriteend = resolve;
+        fileWriter.onerror = reject;
+        
+        const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+        fileWriter.write(blob);
+      }, reject);
+    });
+    
+    // Estatísticas
+    const totalItems = Object.keys(backupData.data).length;
+    const chavesContas = Object.keys(backupData.data).filter(k => 
+      k.toLowerCase().includes('conta') || k.toLowerCase().includes('banco')
+    ).length;
+    
+    showToast(`✓ Backup criado: ${fileName}\n${totalItems} itens (${chavesContas} contas)`);
+    fecharModalBackup();
+    
+  } catch (error) {
+    console.error('Erro ao exportar backup:', error);
+    alert(`Erro ao criar backup: ${error.message}\n\nTente usar a função "Exportar Apenas Contas" primeiro.`);
+  }
+}
+
+// Na função importarBackup, atualize a parte de restauração:
+async function importarBackup() {
+  try {
+    let backupData;
+    
+    if (!selectedBackupFile) {
+      backupData = await selecionarArquivoManual();
+    } else {
+      backupData = await lerArquivoBackup(selectedBackupFile);
+    }
+    
+    if (!backupData) {
+      return;
+    }
+    
+    // Validar estrutura do backup
+    if (!backupData.version || !backupData.data) {
+      throw new Error('Arquivo de backup inválido');
+    }
+    
+    // Mostrar estatísticas do backup
+    const totalItems = Object.keys(backupData.data).length;
+    const contaItems = Object.keys(backupData.data).filter(k => k.includes('contas')).length;
+    const lancamentoItems = Object.keys(backupData.data).filter(k => k.includes('lancamentos')).length;
+    const cartaoItems = Object.keys(backupData.data).filter(k => k.includes('cartoes')).length;
+    
+    const confirmMessage = `Deseja restaurar este backup?
+    
+Conteúdo do backup:
+• ${totalItems} itens no total
+• ${lancamentoItems} meses de transações
+• ${cartaoItems} configurações de cartões
+• ${contaItems} configurações de contas
+
+ATENÇÃO: Todos os dados atuais serão substituídos.`;
+
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+    
+    // Limpar dados atuais (mas manter um backup de emergência)
+    fazerBackupEmergencial();
+    
+    // Restaurar dados
+    Object.keys(backupData.data).forEach(key => {
+      if (typeof backupData.data[key] === 'object') {
+        localStorage.setItem(key, JSON.stringify(backupData.data[key]));
+      } else {
+        localStorage.setItem(key, backupData.data[key]);
+      }
+    });
+    
+    showToast(`Backup restaurado: ${totalItems} itens recuperados`);
+    
+    // Recarregar a página para aplicar os dados
+    setTimeout(() => {
+      location.reload();
+    }, 2000);
+    
+    fecharModalBackup();
+    
+  } catch (error) {
+    console.error('Erro ao importar backup:', error);
+    
+    // Tentar restaurar backup de emergência
+    try {
+      await restaurarBackupEmergencial();
+    } catch (e) {
+      console.error('Erro ao restaurar backup de emergência:', e);
+    }
+    
+    alert(`Erro ao restaurar backup: ${error.message}\n\nOs dados originais foram restaurados do backup automático.`);
+  }
+}
+
+// Função para criar um backup de emergência antes da restauração
+function fazerBackupEmergencial() {
+  try {
+    const backupData = {};
+    
+    // Copiar todas as chaves atuais
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      try {
+        backupData[key] = JSON.parse(localStorage.getItem(key));
+      } catch (e) {
+        backupData[key] = localStorage.getItem(key);
+      }
+    }
+    
+    // Salvar como string para fácil recuperação
+    sessionStorage.setItem('backup_emergencial', JSON.stringify(backupData));
+    console.log('Backup de emergência criado com', Object.keys(backupData).length, 'itens');
+  } catch (error) {
+    console.error('Erro ao criar backup de emergência:', error);
+  }
+}
+
+// Função para restaurar backup de emergência
+async function restaurarBackupEmergencial() {
+  try {
+    const backupStr = sessionStorage.getItem('backup_emergencial');
+    if (!backupStr) return;
+    
+    const backupData = JSON.parse(backupStr);
+    
+    // Limpar localStorage atual
+    localStorage.clear();
+    
+    // Restaurar dados
+    Object.keys(backupData).forEach(key => {
+      if (typeof backupData[key] === 'object') {
+        localStorage.setItem(key, JSON.stringify(backupData[key]));
+      } else {
+        localStorage.setItem(key, backupData[key]);
+      }
+    });
+    
+    console.log('Backup de emergência restaurado com', Object.keys(backupData).length, 'itens');
+    sessionStorage.removeItem('backup_emergencial');
+    
+  } catch (error) {
+    console.error('Erro ao restaurar backup de emergência:', error);
+    throw error;
+  }
+}
+
+async function selecionarArquivoManual() {
+  return new Promise((resolve, reject) => {
+    // Criar input file temporário
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.json';
+    
+    fileInput.onchange = (event) => {
+      const file = event.target.files[0];
+      if (!file) {
+        resolve(null);
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          resolve(data);
+        } catch (error) {
+          reject(new Error('Arquivo inválido'));
+        }
+      };
+      reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
+      reader.readAsText(file);
+    };
+    
+    fileInput.click();
+  });
+}
+
+async function lerArquivoBackup(fileEntry) {
+  return new Promise((resolve, reject) => {
+    fileEntry.file((file) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          resolve(data);
+        } catch (error) {
+          reject(new Error('Arquivo de backup corrompido'));
+        }
+      };
+      reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
+      reader.readAsText(file);
+    }, reject);
+  });
+}
+
+// ========== FUNÇÕES DE GERENCIAMENTO DE BACKUPS ==========
+
+let backupsList = [];
+
+// Função para abrir o gerenciamento de backups
+async function gerenciarBackups() {
+  menuDropdown.classList.remove('active');
+  await abrirModalGerenciamento();
+}
+
+async function abrirModalGerenciamento() {
+  const modal = document.getElementById('gerenciarBackupModal');
+  modal.style.display = 'flex';
+  
+  // Carregar lista de backups
+  await carregarListaBackups();
+}
+
+function fecharModalGerenciamento() {
+  const modal = document.getElementById('gerenciarBackupModal');
+  modal.style.display = 'none';
+  backupsList = [];
+}
+
+async function carregarListaBackups() {
+  const statsDiv = document.getElementById('backupStats');
+  const listDiv = document.getElementById('backupList');
+  const btnExcluirTodos = document.getElementById('btnExcluirTodos');
+  
+  statsDiv.innerHTML = '<p>Carregando backups...</p>';
+  listDiv.innerHTML = '';
+  btnExcluirTodos.disabled = true;
+  
+  try {
+    // Verificar se o plugin File está disponível
+    if (!window.resolveLocalFileSystemURL) {
+      statsDiv.innerHTML = '<p class="error">Plugin de arquivos não disponível.</p>';
+      return;
+    }
+    
+    // Acessar diretório de backups
+    const dirEntry = await criarDiretorioBackup();
+    
+    // Listar arquivos
+    const reader = dirEntry.createReader();
+    const entries = await new Promise((resolve, reject) => {
+      reader.readEntries(resolve, reject);
+    });
+    
+    // Filtrar arquivos .json de backup
+    backupsList = entries.filter(entry => 
+      entry.isFile && entry.name.endsWith('.json')
+    );
+    
+    // Atualizar estatísticas
+    const totalSize = await calcularTamanhoTotalBackups();
+    const sizeMB = (totalSize / (1024 * 1024)).toFixed(2);
+    
+    statsDiv.innerHTML = `
+      <div class="stats-grid">
+        <div class="stat-item">
+          <i class="ri-file-text-line"></i>
+          <div>
+            <span class="stat-value">${backupsList.length}</span>
+            <span class="stat-label">Backups</span>
+          </div>
+        </div>
+        <div class="stat-item">
+          <i class="ri-database-line"></i>
+          <div>
+            <span class="stat-value">${sizeMB}</span>
+            <span class="stat-label">MB usados</span>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    // Atualizar lista
+    atualizarListaUI();
+    
+    // Habilitar botão se houver backups
+    btnExcluirTodos.disabled = backupsList.length === 0;
+    
+  } catch (error) {
+    console.error('Erro ao carregar backups:', error);
+    statsDiv.innerHTML = `<p class="error">Erro ao carregar backups: ${error.message}</p>`;
+  }
+}
+
+async function calcularTamanhoTotalBackups() {
+  let totalSize = 0;
+  
+  for (const fileEntry of backupsList) {
+    try {
+      const file = await new Promise((resolve, reject) => {
+        fileEntry.file(resolve, reject);
+      });
+      totalSize += file.size;
+    } catch (error) {
+      console.error('Erro ao ler tamanho do arquivo:', error);
+    }
+  }
+  
+  return totalSize;
+}
+
+function atualizarListaUI() {
+  const listDiv = document.getElementById('backupList');
+  const btnExcluirTodos = document.getElementById('btnExcluirTodos');
+  
+  if (backupsList.length === 0) {
+    listDiv.innerHTML = `
+      <div class="empty-state">
+        <i class="ri-inbox-line"></i>
+        <p>Nenhum backup encontrado</p>
+      </div>
+    `;
+    return;
+  }
+  
+  listDiv.innerHTML = '';
+  
+  // Ordenar por data (mais recente primeiro)
+  backupsList.sort((a, b) => {
+    try {
+      const dateA = extrairDataDoNome(a.name) || 0;
+      const dateB = extrairDataDoNome(b.name) || 0;
+      return dateB - dateA;
+    } catch (e) {
+      return 0;
+    }
+  });
+  
+  backupsList.forEach((fileEntry, index) => {
+    const item = document.createElement('div');
+    item.className = 'backup-item';
+    item.dataset.index = index;
+    
+    // Extrair informações do nome do arquivo
+    const info = extrairInfoBackup(fileEntry.name);
+    
+    item.innerHTML = `
+      <div class="backup-item-info">
+        <div class="backup-item-header">
+          <i class="ri-file-text-line"></i>
+          <div>
+            <h4>${info.name}</h4>
+            <p>${info.date} • ${info.type} • ${info.time}</p>
+          </div>
+        </div>
+        <div class="backup-item-size" id="size-${index}">
+          Carregando...
+        </div>
+      </div>
+      <div class="backup-item-actions">
+        <button class="btn-icon" onclick="restaurarBackupEspecifico(${index})" title="Restaurar">
+          <i class="ri-upload-cloud-line"></i>
+        </button>
+        <button class="btn-icon btn-danger" onclick="excluirBackupEspecifico(${index})" title="Excluir">
+          <i class="ri-delete-bin-line"></i>
+        </button>
+      </div>
+    `;
+    
+    listDiv.appendChild(item);
+    
+    // Carregar tamanho do arquivo assincronamente
+    carregarTamanhoArquivo(fileEntry, index);
+  });
+  
+  btnExcluirTodos.disabled = backupsList.length === 0;
+}
+
+function extrairInfoBackup(filename) {
+  // Exemplo: backup_financas_completo_2024-01-15T14-30-00.json
+  const parts = filename.replace('.json', '').split('_');
+  
+  let type = 'Desconhecido';
+  let dateStr = 'Data desconhecida';
+  let timeStr = '';
+  
+  if (parts.length >= 4) {
+    // Tipo
+    type = parts[2] === 'completo' ? 'Completo' : 
+           parts[2] === 'mes_atual' ? 'Mês Atual' : 
+           'Backup';
+    
+    // Data e hora
+    const dateTimeStr = parts[3];
+    if (dateTimeStr && dateTimeStr.includes('T')) {
+      const [datePart, timePart] = dateTimeStr.split('T');
+      const year = datePart.substring(0, 4);
+      const month = datePart.substring(5, 7);
+      const day = datePart.substring(8, 10);
+      
+      dateStr = `${day}/${month}/${year}`;
+      
+      if (timePart) {
+        const hour = timePart.substring(0, 2);
+        const minute = timePart.substring(3, 5);
+        timeStr = `${hour}:${minute}`;
+      }
+    }
+  }
+  
+  return {
+    name: filename,
+    type: type,
+    date: dateStr,
+    time: timeStr,
+    filename: filename
+  };
+}
+
+// Função para listar todas as chaves do localStorage (para debug)
+function listarChavesLocalStorage() {
+  console.log('=== CHAVES NO LOCALSTORAGE ===');
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    const value = localStorage.getItem(key);
+    console.log(`${i}: ${key} = ${value.substring(0, 100)}...`);
+  }
+  console.log('=== TOTAL: ' + localStorage.length + ' chaves ===');
+}
+
+// Chame esta função no console para ver quais chaves de contas existem
+
+function extrairDataDoNome(filename) {
+  try {
+    // Extrair a parte da data do nome do arquivo
+    const match = filename.match(/(\d{4}-\d{2}-\d{2})T(\d{2}-\d{2}-\d{2})/);
+    if (match) {
+      const dateTimeStr = match[0].replace(/-/g, '/').replace('T', ' ').replace(/-/g, ':');
+      return new Date(dateTimeStr).getTime();
+    }
+  } catch (e) {
+    return 0;
+  }
+  return 0;
+}
+
+async function carregarTamanhoArquivo(fileEntry, index) {
+  try {
+    const file = await new Promise((resolve, reject) => {
+      fileEntry.file(resolve, reject);
+    });
+    
+    const sizeKB = (file.size / 1024).toFixed(1);
+    const sizeElement = document.getElementById(`size-${index}`);
+    if (sizeElement) {
+      sizeElement.textContent = `${sizeKB} KB`;
+    }
+  } catch (error) {
+    console.error('Erro ao carregar tamanho:', error);
+    const sizeElement = document.getElementById(`size-${index}`);
+    if (sizeElement) {
+      sizeElement.textContent = 'Erro';
+    }
+  }
+}
+
+async function atualizarListaBackups() {
+  await carregarListaBackups();
+  showToast('Lista de backups atualizada');
+}
+
+// Função para restaurar um backup específico
+async function restaurarBackupEspecifico(index) {
+  if (index < 0 || index >= backupsList.length) return;
+  
+  const fileEntry = backupsList[index];
+  const info = extrairInfoBackup(fileEntry.name);
+  
+  if (!confirm(`Deseja restaurar o backup "${info.name}"?\n\nATENÇÃO: Todos os dados atuais serão substituídos.`)) {
+    return;
+  }
+  
+  try {
+    // Ler e restaurar o backup
+    const backupData = await lerArquivoBackup(fileEntry);
+    
+    if (!backupData.version || !backupData.data) {
+      throw new Error('Arquivo de backup inválido');
+    }
+    
+    // Limpar dados atuais
+    localStorage.clear();
+    
+    // Restaurar dados
+    Object.keys(backupData.data).forEach(key => {
+      localStorage.setItem(key, JSON.stringify(backupData.data[key]));
+    });
+    
+    showToast(`Backup "${info.name}" restaurado com sucesso!`);
+    
+    // Recarregar a página
+    setTimeout(() => {
+      location.reload();
+    }, 2000);
+    
+    fecharModalGerenciamento();
+    
+  } catch (error) {
+    console.error('Erro ao restaurar backup:', error);
+    alert(`Erro ao restaurar backup: ${error.message}`);
+  }
+}
+
+// Função para excluir um backup específico
+async function excluirBackupEspecifico(index) {
+  if (index < 0 || index >= backupsList.length) return;
+  
+  const fileEntry = backupsList[index];
+  const info = extrairInfoBackup(fileEntry.name);
+  
+  if (!confirm(`Tem certeza que deseja excluir o backup "${info.name}"?\n\nEsta ação não pode ser desfeita.`)) {
+    return;
+  }
+  
+  try {
+    await new Promise((resolve, reject) => {
+      fileEntry.remove(resolve, reject);
+    });
+    
+    // Remover da lista
+    backupsList.splice(index, 1);
+    
+    // Atualizar UI
+    atualizarListaUI();
+    
+    showToast(`Backup "${info.name}" excluído com sucesso!`);
+    
+  } catch (error) {
+    console.error('Erro ao excluir backup:', error);
+    alert(`Erro ao excluir backup: ${error.message}`);
+  }
+}
+
+// Função para excluir todos os backups
+async function excluirTodosBackups() {
+  if (backupsList.length === 0) return;
+  
+  if (!confirm(`Tem certeza que deseja excluir TODOS os ${backupsList.length} backups?\n\nEsta ação não pode ser desfeita e todos os backups serão perdidos.`)) {
+    return;
+  }
+  
+  try {
+    let sucessos = 0;
+    let erros = 0;
+    
+    // Excluir cada arquivo
+    for (const fileEntry of backupsList) {
+      try {
+        await new Promise((resolve, reject) => {
+          fileEntry.remove(resolve, reject);
+        });
+        sucessos++;
+      } catch (error) {
+        console.error('Erro ao excluir arquivo:', fileEntry.name, error);
+        erros++;
+      }
+    }
+    
+    // Limpar lista
+    backupsList = [];
+    
+    // Atualizar UI
+    atualizarListaUI();
+    
+    // Mostrar resultado
+    let mensagem = `${sucessos} backup(s) excluído(s) com sucesso.`;
+    if (erros > 0) {
+      mensagem += ` ${erros} backup(s) não puderam ser excluídos.`;
+    }
+    
+    showToast(mensagem);
+    
+    // Atualizar estatísticas
+    await carregarListaBackups();
+    
+  } catch (error) {
+    console.error('Erro ao excluir todos backups:', error);
+    alert(`Erro ao excluir backups: ${error.message}`);
+  }
+}
+
+// Adicione esta função em qualquer lugar do seu script (pode ser no final)
+function verificarDadosContas() {
+  console.log('=== VERIFICANDO DADOS DE CONTAS ===');
+  
+  // Verificar todas as chaves possíveis
+  const possiveisChaves = [
+    'contas_bancarias',
+    'contas_config',
+    'nextContaId',
+    'contas_saldo',
+    'contas_lista',
+    'contas',
+    'bancos',
+    'contas_cadastro',
+    'contas_salvo',
+    'contas_salvos',
+    'contas_gerenciamento'
+  ];
+  
+  console.log('Procurando chaves específicas:');
+  possiveisChaves.forEach(chave => {
+    const valor = localStorage.getItem(chave);
+    if (valor) {
+      try {
+        const parsed = JSON.parse(valor);
+        console.log(`✓ ${chave}:`, parsed);
+        console.log(`   Tipo: ${Array.isArray(parsed) ? 'Array com ' + parsed.length + ' itens' : typeof parsed}`);
+      } catch (e) {
+        console.log(`✓ ${chave}: (não é JSON)`, valor);
+      }
+    } else {
+      console.log(`✗ ${chave}: não encontrada`);
+    }
+  });
+  
+  // Verificar chaves que começam com 'contas_'
+  console.log('\n=== TODAS AS CHAVES QUE COMEÇAM COM "contas_" ===');
+  let contasCount = 0;
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key.startsWith('contas_')) {
+      contasCount++;
+      const valor = localStorage.getItem(key);
+      try {
+        const parsed = JSON.parse(valor);
+        console.log(`${key}:`, parsed);
+      } catch (e) {
+        console.log(`${key}: (texto)`, valor.substring(0, 100) + (valor.length > 100 ? '...' : ''));
+      }
+    }
+  }
+  
+  if (contasCount === 0) {
+    console.log('Nenhuma chave começando com "contas_" encontrada.');
+  }
+  
+  // Verificar TODAS as chaves do localStorage
+  console.log('\n=== TODAS AS CHAVES DO LOCALSTORAGE ===');
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    const valor = localStorage.getItem(key);
+    console.log(`${i}: ${key}`);
+  }
+  
+  console.log(`\n=== TOTAL: ${localStorage.length} chaves no localStorage ===`);
+}
+
+// Função mais simples para testar rapidamente
+function debugContas() {
+  console.log('=== DEBUG RÁPIDO CONTAS ===');
+  const todasChaves = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    todasChaves.push(localStorage.key(i));
+  }
+  
+  console.log('Todas as chaves:', todasChaves);
+  
+  // Filtrar chaves que podem ser de contas
+  const chavesContas = todasChaves.filter(key => 
+    key.includes('conta') || 
+    key.includes('banco') || 
+    key.includes('saldo') ||
+    key.toLowerCase().includes('account')
+  );
+  
+  console.log('Possíveis chaves de contas:', chavesContas);
+  
+  // Mostrar valores das possíveis chaves de contas
+  chavesContas.forEach(key => {
+    const valor = localStorage.getItem(key);
+    console.log(`\n${key}:`);
+    try {
+      console.log(JSON.parse(valor));
+    } catch (e) {
+      console.log(valor);
+    }
+  });
+}
+
+// Adicione também esta função para ver o que está sendo salvo no backup
+function verificarBackupAtual() {
+  console.log('=== VERIFICANDO O QUE SERIA SALVO NO BACKUP ===');
+  
+  const chavesParaBackup = [];
+  
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    
+    if (key.startsWith('lancamentos_') || 
+        key.startsWith('cartoes_') || 
+        key.startsWith('contas_') ||
+        key === 'valoresVisiveis' ||
+        key === 'contas_bancarias' ||
+        key === 'contas_config' ||
+        key === 'nextContaId') {
+      chavesParaBackup.push(key);
+    }
+  }
+  
+  console.log('Chaves que seriam salvas no backup:', chavesParaBackup);
+  console.log('Total:', chavesParaBackup.length, 'chaves');
+  
+  // Verificar se há dados nas chaves de contas
+  const chavesContas = chavesParaBackup.filter(key => 
+    key.includes('contas') || key.includes('Conta')
+  );
+  
+  console.log('\nChaves de contas no backup:', chavesContas);
+  
+  chavesContas.forEach(key => {
+    const valor = localStorage.getItem(key);
+    console.log(`\n${key}:`);
+    try {
+      const parsed = JSON.parse(valor);
+      if (Array.isArray(parsed)) {
+        console.log(`Array com ${parsed.length} itens:`, parsed);
+      } else {
+        console.log(parsed);
+      }
+    } catch (e) {
+      console.log('(não é JSON):', valor);
+    }
+  });
+}
+
+// FUNÇÃO PARA CALCULAR E MOSTRAR SALDO DIÁRIO
+// FUNÇÃO PARA RENDERIZAR CABEÇALHOS DE DATA E SALDO DIÁRIO
+function renderDailyBalance(transactions) {
+    const transactionsContainer = document.getElementById('transactionsContainer');
+    
+    // CALCULAR SALDO ACUMULADO DOS MESES ANTERIORES
+    let saldoAcumuladoAnterior = getSaldoAcumuladoMesesAnteriores();
+    
+    // Agrupar TODAS as transações (pagas e não pagas) por data para o CÁLCULO do saldo
+    const groupedByDateForCalculation = {};
+    
+    transactions.forEach(transaction => {
+        const date = transaction.dataVencimento;
+        if (!date) return;
+        
+        if (!groupedByDateForCalculation[date]) {
+            groupedByDateForCalculation[date] = {
+                total: 0,
+                transactions: []
+            };
+        }
+        
+        groupedByDateForCalculation[date].total += transaction.valor;
+        groupedByDateForCalculation[date].transactions.push(transaction);
+    });
+    
+    // Agrupar apenas transações NÃO PAGAS por data para POSICIONAR o saldo
+    const transactionsNaoPagas = transactions.filter(t => !t.pago);
+    const groupedByDateForPosition = {};
+    
+    transactionsNaoPagas.forEach(transaction => {
+        const date = transaction.dataVencimento;
+        if (!date) return;
+        
+        if (!groupedByDateForPosition[date]) {
+            groupedByDateForPosition[date] = {
+                total: 0,
+                transactions: []
+            };
+        }
+        
+        groupedByDateForPosition[date].total += transaction.valor;
+        groupedByDateForPosition[date].transactions.push(transaction);
+    });
+    
+    // Ordenar datas (mais antigas primeiro)
+    const sortedDates = Object.keys(groupedByDateForCalculation).sort();
+    
+    // Remover todos os resumos diários e cabeçalhos existentes
+    document.querySelectorAll('.daily-balance-row, .date-header').forEach(el => el.remove());
+    
+    // Variável para controle do saldo acumulado (inicia com saldo dos meses anteriores)
+    let saldoAcumulado = saldoAcumuladoAnterior;
+    
+    // Para cada data, calcular o saldo acumulado e adicionar cabeçalho
+    for (let i = 0; i < sortedDates.length; i++) {
+        const date = sortedDates[i];
+        const dailyData = groupedByDateForCalculation[date];
+        
+        // Atualizar saldo acumulado com TODAS as transações deste dia (pagas e não pagas)
+        saldoAcumulado += dailyData.total;
+        
+        // Verificar se existem transações NÃO PAGAS nesta data
+        const hasUnpaidTransactions = groupedByDateForPosition[date] && groupedByDateForPosition[date].transactions.length > 0;
+        
+        // Se não houver transações não pagas, pular a criação do cabeçalho e saldo
+        if (!hasUnpaidTransactions) {
+            continue;
+        }
+        
+        // Formatar data para exibição - APENAS DIA DA SEMANA E DIA/MÊS
+        const dataObj = new Date(date + 'T00:00:00');
+        const diaSemana = dataObj.toLocaleDateString('pt-BR', { weekday: 'long' });
+        const dia = dataObj.getDate();
+        
+        // Capitalizar primeira letra do dia da semana
+        const diaSemanaCapitalizado = diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1);
+        
+        // Formatar: "Sexta-feira, 05"
+        const formattedDate = `${diaSemanaCapitalizado}, ${dia.toString().padStart(2, '0')}`;
+        
+        // Encontrar o PRIMEIRO card NÃO PAGO desta data para inserir o cabeçalho ANTES
+        let firstCardOfDate = null;
+        const cardsList = document.querySelectorAll('.transaction-card');
+        
+        for (let j = 0; j < cardsList.length; j++) {
+            const card = cardsList[j];
+            const cardDate = card.getAttribute('data-date');
+            if (cardDate === date) {
+                const cardIndex = parseInt(card.getAttribute('data-index'));
+                if (cardIndex >= 0 && lancamentos[cardIndex] && !lancamentos[cardIndex].pago) {
+                    firstCardOfDate = card;
+                    break;
+                }
+            }
+        }
+        
+        // Criar cabeçalho de data
+        const dateHeader = document.createElement('div');
+        dateHeader.className = 'date-header';
+        dateHeader.setAttribute('data-header-date', date);
+        dateHeader.innerHTML = `
+            <div class="date-header-text">${formattedDate}</div>
+            <div class="date-header-line"></div>
+        `;
+        
+        // Inserir cabeçalho ANTES do primeiro card NÃO PAGO da data
+        if (firstCardOfDate) {
+            firstCardOfDate.insertAdjacentElement('beforebegin', dateHeader);
+        } else {
+            transactionsContainer.appendChild(dateHeader);
+        }
+        
+        // Criar elemento do resumo diário (saldo)
+        const dailyRow = document.createElement('div');
+        dailyRow.className = 'daily-balance-row';
+        dailyRow.setAttribute('data-balance-date', date);
+        
+        // Adicionar classe baseada no saldo para controlar a cor da borda
+        if (saldoAcumulado < 0) {
+            dailyRow.classList.add('negative-border');
+        } else if (saldoAcumulado > 0) {
+            dailyRow.classList.add('positive-border');
+        } else {
+            dailyRow.classList.add('zero-border');
+        }
+        
+        // Formatar o valor com sinal se for negativo
+        const valorFormatado = formatarValorComSinal(saldoAcumulado);
+        
+        dailyRow.innerHTML = `
+            <span class="daily-balance-label">Saldo do dia</span>
+            <span class="daily-balance-amount">${valorFormatado}</span>
+        `;
+        
+        // Encontrar o ÚLTIMO card NÃO PAGO desta data para inserir o saldo APÓS
+        let lastCardOfDate = null;
+        for (let j = cardsList.length - 1; j >= 0; j--) {
+            const card = cardsList[j];
+            const cardDate = card.getAttribute('data-date');
+            if (cardDate === date) {
+                const cardIndex = parseInt(card.getAttribute('data-index'));
+                if (cardIndex >= 0 && lancamentos[cardIndex] && !lancamentos[cardIndex].pago) {
+                    lastCardOfDate = card;
+                    break;
+                }
+            }
+        }
+        
+        // Inserir saldo após o último card NÃO PAGO da data
+        if (lastCardOfDate) {
+            lastCardOfDate.insertAdjacentElement('afterend', dailyRow);
+        } else {
+            // Se não houver cards não pagos, inserir após o cabeçalho
+            if (dateHeader.nextSibling) {
+                dateHeader.insertAdjacentElement('afterend', dailyRow);
+            } else {
+                transactionsContainer.appendChild(dailyRow);
+            }
+        }
+    }
+}
+
+// Função auxiliar para formatar valor com sinal
+function formatarValorComSinal(valor) {
+    const valorAbsoluto = Math.abs(valor);
+    const valorFormatado = formatToBRL(valorAbsoluto);
+    
+    if (valor < 0) {
+        return `- R$ ${valorFormatado}`;
+    }
+    return `R$ ${valorFormatado}`;
+}
+
+// Função auxiliar para extrair a data de um card
+function getCardDate(card) {
+    const dateElement = card.querySelector('.transaction-date');
+    if (!dateElement) return null;
+    
+    const dateText = dateElement.textContent;
+    // Extrair data do texto (formato: "Vence em X dias" ou data específica)
+    if (dateText.includes('Vence em')) {
+        // Se for um card de pendência, precisamos pegar a data do objeto
+        return null;
+    }
+    
+    // Buscar pelo atributo data ou pelo conteúdo
+    return null;
+}
+
+// MODIFICAR A FUNÇÃO renderFilteredTransactions para incluir o saldo diário
+// Encontre a função renderFilteredTransactions e substitua por esta:
+
+function renderFilteredTransactions(filteredLancamentos) {
+    const transactionsContainer = document.getElementById('transactionsContainer');
+    transactionsContainer.innerHTML = '';
+
+    // Criar um mapa para encontrar o índice original baseado na descrição e valor
+    const lancamentosMap = new Map();
+    lancamentos.forEach((lanc, index) => {
+        const key = `${lanc.descricao}-${lanc.valor}-${lanc.dataVencimento}`;
+        lancamentosMap.set(key, index);
+    });
+
+    const allTransactions = filteredLancamentos.map((l, i) => ({
+        ...l, 
+        _idx: i,
+        // Encontrar o índice original no array completo
+        originalIndex: lancamentosMap.get(`${l.descricao}-${l.valor}-${l.dataVencimento}`)
+    }));
+
+    // Aplica a mesma ordenação
+    allTransactions.sort((a, b) => {
+        if (!a.pago && b.pago) return -1;
+        if (a.pago && !b.pago) return 1;
+        
+        const dataA = a.dataVencimento ? new Date(a.dataVencimento + 'T00:00:00') : new Date('9999-12-31');
+        const dataB = b.dataVencimento ? new Date(b.dataVencimento + 'T00:00:00') : new Date('9999-12-31');
+        
+        if (!a.pago && !b.pago) {
+            return dataA - dataB;
+        } else {
+            const timestampA = a.ultimaModificacao || a._idx;
+            const timestampB = b.ultimaModificacao || b._idx;
+            return timestampB - timestampA;
+        }
+    });
+
+    allTransactions.forEach(lanc => addRowToTable(lanc, lanc.originalIndex));
+    
+    // ADICIONAR ESTA LINHA - Mostrar o saldo diário
+    renderDailyBalance(filteredLancamentos);
+}
+
+// Função para atualizar o label do topo baseado no tipo
+function atualizarLabelTopo() {
+  const tipoSelect = document.getElementById('tipo');
+  const modalTypeLabel = document.getElementById('modalTypeLabel');
+  const modalTitle = document.getElementById('modalTitle');
+  
+  if (!tipoSelect || !modalTypeLabel) return;
+  
+  const tipo = tipoSelect.value;
+  
+  console.log('Atualizando label para:', tipo); // Para debug
+  
+  if (tipo === 'receita') {
+    modalTypeLabel.textContent = 'RECEITA';
+    if (modalTitle) modalTitle.textContent = 'Nova Receita';
+  } else {
+    modalTypeLabel.textContent = 'DESPESA';
+    if (modalTitle) modalTitle.textContent = 'Nova Despesa';
+  }
+}
+
+// Função para alterar a cor da status bar baseado no tipo de lançamento
+function updateStatusBarColor(tipo) {
+    if (typeof StatusBar !== 'undefined') {
+        if (tipo === 'despesa') {
+            // Cor vermelha para despesas
+            StatusBar.backgroundColorByHexString("#f44336");
+            StatusBar.styleLightContent(); // Texto branco
+        } else if (tipo === 'receita') {
+            // Cor verde para receitas
+            StatusBar.backgroundColorByHexString("#21c45d");
+            StatusBar.styleLightContent(); // Texto branco
+        } else {
+            // Cor padrão
+            StatusBar.backgroundColorByHexString("#21c45d");
+            StatusBar.styleLightContent();
+        }
+    }
+}
+
+// Função para restaurar a cor original da status bar
+function restoreStatusBarColor() {
+    if (typeof StatusBar !== 'undefined') {
+        StatusBar.backgroundColorByHexString("#21c45d");
+        StatusBar.styleLightContent();
+    }
+}
+
+// Adicione este listener no final do script, junto com os outros event listeners
+tipoInput.addEventListener('change', function() {
+    atualizarLabelTopo();
+    atualizarTextoPago();
+    toggleFormaPagamento();
+    
+    // ALTERAR COR DA STATUS BAR QUANDO MUDAR O TIPO
+    if (this.value === 'despesa') {
+        updateStatusBarColor('despesa');
+    } else if (this.value === 'receita') {
+        updateStatusBarColor('receita');
+    }
+});
+
+// ========== CALCULADORA ==========
+let calcState = { display: '0', expression: '', operand: null, operator: null, waitingNext: false };
+
+function abrirCalculadora() {
+  calcState = { display: '0', expression: '', operand: null, operator: null, waitingNext: false };
+  atualizarCalculadora();
+  document.getElementById('calcModal').style.display = 'flex';
+}
+
+function abrirCalculadoraComValor() {
+  const campoValor = document.getElementById('valor').value;
+  const valorAtual = campoValor ? campoValor.replace(/\./g, '').replace(',', '.') : '0';
+  const numero = parseFloat(valorAtual);
+
+  calcState = {
+    display: (!isNaN(numero) && numero > 0) ? campoValor : '0',
+    expression: '',
+    operand: null,
+    operator: null,
+    waitingNext: false
+  };
+  atualizarCalculadora();
+  document.getElementById('calcModal').style.display = 'flex';
+}
+
+// Função para vibração suave ao clicar nos botões da calculadora
+function vibracao_calculadora() {
+  if (navigator.vibrate) {
+    navigator.vibrate(30); // 50ms de vibração suave
+  }
+}
+
+function calcApagar() {
+  vibracao_calculadora();
+  if (calcState.waitingNext) return;
+  calcState.display = calcState.display.length > 1
+    ? calcState.display.slice(0, -1)
+    : '0';
+  atualizarCalculadora();
+}
+
+// LONGPRESS no botão de apagar — limpa tudo
+setTimeout(function() {
+  let pressTimer = null;
+
+  const btn = document.getElementById('calcDeleteBtn');
+  if (!btn) return;
+
+  btn.addEventListener('mousedown', startPress);
+  btn.addEventListener('touchstart', startPress, { passive: true });
+  btn.addEventListener('mouseup', cancelPress);
+  btn.addEventListener('mouseleave', cancelPress);
+  btn.addEventListener('touchend', cancelPress);
+  btn.addEventListener('touchcancel', cancelPress);
+
+  function startPress() {
+    pressTimer = setTimeout(function() {
+      calcState = { display: '0', expression: '', operand: null, operator: null, waitingNext: false };
+      atualizarCalculadora();
+      vibrarToque();
+    }, 600);
+  }
+
+  function cancelPress() {
+    clearTimeout(pressTimer);
+  }
+}, 500);
+
+function fecharCalculadora() {
+  document.getElementById('calcModal').style.display = 'none';
+}
+
+function atualizarCalculadora() {
+  document.getElementById('calcDisplay').textContent = calcState.display;
+  document.getElementById('calcExpression').textContent = calcState.expression;
+}
+
+function calcInput(val) {
+  vibracao_calculadora();
+  const s = calcState;
+
+  if (val === 'AC') {
+    calcState = { display: '0', expression: '', operand: null, operator: null, waitingNext: false };
+    atualizarCalculadora();
+    return;
+  }
+
+  if (val === '+/-') {
+    s.display = s.display.startsWith('-') ? s.display.slice(1) : '-' + s.display;
+    atualizarCalculadora();
+    return;
+  }
+
+  if (val === '%') {
+    s.display = String(parseFloat(s.display.replace(',', '.')) / 100).replace('.', ',');
+    atualizarCalculadora();
+    return;
+  }
+
+// OPERADORES
+if (['+', '-', '*', '/'].includes(val)) {
+  // Se já há uma operação pendente, resolve antes de iniciar a nova
+  if (s.operator !== null && !s.waitingNext) {
+    const parts = s.display.split(' ');
+    const currentStr = parts[parts.length - 1];
+    const current = parseFloat(currentStr.replace(',', '.'));
+    let result;
+    switch (s.operator) {
+      case '+': result = s.operand + current; break;
+      case '-': result = s.operand - current; break;
+      case '*': result = s.operand * current; break;
+      case '/': result = current !== 0 ? s.operand / current : 0; break;
+    }
+    s.operand = parseFloat(result.toFixed(10));
+    s.display = String(parseFloat(result.toFixed(10))).replace('.', ',');
+  } else {
+    s.operand = parseFloat(s.display.replace(',', '.'));
+  }
+
+  s.operator = val;
+  const opLabel = val === '*' ? '×' : val === '/' ? '÷' : val;
+  s.expression = s.display;
+  s.display = s.display + ' ' + opLabel + ' ';
+  s.waitingNext = true;
+  atualizarCalculadora();
+  return;
+}
+
+// IGUAL
+if (val === '=') {
+  if (s.operator === null) return;
+  // Pega apenas a parte após o operador
+  const parts = s.display.split(' ');
+  const currentStr = parts[parts.length - 1];
+  const current = parseFloat(currentStr.replace(',', '.'));
+  let result;
+  switch (s.operator) {
+    case '+': result = s.operand + current; break;
+    case '-': result = s.operand - current; break;
+    case '*': result = s.operand * current; break;
+    case '/': result = current !== 0 ? s.operand / current : 0; break;
+  }
+  s.expression = '';
+  s.display = String(parseFloat(result.toFixed(10))).replace('.', ',');
+  s.operator = null;
+  s.operand = null;
+  s.waitingNext = false;
+  atualizarCalculadora();
+  return;
+}
+
+// VÍRGULA — verifica apenas o número atual (após o último operador)
+if (val === ',') {
+  const parts = s.display.split(' ');
+  const currentPart = parts[parts.length - 1];
+  if (!currentPart.includes(',')) {
+    s.display += ',';
+  }
+  s.waitingNext = false;
+  atualizarCalculadora();
+  return;
+}
+
+// DÍGITOS
+if (s.waitingNext) {
+  // Adiciona o dígito após o espaço já existente no display
+  s.display = s.display + val;
+  s.waitingNext = false;
+} else {
+  s.display = s.display === '0' ? val : s.display + val;
+}
+atualizarCalculadora();
+}
+
+function calcConcluir() {
+  if (calcState.operator !== null) calcInput('=');
+
+  const valor = calcState.display.replace(',', '.');
+  const numero = parseFloat(valor);
+  if (!isNaN(numero) && numero > 0) {
+    document.getElementById('valor').value = formatToBRL(numero);
+  }
+  fecharCalculadora();
+}
+
+document.getElementById('valor').addEventListener('click', function(e) {
+  e.preventDefault();
+  this.blur();
+  abrirCalculadoraComValor();
+});
+
+document.getElementById('valor').addEventListener('focus', function() {
+  this.blur();
+  abrirCalculadoraComValor();
+});
+
+// ========== VIBRAÇÃO ==========
+function vibrarToque() {
+  if (navigator.vibrate) {
+    navigator.vibrate(30);
+  }
+}
+
+document.getElementById('calcModal').addEventListener('click', function(e) {
+  if (e.target.closest('.calc-btn') || e.target.closest('[onclick*="calcApagar"]')) {
+    vibrarToque();
+  }
+});
+
+
+
+// Esconder botão flutuante de logout injetado pelo auth-guard
+document.addEventListener('DOMContentLoaded', function() {
+  // Remove qualquer botão de logout flutuante injetado pelo auth-guard
+  const observer = new MutationObserver(() => {
+    const logoutBtn = document.querySelector('button[onclick*="signOut"], button[onclick*="logout"], #auth-logout-btn');
+    if (logoutBtn && logoutBtn.style.position === 'fixed') {
+      logoutBtn.style.display = 'none';
+    }
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+
+  // Também tenta remover imediatamente se já existir
+  setTimeout(() => {
+    document.querySelectorAll('body > button').forEach(btn => {
+      const style = window.getComputedStyle(btn);
+      if (style.position === 'fixed' && (btn.textContent.toLowerCase().includes('sair') || btn.textContent.toLowerCase().includes('logout'))) {
+        btn.style.display = 'none';
+      }
+    });
+  }, 500);
+});
+
+// Inicialização
+currentFilter = 'transacoes'; // Garante que comece com o filtro padrão
+updateMonthDisplay();
+carregarPreferenciaVisibilidade();
+carregarFormasPagamento(); // ← ADICIONE ESTA LINHA
+
+// Na inicialização, adicione:
+setTimeout(() => {
+    applyCombinedFilters();
+    updatePendenciaButtonVisibility();
+    updateFilterIcon(); // ← GARANTIR QUE ESTÁ SENDO CHAMADO
+}, 100);
+
+tipoInput.addEventListener('change', function() {
+    atualizarLabelTopo();
+    atualizarTextoPago();
+    toggleFormaPagamento();
+});
+
+
+// Adicionar botão de debug no console
+window.debugSupabase = async function() {
+    console.log('=== DEBUG SUPABASE ===');
+    const { getCurrentUser } = await import('./js/supabase-config.js');
+    const { loadUserData, saveUserTransactionsToSupabase } = await import('./js/supabase-sync.js');
+    
+    const user = await getCurrentUser();
+    console.log('Usuário atual:', user?.email);
+    
+    console.log('Transações no localStorage:');
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith('lancamentos_')) {
+            const data = JSON.parse(localStorage.getItem(key));
+            console.log(`  ${key}: ${data.length} transações`);
+        }
+    }
+    
+    console.log('Recarregando dados do Supabase...');
+    await loadUserData();
+    console.log('Dados recarregados!');
+};
+
+  </script>
+
+
+  <!-- STATUS BAR -->
+  <!-- <script src="cordova.js"></script> -->
+  <script>
+    document.addEventListener('deviceready', function() {
+      if (typeof StatusBar !== 'undefined') {
+        setTimeout(function() {
+          StatusBar.overlaysWebView(false);
+          StatusBar.backgroundColorByHexString("#21c45d"); //Cor da StatusBar
+          StatusBar.styleLightContent();
+        }, 300);
+      }
+    }, false);
+
+    // Funções para a barra de navegação
+    function navigateTo(pagina) {
+        if (pagina === 'home') {
+            window.location.href = 'index.html';
+        } else if (pagina === 'transacoes') {
+            window.location.href = 'index2.html';
+        } else if (pagina === 'investimentos') {
+            window.location.href = 'index3.html';
+        }
+    }
+
+// Gerenciar contas 
+function navigateToContas() {
+  window.location.href = 'index4.html';
+  menuDropdown.classList.remove('active');
+}
+
+
+  </script>
+
+<!-- Barra de Navegação Inferior -->
+<script>
+function navigateTo(pagina) {
+    if (pagina === 'home') window.location.href = 'index.html';
+    else if (pagina === 'transacoes') window.location.href = 'index2.html';
+}
+</script>
+<div class="bottom-nav">
+    <button class="nav-btn" onclick="navigateTo('home')">
+        <i class="ri-home-5-line"></i>
+        <div class="label">Home</div>
+    </button>
+    <button class="nav-btn active" onclick="navigateTo('transacoes')">
+        <i class="ri-list-check"></i>
+        <div class="label">Transações</div>
+    </button>
+</div>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    });
+  }
+
+// FUNÇÃO DE LOGOUT CORRETA
+async function sairDoApp() {
+    const menuDropdown = document.getElementById('menuDropdown');
+    if (menuDropdown) menuDropdown.classList.remove('active');
+    
+    if (!confirm('Deseja realmente sair da sua conta? Seus dados serão salvos.')) {
+        return;
+    }
+    
+    try {
+        console.log('Sincronizando dados antes de sair...');
+        
+        try {
+            const { syncAllToSupabase } = await import('./js/supabase-sync.js');
+            await syncAllToSupabase();
+            console.log('✅ Dados sincronizados!');
+        } catch (syncError) {
+            console.warn('Erro na sincronização:', syncError);
+        }
+        
+        try {
+            const { signOut } = await import('./js/supabase-config.js');
+            await signOut();
+        } catch (logoutError) {
+            console.warn('Erro no logout:', logoutError);
+        }
+        
+        // Limpar todos os dados locais ao sair (dados do app + sessao do Supabase)
+        const _ko = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const _k = localStorage.key(i);
+            if (_k && (
+                _k.startsWith('lancamentos_') ||
+                _k === 'cartoes_credito' ||
+                _k === '_last_user_id' ||
+                _k.startsWith('sb-')  // token de sessao do Supabase
+            )) _ko.push(_k);
+        }
+        _ko.forEach(k => localStorage.removeItem(k));
+        sessionStorage.setItem('_from_logout', '1');
+        window.location.href = 'login.html';
+        
+    } catch (error) {
+        console.error('Erro ao sair:', error);
+        window.location.href = 'login.html';
+    }
+}
+</script>
+</body>
+</html>

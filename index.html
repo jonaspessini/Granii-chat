@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#21c45d">
+    <title>Home</title>
+    <link rel="manifest" href="manifest.json">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="css/index.css">
+
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header-purple">
+    <div class="home-user-bar">
+        <div class="home-user-info">
+            <i class="ri-user-3-line"></i>
+            <span id="homeUserEmail">Carregando...</span>
+        </div>
+        <button class="home-logout-btn" id="homeLogoutBtn" type="button">
+            <i class="ri-logout-box-r-line"></i>
+            <span>Sair</span>
+        </button>
+    </div>
+    <div class="month-navigation-header">
+        <button class="month-btn" id="prevMonthHeader">❮</button>
+        <div class="month-display-header" id="monthDisplayHeader">
+            <span id="currentMonthTextHeader"></span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+        </div>
+        <button class="month-btn" id="nextMonthHeader">❯</button>
+    </div>
+</div>
+
+<!-- CONTEÚDO PRINCIPAL ROLÁVEL -->
+<div class="main-scroll" id="mainScroll">
+    
+    <!-- CARD DE SALDO (AGORA ROLÁVEL) -->
+    <div class="header-balance-card">
+        <div class="olho"><i class="ri-eye-line"></i></div>
+        <div class="balance-label">Saldo atual</div>
+        <div class="balance-value" id="currentBalanceDisplay">R$ 0,00</div>
+        <div class="balance-summary-row">
+            <div class="summary-item">
+                <div class="summary-item-label">Receitas</div>
+                <div class="summary-item-value">
+                    <span class="summary-item-icon income-icon">↑</span>
+                    <span class="value-text income-value" id="headerReceitasTotais">0,00</span>
+                </div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-item-label">Despesas</div>
+                <div class="summary-item-value">
+                    <span class="summary-item-icon expense-icon">↓</span>
+                    <span class="value-text expense-value" id="headerDespesasTotais">0,00</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CARD 1: RESUMO DO MÊS -->
+    <div class="section-card">
+        <div class="section-title">
+            <i class="ri-bar-chart-2-line"></i>
+            <span>Resumo do mês</span>
+        </div>
+        <div class="month-summary">
+            <div class="balance-month" id="monthBalanceDisplay">R$ 0,00</div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar" style="width: 0%;"></div>
+            </div>
+            <div class="progress-stats">
+                <span id="receitasMesLabel">R$ 0,00</span>
+                <span>vs</span>
+                <span id="despesasMesLabel">R$ 0,00</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- CARD 2: PENDÊNCIAS PRIORITÁRIAS -->
+    <div class="section-card">
+        <div class="section-title">
+            <i class="ri-alarm-warning-line"></i>
+            <span>Próximos vencimentos</span>
+        </div>
+        <div id="pendingList" class="pending-list"></div>
+    </div>
+
+    <!-- CARD 3: HISTÓRICO (GRÁFICO) -->
+    <div class="section-card">
+        <div class="section-title">
+            <i class="ri-funds-line"></i>
+            <span>Histórico de 6 meses</span>
+        </div>
+        <div class="chart-container">
+            <div class="chart-bars" id="historyChart"></div>
+        </div>
+        <div class="chart-legend">
+            <div class="legend-item"><div class="legend-color income"></div><span>Receitas</span></div>
+            <div class="legend-item"><div class="legend-color expense"></div><span>Despesas</span></div>
+        </div>
+    </div>
+
+    <!-- CARD 4: CARTÕES -->
+    <div class="cartoes-container" id="cartoesContainer"></div>
+</div>
+
+<!-- MODAL DE SELEÇÃO DE MÊS - CORRIGIDO -->
+<div id="monthYearPickerModal" class="modal">
+    <div class="modal-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <button class="month-nav-btn" onclick="changeYearPicker(-1)">❮</button>
+            <span id="pickerYearDisplay" style="font-weight: 600; font-size: 1.2em;">2025</span>
+            <button class="month-nav-btn" onclick="changeYearPicker(1)">❯</button>
+        </div>
+        <div class="months-grid" id="monthsGrid"></div>
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button class="modal-cancel-btn" onclick="closeMonthYearPickerModal()">CANCELAR</button>
+            <button class="modal-current-btn" onclick="goToCurrentMonth()">MÊS ATUAL</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DE DETALHES DOS CARTÕES -->
+<div class="cartoes-details-modal" id="cartoesDetailsModal">
+    <div class="cartoes-details-header">
+        <div>Detalhes do Cartão</div>
+        <button style="background:none; border:none; color:white; font-size:1.5em; cursor:pointer;" onclick="closeCartoesDetails()">×</button>
+    </div>
+    <div class="cartoes-details-content" id="cartoesDetailsContent"></div>
+</div>
+
+<!-- OVERLAY -->
+<div class="overlay" id="modalOverlay"></div>
+
+<!-- Barra de Navegação Inferior -->
+<script>
+function navigateTo(pagina) {
+    if (pagina === 'home') {
+        window.location.href = 'index.html';
+    } else if (pagina === 'transacoes') {
+        window.location.href = 'index2.html';
+    }
+}
+</script>
+
+<div class="bottom-nav">
+    <button class="nav-btn active" onclick="navigateTo('home')">
+        <i class="ri-home-5-line"></i>
+        <div class="label">Home</div>
+    </button>
+    <button class="nav-btn" onclick="navigateTo('transacoes')">
+        <i class="ri-list-check"></i>
+        <div class="label">Transações</div>
+    </button>
+    <!-- <button class="nav-btn" onclick="navigateTo('investimentos')">
+        <i class="ri-line-chart-line"></i>
+        <div class="label">Investimentos</div>
+    </button> -->
+</div>
+
+<!-- PRIMEIRO SCRIPT: Carrega Supabase como Módulo -->
+<script type="module">
+    import { initSupabaseForUser } from './js/supabase-integration.js';
+    import { getCurrentUser, signOut } from './js/supabase-config.js';
+    import { syncAllToSupabase } from './js/supabase-sync.js';
+    import { startSingleSessionGuard } from './js/single-session.js';
+    window.initSupabase = initSupabaseForUser;
+
+    function limparDadosLocaisAoSair() {
+        const keysToRemove = [];
+
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+
+            if (key && (
+                key.startsWith('lancamentos_') ||
+                key.includes('_lancamentos_') ||
+                key.startsWith('cartoes_') ||
+                key.endsWith('_cartoes_credito') ||
+                key.startsWith('contas_') ||
+                key.includes('_contas_') ||
+                key === 'cartoes_credito' ||
+                key === 'contas_bancarias' ||
+                key === 'contas_config' ||
+                key === 'nextContaId' ||
+                key === '_last_user_id' ||
+                key.startsWith('sb-')
+            )) {
+                keysToRemove.push(key);
+            }
+        }
+
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+    }
+
+    async function atualizarUsuarioHome() {
+        const userEmail = document.getElementById('homeUserEmail');
+        const user = await getCurrentUser();
+
+        if (!user) {
+            window.location.href = 'login.html';
+            return;
+        }
+
+        if (userEmail) {
+            const displayName = user.user_metadata?.display_name || user.user_metadata?.name || user.email || 'Usuario conectado';
+            userEmail.textContent = displayName;
+            userEmail.title = user.email || displayName;
+        }
+    }
+
+    async function sairDaHome() {
+        const logoutBtn = document.getElementById('homeLogoutBtn');
+
+        if (!confirm('Deseja realmente sair da sua conta? Seus dados serao salvos.')) {
+            return;
+        }
+
+        if (logoutBtn) logoutBtn.disabled = true;
+
+        try {
+            await syncAllToSupabase();
+        } catch (syncError) {
+            console.warn('Erro ao sincronizar antes de sair:', syncError);
+        }
+
+        try {
+            await signOut();
+        } catch (logoutError) {
+            console.warn('Erro ao sair:', logoutError);
+        }
+
+        limparDadosLocaisAoSair();
+        sessionStorage.setItem('_from_logout', '1');
+        window.location.href = 'login.html';
+    }
+
+    document.getElementById('homeLogoutBtn')?.addEventListener('click', sairDaHome);
+    atualizarUsuarioHome();
+    startSingleSessionGuard();
+    console.log('✅ Supabase module loaded');
+</script>
+
+<!-- SEGUNDO SCRIPT: Seu código original modificado -->
+<script>
+    (async function() {
+        // ========== INICIALIZAR SUPABASE PRIMEIRO ==========
+        if (window.initSupabase) {
+            console.log('🔄 Inicializando Supabase...');
+            await window.initSupabase();
+            console.log('✅ Supabase inicializado!');
+        }
+        
+        // ========== CONFIGURAÇÕES INICIAIS ==========
+        let currentDate = new Date();
+        const today = new Date();
+        let pickerCurrentYear = today.getFullYear();
+        let pickerSelectedMonth = today.getMonth();
+        let valoresVisiveis = true;
+        
+        const monthNames = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+        const monthNamesShort = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
+
+        // Elementos DOM
+        const currentMonthTextHeader = document.getElementById('currentMonthTextHeader');
+        const currentBalanceDisplay = document.getElementById('currentBalanceDisplay');
+        const headerReceitasTotaisEl = document.getElementById('headerReceitasTotais');
+        const headerDespesasTotaisEl = document.getElementById('headerDespesasTotais');
+        const cartoesContainer = document.getElementById('cartoesContainer');
+
+        // ========== FUNÇÕES AUXILIARES ==========
+        function formatToBRL(value) {
+            if (isNaN(value)) return '0,00';
+            return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function getMonthKey(date = currentDate) {
+            return date.toISOString().slice(0, 7);
+        }
+
+        function getHojeZerado() {
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0);
+            return hoje;
+        }
+
+        function calcularDiasAteVencimento(dataVencimento) {
+            if (!dataVencimento) return null;
+            const hoje = getHojeZerado();
+            const vencimento = new Date(dataVencimento + 'T00:00:00');
+            vencimento.setHours(0, 0, 0, 0);
+            const diffTime = vencimento - hoje;
+            return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        }
+
+        // ========== SALDO ACUMULADO GLOBAL ==========
+        function getSaldoAcumulado() {
+            let totalReceitasPagas = 0;
+            let totalDespesasPagas = 0;
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('lancamentos_')) {
+                    const data = localStorage.getItem(key);
+                    const lancamentos = data ? JSON.parse(data) : [];
+                    lancamentos.forEach(lanc => {
+                        const pago = lanc.hasOwnProperty('pago') ? lanc.pago : false;
+                        if (pago) {
+                            if (lanc.valor > 0) totalReceitasPagas += lanc.valor;
+                            else totalDespesasPagas += lanc.valor;
+                        }
+                    });
+                }
+            }
+            return totalReceitasPagas + totalDespesasPagas;
+        }
+
+        // ========== CARREGAR LANÇAMENTOS DO MÊS ATUAL ==========
+        function loadCurrentMonthTransactions() {
+            const key = 'lancamentos_' + getMonthKey(currentDate);
+            const data = localStorage.getItem(key);
+            return data ? JSON.parse(data) : [];
+        }
+
+        // ========== ATUALIZAR DISPLAY DO MÊS ==========
+        function updateMonthDisplay() {
+            const month = currentDate.getMonth();
+            const year = currentDate.getFullYear();
+            currentMonthTextHeader.textContent = `${monthNames[month]} ${year}`;
+            calcularTotais();
+            renderizarCartoes();
+            renderizarResumoMes();
+            renderizarPendencias();
+            renderizarHistorico();
+        }
+
+        function changeMonth(direction) {
+            currentDate.setMonth(currentDate.getMonth() + direction);
+            updateMonthDisplay();
+        }
+
+        // ========== CALCULAR TOTAIS ==========
+        function calcularTotais() {
+            const lancamentos = loadCurrentMonthTransactions();
+
+            let totalReceitas = 0, totalDespesas = 0;
+            lancamentos.forEach(lanc => {
+                if (lanc.valor > 0) totalReceitas += lanc.valor;
+                else totalDespesas += lanc.valor;
+            });
+
+            const saldoAcumulado = getSaldoAcumulado();
+
+            if (valoresVisiveis) {
+                currentBalanceDisplay.textContent = `R$ ${formatToBRL(saldoAcumulado)}`;
+                headerReceitasTotaisEl.textContent = formatToBRL(totalReceitas);
+                headerDespesasTotaisEl.textContent = formatToBRL(Math.abs(totalDespesas));
+            } else {
+                currentBalanceDisplay.textContent = '---';
+                headerReceitasTotaisEl.textContent = '---';
+                headerDespesasTotaisEl.textContent = '---';
+            }
+        }
+
+        // ========== RENDERIZAR RESUMO DO MÊS ==========
+        function renderizarResumoMes() {
+            const lancamentos = loadCurrentMonthTransactions();
+            let totalReceitas = 0, totalDespesas = 0;
+            lancamentos.forEach(lanc => {
+                if (lanc.valor > 0) totalReceitas += lanc.valor;
+                else totalDespesas += lanc.valor;
+            });
+            
+            const balanco = totalReceitas + totalDespesas;
+            const balancoAbs = Math.abs(balanco);
+            const totalDespesasAbs = Math.abs(totalDespesas);
+            
+            const monthBalanceEl = document.getElementById('monthBalanceDisplay');
+            const receitasMesLabel = document.getElementById('receitasMesLabel');
+            const despesasMesLabel = document.getElementById('despesasMesLabel');
+            const progressBar = document.getElementById('progressBar');
+            
+            if (valoresVisiveis) {
+                if (monthBalanceEl) {
+                    monthBalanceEl.textContent = `${balanco >= 0 ? '+' : '-'} R$ ${formatToBRL(balancoAbs)}`;
+                    monthBalanceEl.className = `balance-month ${balanco > 0 ? 'positive' : balanco < 0 ? 'negative' : 'neutral'}`;
+                }
+                if (receitasMesLabel) receitasMesLabel.textContent = `R$ ${formatToBRL(totalReceitas)}`;
+                if (despesasMesLabel) despesasMesLabel.textContent = `R$ ${formatToBRL(totalDespesasAbs)}`;
+            } else {
+                if (monthBalanceEl) monthBalanceEl.textContent = '---';
+                if (receitasMesLabel) receitasMesLabel.textContent = '---';
+                if (despesasMesLabel) despesasMesLabel.textContent = '---';
+            }
+            
+            let percent = 0;
+            let barClass = 'good';
+            if (totalReceitas > 0) {
+                percent = (totalDespesasAbs / totalReceitas) * 100;
+                percent = Math.min(percent, 100);
+                if (percent > 90) barClass = 'danger';
+                else if (percent > 70) barClass = 'warning';
+                else barClass = 'good';
+            } else if (totalDespesasAbs > 0) {
+                percent = 100;
+                barClass = 'danger';
+            }
+            
+            if (progressBar) {
+                progressBar.style.width = `${percent}%`;
+                progressBar.className = `progress-bar ${barClass}`;
+            }
+        }
+
+        // ========== RENDERIZAR PENDÊNCIAS ==========
+        function renderizarPendencias() {
+            const lancamentos = loadCurrentMonthTransactions();
+            const hoje = getHojeZerado();
+            const limiteFuturo = new Date(hoje);
+            limiteFuturo.setDate(hoje.getDate() + 7);
+            
+            const pendencias = lancamentos.filter(lanc => {
+                if (lanc.pago) return false;
+                if (!lanc.dataVencimento) return false;
+                const dataVenc = new Date(lanc.dataVencimento + 'T00:00:00');
+                dataVenc.setHours(0, 0, 0, 0);
+                return dataVenc <= limiteFuturo;
+            });
+            
+            pendencias.sort((a, b) => new Date(a.dataVencimento) - new Date(b.dataVencimento));
+            
+            const container = document.getElementById('pendingList');
+            if (!container) return;
+            
+            if (pendencias.length === 0) {
+                container.innerHTML = `<div class="empty-state"><i class="ri-checkbox-circle-line"></i><div>Nenhuma pendência próxima</div></div>`;
+                return;
+            }
+            
+            container.innerHTML = '';
+            pendencias.forEach(pend => {
+                const dias = calcularDiasAteVencimento(pend.dataVencimento);
+                let statusClass = 'upcoming';
+                let statusText = '';
+                
+                if (dias < 0) {
+                    statusClass = 'overdue';
+                    statusText = `Vencido há ${Math.abs(dias)} dias`;
+                } else if (dias === 0) {
+                    statusClass = 'today';
+                    statusText = 'Vence hoje';
+                } else if (dias <= 3) {
+                    statusClass = 'upcoming';
+                    statusText = `Vence em ${dias} dia${dias !== 1 ? 's' : ''}`;
+                } else {
+                    statusClass = 'normal';
+                    statusText = `Vence em ${dias} dias`;
+                }
+                
+                const item = document.createElement('div');
+                item.className = `pending-item ${statusClass}`;
+                item.onclick = () => navigateTo('transacoes');
+                item.innerHTML = `
+                    <div class="pending-info">
+                        <div class="pending-desc">${pend.descricao}</div>
+                        <div class="pending-date">${statusText}</div>
+                    </div>
+                    <div class="pending-value">R$ ${formatToBRL(Math.abs(pend.valor))}</div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        // ========== RENDERIZAR GRÁFICO DE HISTÓRICO ==========
+        function renderizarHistorico() {
+            const meses = [];
+            
+            for (let i = 5; i >= 0; i--) {
+                const dataMes = new Date(currentDate);
+                dataMes.setMonth(currentDate.getMonth() - i);
+                const key = 'lancamentos_' + getMonthKey(dataMes);
+                const lancamentos = localStorage.getItem(key) ? JSON.parse(localStorage.getItem(key)) : [];
+                
+                let receitas = 0, despesas = 0;
+                lancamentos.forEach(lanc => {
+                    if (lanc.valor > 0) receitas += lanc.valor;
+                    else despesas += lanc.valor;
+                });
+                
+                meses.push({
+                    nome: monthNamesShort[dataMes.getMonth()],
+                    ano: dataMes.getFullYear(),
+                    receitas: receitas,
+                    despesas: Math.abs(despesas)
+                });
+            }
+            
+            const maxValor = Math.max(...meses.flatMap(m => [m.receitas, m.despesas]), 1);
+            const alturaMaxima = 80;
+            
+            const container = document.getElementById('historyChart');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            meses.forEach(mes => {
+                const alturaReceitas = (mes.receitas / maxValor) * alturaMaxima;
+                const alturaDespesas = (mes.despesas / maxValor) * alturaMaxima;
+                
+                const wrapper = document.createElement('div');
+                wrapper.className = 'chart-bar-wrapper';
+                wrapper.innerHTML = `
+                    <div class="chart-bar-group">
+                        <div class="bar-income" style="height: ${Math.max(alturaReceitas, 4)}px;"></div>
+                        <div class="bar-expense" style="height: ${Math.max(alturaDespesas, 4)}px;"></div>
+                    </div>
+                    <div class="chart-label">
+                        <div class="chart-month">${mes.nome}</div>
+                    </div>
+                `;
+                container.appendChild(wrapper);
+            });
+        }
+
+        // ========== RENDERIZAR CARTÕES ==========
+        function renderizarCartoes() {
+            const lancamentos = loadCurrentMonthTransactions();
+            const cartoesCadastrados = JSON.parse(localStorage.getItem('cartoes_credito') || '[]');
+            
+            if (!cartoesContainer) return;
+            
+            if (cartoesCadastrados.length === 0) {
+                cartoesContainer.style.display = 'none';
+                return;
+            }
+            
+            cartoesContainer.style.display = 'block';
+            cartoesContainer.innerHTML = '';
+            
+            const totaisPorCartao = {};
+            cartoesCadastrados.forEach(cartao => { totaisPorCartao[cartao.id] = 0; });
+            
+            lancamentos.forEach(lanc => {
+                if (lanc.tipo === 'despesa' && !lanc.pago && lanc.formaPagamento && lanc.formaPagamento !== 'debito_pix') {
+                    if (totaisPorCartao.hasOwnProperty(lanc.formaPagamento)) {
+                        totaisPorCartao[lanc.formaPagamento] += Math.abs(lanc.valor);
+                    }
+                }
+            });
+            
+            let somaTotal = 0;
+            cartoesCadastrados.forEach(cartao => {
+                const valorAberto = totaisPorCartao[cartao.id] || 0;
+                somaTotal += valorAberto;
+                
+                const card = document.createElement('div');
+                card.className = 'cartao-item-card';
+                card.onclick = () => openCartaoDetails(cartao.id);
+                card.innerHTML = `
+                    <div class="cartao-item-info">
+                        <div class="cartao-item-icon"><i class="ri-bank-card-line"></i></div>
+                        <div class="cartao-item-name">${cartao.nome}</div>
+                    </div>
+                    <div class="cartao-item-value">R$ ${formatToBRL(valorAberto)}</div>
+                `;
+                cartoesContainer.appendChild(card);
+            });
+            
+            const totalRow = document.createElement('div');
+            totalRow.className = 'cartao-total-geral';
+            totalRow.innerHTML = `
+                <div class="cartao-total-label">Total Faturas</div>
+                <div class="cartao-total-value">R$ ${formatToBRL(somaTotal)}</div>
+            `;
+            cartoesContainer.appendChild(totalRow);
+        }
+
+        // ========== MODAL DE DETALHES DO CARTÃO ==========
+        function openCartaoDetails(cartaoId) {
+            const lancamentos = loadCurrentMonthTransactions();
+            const transacoesCartao = lancamentos.filter(lanc => 
+                lanc.tipo === 'despesa' && !lanc.pago && lanc.formaPagamento === cartaoId
+            );
+            
+            if (transacoesCartao.length === 0) return;
+            
+            const cartoesCadastrados = JSON.parse(localStorage.getItem('cartoes_credito') || '[]');
+            const cartao = cartoesCadastrados.find(c => c.id === cartaoId);
+            const nomeCartao = cartao ? cartao.nome : 'Cartão';
+            const totalCartao = Math.abs(transacoesCartao.reduce((sum, t) => sum + t.valor, 0));
+            
+            let html = `<div style="margin-bottom:20px;"><strong>${nomeCartao}</strong> - Total: R$ ${formatToBRL(totalCartao)}</div>`;
+            transacoesCartao.forEach(trans => {
+                html += `<div class="cartao-transaction-item">
+                            <span>${trans.descricao}</span>
+                            <span style="color:#f44336;">R$ ${formatToBRL(Math.abs(trans.valor))}</span>
+                        </div>`;
+            });
+            
+            document.getElementById('cartoesDetailsContent').innerHTML = html;
+            document.getElementById('modalOverlay').classList.add('active');
+            const modal = document.getElementById('cartoesDetailsModal');
+            modal.style.display = 'block';
+            setTimeout(() => modal.classList.add('active'), 10);
+        }
+        
+        function closeCartoesDetails() {
+            const modal = document.getElementById('cartoesDetailsModal');
+            modal.classList.remove('active');
+            document.getElementById('modalOverlay').classList.remove('active');
+            setTimeout(() => modal.style.display = 'none', 300);
+        }
+
+        // ========== MODAL DE MÊS/ANO ==========
+        function openMonthYearPickerModal() {
+            pickerCurrentYear = currentDate.getFullYear();
+            pickerSelectedMonth = currentDate.getMonth();
+            renderMonthPickerGrid();
+            document.getElementById('monthYearPickerModal').style.display = 'flex';
+        }
+        
+        function closeMonthYearPickerModal() {
+            document.getElementById('monthYearPickerModal').style.display = 'none';
+        }
+        
+        function renderMonthPickerGrid() {
+            document.getElementById('pickerYearDisplay').textContent = pickerCurrentYear;
+            const grid = document.getElementById('monthsGrid');
+            grid.innerHTML = '';
+            
+            monthNamesShort.forEach((monthName, index) => {
+                const item = document.createElement('div');
+                item.className = 'month-item';
+                item.textContent = monthName;
+                if (pickerCurrentYear === currentDate.getFullYear() && index === currentDate.getMonth()) {
+                    item.classList.add('selected');
+                }
+                item.onclick = () => {
+                    document.querySelectorAll('.month-item').forEach(m => m.classList.remove('selected'));
+                    item.classList.add('selected');
+                    pickerSelectedMonth = index;
+                    goToSelectedMonth();
+                };
+                grid.appendChild(item);
+            });
+        }
+        
+        function changeYearPicker(direction) {
+            pickerCurrentYear += direction;
+            renderMonthPickerGrid();
+        }
+        
+        function goToSelectedMonth() {
+            currentDate.setFullYear(pickerCurrentYear, pickerSelectedMonth, 1);
+            updateMonthDisplay();
+            closeMonthYearPickerModal();
+        }
+        
+        function goToCurrentMonth() {
+            currentDate = new Date(today.getFullYear(), today.getMonth(), 1);
+            updateMonthDisplay();
+            closeMonthYearPickerModal();
+        }
+
+        // ========== FUNÇÃO DO OLHO ==========
+        function toggleValoresVisiveis() {
+            valoresVisiveis = !valoresVisiveis;
+            calcularTotais();
+            renderizarResumoMes();
+            
+            const olhoIcon = document.querySelector('.olho i');
+            olhoIcon.className = valoresVisiveis ? 'ri-eye-line' : 'ri-eye-off-line';
+        }
+
+        // ========== NAVEGAÇÃO ==========
+        function navigateTo(pagina) {
+            if (pagina === 'home') {
+                window.location.href = 'index.html';
+            } else if (pagina === 'transacoes') {
+                window.location.href = 'index2.html';
+            }
+        }
+
+        // ========== EVENT LISTENERS ==========
+        document.querySelector('.olho').addEventListener('click', toggleValoresVisiveis);
+        document.getElementById('prevMonthHeader').addEventListener('click', () => changeMonth(-1));
+        document.getElementById('nextMonthHeader').addEventListener('click', () => changeMonth(1));
+        document.getElementById('monthDisplayHeader').addEventListener('click', openMonthYearPickerModal);
+        document.getElementById('modalOverlay').addEventListener('click', closeCartoesDetails);
+        
+        window.onclick = (e) => {
+            const modal = document.getElementById('monthYearPickerModal');
+            if (e.target === modal) {
+                closeMonthYearPickerModal();
+            }
+        };
+
+        // ========== INICIALIZAÇÃO ==========
+        updateMonthDisplay();
+        setInterval(() => {
+            calcularTotais();
+            renderizarPendencias();
+        }, 5000);
+        
+    })();
+</script>
+
+<!-- <script src="cordova.js"></script> -->
+<script>
+    document.addEventListener('deviceready', function() {
+        if (typeof StatusBar !== 'undefined') {
+            setTimeout(function() {
+                StatusBar.overlaysWebView(false);
+                StatusBar.backgroundColorByHexString("#21c45d");
+                StatusBar.styleLightContent();
+            }, 300);
+        }
+    }, false);
+</script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    });
+  }
+</script>
+</body>
+</html>

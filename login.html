@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Entrar - Login</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-on-surface": "#eaf1ff",
+                        "on-tertiary-fixed": "#131e19",
+                        "on-secondary-fixed-variant": "#3f465c",
+                        "on-primary-container": "#004a1d",
+                        "surface": "#f8f9ff",
+                        "primary-fixed-dim": "#4be176",
+                        "surface-tint": "#006e2f",
+                        "on-secondary-container": "#5c647a",
+                        "on-background": "#0b1c30",
+                        "on-secondary-fixed": "#131b2e",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-container": "#dae2fd",
+                        "primary": "#006e2f",
+                        "primary-container": "#21c45d",
+                        "on-primary-fixed-variant": "#005321",
+                        "tertiary-fixed": "#d9e6dd",
+                        "secondary-fixed-dim": "#bec6e0",
+                        "inverse-surface": "#213145",
+                        "on-tertiary": "#ffffff",
+                        "secondary": "#565e74",
+                        "background": "#f8f9ff",
+                        "inverse-primary": "#4be176",
+                        "surface-container-highest": "#d3e4fe",
+                        "surface-container-low": "#eff4ff",
+                        "on-error": "#ffffff",
+                        "tertiary": "#55615a",
+                        "on-secondary": "#ffffff",
+                        "secondary-fixed": "#dae2fd",
+                        "error": "#ba1a1a",
+                        "on-tertiary-container": "#36423c",
+                        "surface-container-high": "#dce9ff",
+                        "outline-variant": "#bccbb9",
+                        "on-tertiary-fixed-variant": "#3e4943",
+                        "error-container": "#ffdad6",
+                        "surface-container": "#e5eeff",
+                        "surface-variant": "#d3e4fe",
+                        "surface-dim": "#cbdbf5",
+                        "on-surface": "#0b1c30",
+                        "outline": "#6d7b6c",
+                        "on-error-container": "#93000a",
+                        "tertiary-container": "#a1aea6",
+                        "on-primary": "#ffffff",
+                        "tertiary-fixed-dim": "#bdcac1",
+                        "surface-bright": "#f8f9ff",
+                        "primary-fixed": "#6bfe8f",
+                        "on-primary-fixed": "#002109",
+                        "on-surface-variant": "#3d4a3d"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-md": "16px",
+                        "stack-lg": "24px",
+                        "stack-xl": "40px",
+                        "stack-sm": "8px",
+                        "gutter": "16px",
+                        "container-margin": "24px"
+                    },
+                    "fontFamily": {
+                        "h1": ["Manrope"],
+                        "body-md": ["Manrope"],
+                        "label-sm": ["Manrope"],
+                        "label-md": ["Manrope"],
+                        "body-lg": ["Manrope"],
+                        "h2": ["Manrope"]
+                    },
+                    "fontSize": {
+                        "h1": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "h2": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+  
+<body class="bg-background font-body-md text-on-background min-h-screen flex flex-col">
+<!-- TopAppBar Section -->
+<header class="bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 shadow-sm shadow-slate-900/5 docked full-width top-0 sticky z-50">
+<div class="flex items-center justify-between w-full px-6 h-16 max-w-7xl mx-auto">
+<button class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors active:scale-95 duration-200 ease-in-out text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="text-lg font-bold text-slate-900 dark:text-white font-manrope antialiased tracking-tight">Entrar</h1>
+<div class="w-10"></div> <!-- Spacer for centering -->
+</div>
+</header>
+<!-- Main Content Canvas -->
+<!-- Substitua TODO o conteúdo do <main> por isso: -->
+<main class="flex-grow flex items-center justify-center px-container-margin py-stack-xl">
+<div class="w-full max-w-[400px] flex flex-col items-center">
+    <div class="mb-stack-xl text-center">
+        <div class="w-16 h-16 bg-primary-container rounded-xl flex items-center justify-center shadow-lg shadow-primary/10 mb-stack-md mx-auto">
+            <span class="material-symbols-outlined text-on-primary-container text-4xl">lock</span>
+        </div>
+        <h2 class="font-h1 text-h1 text-on-surface mb-stack-sm" id="formTitle">Bem-vindo de volta</h2>
+        <p class="font-body-md text-body-md text-on-surface-variant" id="formSubtitle">Acesse sua conta para continuar</p>
+    </div>
+
+    <div class="w-full bg-surface-container-lowest p-8 rounded-xl shadow-md border border-slate-100">
+        <!-- Formulário de Login -->
+        <form id="loginForm" class="flex flex-col gap-stack-lg">
+            <div class="flex flex-col gap-2" id="displayNameGroup" style="display: none;">
+                <label class="font-label-md text-label-md text-on-surface-variant ml-1">Como voce quer ser chamado?</label>
+                <div class="relative group">
+                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">badge</span>
+                    <input class="w-full h-12 pl-12 pr-4 bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary-container/20 focus:border-primary outline-none" id="displayName" placeholder="Seu nome" type="text" maxlength="40" autocomplete="name">
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label class="font-label-md text-label-md text-on-surface-variant ml-1">E-mail</label>
+                <div class="relative group">
+                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">mail</span>
+                    <input class="w-full h-12 pl-12 pr-4 bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary-container/20 focus:border-primary outline-none" id="email" placeholder="seu@email.com" type="email">
+                </div>
+            </div>
+            
+            <div class="flex flex-col gap-2">
+                <div class="flex justify-between items-center ml-1">
+                    <label class="font-label-md text-label-md text-on-surface-variant">Senha</label>
+                    <a class="text-label-sm font-label-sm text-primary hover:underline cursor-pointer" id="toggleForm">Criar conta</a>
+                </div>
+                <div class="relative group">
+                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">key</span>
+                    <input class="w-full h-12 pl-12 pr-4 bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary-container/20 focus:border-primary outline-none" id="password" placeholder="••••••••" type="password">
+                </div>
+            </div>
+
+            <div id="confirmPasswordGroup" style="display: none;">
+                <div class="relative group">
+                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">verified</span>
+                    <input class="w-full h-12 pl-12 pr-4 bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary-container/20 focus:border-primary outline-none" id="confirmPassword" placeholder="Confirmar senha" type="password">
+                </div>
+            </div>
+
+            <button type="submit" id="submitBtn" class="w-full h-12 bg-primary-container text-on-primary-container font-label-md text-label-md rounded-lg shadow-sm active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 hover:opacity-90">
+                Entrar
+                <span class="material-symbols-outlined text-[20px]">login</span>
+            </button>
+            
+            <div id="message" class="text-center text-sm text-red-500 mt-2"></div>
+        </form>
+    </div>
+</div>
+</main>
+<!-- Footer Section -->
+<footer class="bg-transparent font-manrope text-sm flex flex-col items-center gap-4 py-8 w-full mt-auto">
+<div class="flex gap-6">
+<a class="text-slate-400 hover:text-green-500 transition-opacity hover:opacity-80" href="#">Termos de Uso</a>
+<a class="text-slate-400 hover:text-green-500 transition-opacity hover:opacity-80" href="#">Privacidade</a>
+</div>
+<p class="text-slate-400">© 2026 Todos os direitos reservados.</p>
+</footer>
+
+<script type="module">
+    import { supabase, signIn, signUp } from './js/supabase-config.js';
+    import { activateSingleSession } from './js/single-session.js';
+    
+    let isLoginMode = true;
+    const formTitle = document.getElementById('formTitle');
+    const formSubtitle = document.getElementById('formSubtitle');
+    const toggleForm = document.getElementById('toggleForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const displayNameGroup = document.getElementById('displayNameGroup');
+    const confirmPasswordGroup = document.getElementById('confirmPasswordGroup');
+    const messageDiv = document.getElementById('message');
+    const emailInput = document.getElementById('email');
+    const displayNameInput = document.getElementById('displayName');
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirmPassword');
+    
+    // Verificar se já está logado
+    async function checkSession() {
+        const user = await supabase.auth.getUser();
+        if (user.data.user) {
+            window.location.href = 'index2.html';
+        }
+    }
+    checkSession();
+    
+    // Alternar entre login e cadastro
+    toggleForm.addEventListener('click', (e) => {
+        e.preventDefault();
+        isLoginMode = !isLoginMode;
+        
+        if (isLoginMode) {
+            formTitle.textContent = 'Bem-vindo de volta';
+            formSubtitle.textContent = 'Acesse sua conta para continuar';
+            toggleForm.textContent = 'Criar conta';
+            submitBtn.innerHTML = 'Entrar <span class="material-symbols-outlined text-[20px]">login</span>';
+            displayNameGroup.style.display = 'none';
+            confirmPasswordGroup.style.display = 'none';
+            messageDiv.textContent = '';
+        } else {
+            formTitle.textContent = 'Criar conta';
+            formSubtitle.textContent = 'Cadastre-se para começar';
+            toggleForm.textContent = 'Já tenho conta';
+            submitBtn.innerHTML = 'Cadastrar <span class="material-symbols-outlined text-[20px]">person_add</span>';
+            displayNameGroup.style.display = 'flex';
+            confirmPasswordGroup.style.display = 'block';
+            messageDiv.textContent = '';
+        }
+    });
+    
+    // Submit do formulário
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const email = emailInput.value.trim();
+        const displayName = displayNameInput.value.trim();
+        const password = passwordInput.value;
+        
+        messageDiv.textContent = '';
+        messageDiv.className = 'text-center text-sm mt-2';
+        
+        if (!email || !password) {
+            messageDiv.textContent = 'Preencha todos os campos!';
+            messageDiv.classList.add('text-red-500');
+            return;
+        }
+        
+        if (!isLoginMode) {
+            const confirmPassword = confirmPasswordInput.value;
+            if (!displayName) {
+                messageDiv.textContent = 'Informe como voce quer ser chamado!';
+                messageDiv.classList.add('text-red-500');
+                return;
+            }
+            if (password !== confirmPassword) {
+                messageDiv.textContent = 'As senhas não coincidem!';
+                messageDiv.classList.add('text-red-500');
+                return;
+            }
+            if (password.length < 6) {
+                messageDiv.textContent = 'A senha deve ter pelo menos 6 caracteres!';
+                messageDiv.classList.add('text-red-500');
+                return;
+            }
+        }
+        
+        // Desabilitar botão durante a requisição
+        submitBtn.disabled = true;
+        submitBtn.textContent = isLoginMode ? 'Entrando...' : 'Cadastrando...';
+        
+        try {
+            if (isLoginMode) {
+                await signIn(email, password);
+                await activateSingleSession();
+                messageDiv.textContent = 'Login realizado! Redirecionando...';
+                messageDiv.classList.add('text-green-500');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1000);
+            } else {
+                await signUp(email, password, displayName);
+                messageDiv.textContent = 'Cadastro realizado! Verifique seu email para confirmar.';
+                messageDiv.classList.add('text-green-500');
+                // Limpar campos
+                emailInput.value = '';
+                displayNameInput.value = '';
+                passwordInput.value = '';
+                confirmPasswordInput.value = '';
+                // Voltar para login após 2 segundos
+                setTimeout(() => {
+                    toggleForm.click();
+                }, 2000);
+            }
+        } catch (error) {
+            messageDiv.textContent = `Erro: ${error.message}`;
+            messageDiv.classList.add('text-red-500');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = isLoginMode ? 'Entrar <span class="material-symbols-outlined text-[20px]">login</span>' : 'Cadastrar <span class="material-symbols-outlined text-[20px]">person_add</span>';
+        }
+    });
+</script>
+
+<script type="module">
+    // Teste de conexão com Supabase
+    import { supabase } from './js/supabase-config.js';
+    
+    console.log('Supabase URL:', supabase.supabaseUrl);
+    console.log('Testando conexão...');
+    
+    // Testar se a conexão está funcionando
+    async function testConnection() {
+        try {
+            const { data, error } = await supabase.auth.getSession();
+            if (error) {
+                console.error('Erro de conexão:', error);
+                alert('Erro de conexão com Supabase! Verifique suas credenciais.');
+            } else {
+                console.log('Conexão OK!');
+            }
+        } catch (e) {
+            console.error('Erro:', e);
+            alert('Erro ao conectar com Supabase: ' + e.message);
+        }
+    }
+    
+    testConnection();
+</script>
+
+</body></html>
