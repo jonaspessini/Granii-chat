@@ -255,6 +255,32 @@
         }
     });
     
+    function traduzirErro(msg) {
+        if (!msg) return 'Ocorreu um erro. Tente novamente.';
+        const m = msg.toLowerCase();
+        if (m.includes('invalid login credentials') || m.includes('invalid credentials'))
+            return 'E-mail ou senha incorretos.';
+        if (m.includes('email not confirmed'))
+            return 'E-mail não confirmado. Verifique sua caixa de entrada.';
+        if (m.includes('user already registered') || m.includes('already been registered') || m.includes('already registered'))
+            return 'Este e-mail já possui uma conta cadastrada.';
+        if (m.includes('password should be at least'))
+            return 'A senha deve ter pelo menos 6 caracteres.';
+        if (m.includes('unable to validate email address') || m.includes('invalid email'))
+            return 'E-mail inválido. Verifique o endereço informado.';
+        if (m.includes('email rate limit exceeded') || m.includes('rate limit'))
+            return 'Muitas tentativas. Aguarde alguns minutos e tente novamente.';
+        if (m.includes('network') || m.includes('fetch'))
+            return 'Erro de conexão. Verifique sua internet e tente novamente.';
+        if (m.includes('weak password'))
+            return 'Senha muito fraca. Use letras, números e símbolos.';
+        if (m.includes('signup is disabled'))
+            return 'Cadastro desativado no momento. Tente mais tarde.';
+        if (m.includes('too many requests'))
+            return 'Muitas tentativas seguidas. Aguarde um momento.';
+        return 'Ocorreu um erro. Tente novamente.';
+    }
+
     // Submit do formulário
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -289,6 +315,32 @@
                 messageDiv.classList.add('text-red-500');
                 return;
             }
+
+            // Verificar se o email está na lista de pagantes
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Verificando...';
+            const { data: pagante, error: erroVerif } = await supabase
+                .from('usuarios_pagantes')
+                .select('id')
+                .eq('email', email.toLowerCase())
+                .maybeSingle();
+
+            if (erroVerif || !pagante) {
+                messageDiv.innerHTML = `
+                    <div class="flex flex-col items-center gap-3">
+                        <span class="text-red-500 font-semibold">Este e-mail não tem acesso ao app.</span>
+                        <span class="text-slate-500 text-xs">Para usar o Gastos Mensal, é necessário adquirir o acesso.</span>
+                        <a href="LINK_PAGAMENTO_AQUI" target="_blank"
+                           class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-container text-on-primary-container font-semibold rounded-lg shadow hover:opacity-90 active:scale-95 transition-all text-sm">
+                            <span class="material-symbols-outlined text-[18px]">shopping_cart</span>
+                            Quero ter acesso
+                        </a>
+                    </div>`;
+                messageDiv.className = 'text-center text-sm mt-2';
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Cadastrar <span class="material-symbols-outlined text-[20px]">person_add</span>';
+                return;
+            }
         }
         
         // Desabilitar botão durante a requisição
@@ -319,7 +371,7 @@
                 }, 2000);
             }
         } catch (error) {
-            messageDiv.textContent = `Erro: ${error.message}`;
+            messageDiv.textContent = traduzirErro(error.message);
             messageDiv.classList.add('text-red-500');
         } finally {
             submitBtn.disabled = false;
