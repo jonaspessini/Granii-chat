@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gastos Mensal — Controle seu dinheiro de verdade</title>
+  <meta name="description" content="O app brasileiro para controlar gastos mensais, cartões de crédito e contas bancárias. Simples, rápido e funciona no celular." />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green: #21c45d;
+      --green-dark: #17a34a;
+      --green-light: #dcfce7;
+      --green-xlight: #f0fdf4;
+      --black: #0a0a0a;
+      --gray-1: #171717;
+      --gray-2: #404040;
+      --gray-3: #737373;
+      --gray-4: #d4d4d4;
+      --gray-5: #f5f5f5;
+      --white: #ffffff;
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--white);
+      color: var(--black);
+      overflow-x: hidden;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 5%;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+    }
+
+    .nav-logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.2rem;
+      color: var(--black);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-logo span {
+      display: inline-block;
+      width: 28px; height: 28px;
+      background: var(--green);
+      border-radius: 8px;
+    }
+
+    .nav-cta {
+      background: var(--black);
+      color: var(--white);
+      padding: 10px 22px;
+      border-radius: 50px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+
+    .nav-cta:hover { background: var(--green-dark); background: var(--green); }
+
+    /* ── HERO ── */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 0 5% 10px;  /* sem padding-top */
+  position: relative;
+  overflow: hidden;
+}
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -200px; left: 50%;
+      transform: translateX(-50%);
+      width: 800px; height: 800px;
+      background: radial-gradient(circle, rgba(33,196,93,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--green-light);
+      color: var(--green-dark);
+      padding: 6px 14px;
+      border-radius: 50px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      margin-bottom: 28px;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    .hero-badge::before {
+      content: '●';
+      font-size: 0.6rem;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: clamp(2.4rem, 6vw, 4.5rem);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      color: var(--black);
+      max-width: 800px;
+      margin-bottom: 24px;
+      animation: fadeUp 0.6s 0.1s ease both;
+    }
+
+    h1 em {
+      font-style: normal;
+      color: var(--green);
+    }
+
+    .hero-sub {
+      font-size: clamp(1rem, 2vw, 1.2rem);
+      color: var(--gray-3);
+      max-width: 520px;
+      line-height: 1.6;
+      margin-bottom: 40px;
+      font-weight: 300;
+      animation: fadeUp 0.6s 0.2s ease both;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      animation: fadeUp 0.6s 0.3s ease both;
+    }
+
+    .btn-primary {
+      background: var(--green);
+      color: white;
+      padding: 16px 32px;
+      border-radius: 50px;
+      font-size: 1rem;
+      font-weight: 500;
+      text-decoration: none;
+      transition: all 0.2s;
+      box-shadow: 0 4px 20px rgba(33,196,93,0.35);
+    }
+
+    .btn-primary:hover {
+      background: var(--green-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(33,196,93,0.4);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--gray-2);
+      padding: 16px 32px;
+      border-radius: 50px;
+      font-size: 1rem;
+      font-weight: 500;
+      text-decoration: none;
+      border: 1.5px solid var(--gray-4);
+      transition: all 0.2s;
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--gray-2);
+      color: var(--black);
+    }
+
+    .hero-social {
+      margin-top: 56px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.85rem;
+      color: var(--gray-3);
+      animation: fadeUp 0.6s 0.4s ease both;
+    }
+
+    .avatars {
+      display: flex;
+    }
+
+    .avatars span {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      border: 2px solid white;
+      margin-left: -8px;
+      display: inline-block;
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      color: white;
+    }
+
+    .avatars span:nth-child(1) { background: #6366f1; margin-left: 0; }
+    .avatars span:nth-child(2) { background: #f59e0b; }
+    .avatars span:nth-child(3) { background: #ec4899; }
+    .avatars span:nth-child(4) { background: #14b8a6; }
+
+    /* ── MOCKUP ── */
+    .mockup-section {
+      padding: 0 5% 100px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .mockup-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 900px;
+    }
+
+    .mockup-bg {
+      background: var(--gray-5);
+      border-radius: 24px;
+      padding: 48px 40px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+      animation: fadeUp 0.8s 0.5s ease both;
+    }
+
+    .mock-card {
+      background: white;
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+
+    .mock-card.featured {
+      grid-column: span 2;
+      background: var(--black);
+      color: white;
+    }
+
+    .mock-card.tall {
+      grid-row: span 2;
+    }
+
+    .mock-label {
+      font-size: 0.72rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--gray-3);
+      margin-bottom: 8px;
+    }
+
+    .mock-card.featured .mock-label { color: rgba(255,255,255,0.5); }
+
+    .mock-value {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--black);
+      line-height: 1;
+    }
+
+    .mock-card.featured .mock-value { color: white; font-size: 2.2rem; }
+
+    .mock-value.green { color: var(--green); }
+    .mock-value.red { color: #f43f5e; }
+
+    .mock-bar-row {
+      margin-top: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .mock-bar-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.7);
+    }
+
+    .mock-bar-track {
+      flex: 1;
+      height: 4px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .mock-bar-fill {
+      height: 100%;
+      background: var(--green);
+      border-radius: 2px;
+    }
+
+    .mock-list {
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .mock-list-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+    }
+
+    .mock-list-item .name { color: var(--gray-2); font-weight: 500; }
+    .mock-list-item .val { font-weight: 600; color: var(--black); }
+    .mock-list-item .val.neg { color: #f43f5e; }
+
+    .mock-donut {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      background: conic-gradient(var(--green) 0% 45%, #f43f5e 45% 70%, #f59e0b 70% 85%, var(--gray-4) 85% 100%);
+      margin: 16px auto 0;
+      position: relative;
+    }
+
+    .mock-donut::after {
+      content: '';
+      position: absolute;
+      inset: 18px;
+      background: white;
+      border-radius: 50%;
+    }
+
+    .mock-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--green-light);
+      color: var(--green-dark);
+      padding: 4px 10px;
+      border-radius: 50px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      margin-top: 10px;
+    }
+
+    /* ── FEATURES ── */
+    .section {
+      padding: 100px 5%;
+    }
+
+    .section-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--green);
+      margin-bottom: 16px;
+    }
+
+    h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.8rem, 4vw, 3rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      color: var(--black);
+      max-width: 600px;
+      margin-bottom: 60px;
+    }
+
+    h2 em { font-style: normal; color: var(--green); }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .feature-card {
+      background: var(--gray-5);
+      border-radius: var(--radius);
+      padding: 32px;
+      transition: transform 0.2s;
+    }
+
+    .feature-card:hover { transform: translateY(-4px); }
+
+    .feature-icon {
+      width: 48px; height: 48px;
+      background: var(--green-light);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      margin-bottom: 20px;
+    }
+
+    .feature-card h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: var(--black);
+    }
+
+    .feature-card p {
+      font-size: 0.9rem;
+      color: var(--gray-3);
+      line-height: 1.6;
+    }
+
+    /* ── HOW IT WORKS ── */
+    .how-section {
+      padding: 100px 5%;
+      background: var(--black);
+      color: white;
+    }
+
+    .how-section .section-label { color: var(--green); }
+    .how-section h2 { color: white; }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 40px;
+      counter-reset: steps;
+    }
+
+    .step {
+      counter-increment: steps;
+      position: relative;
+      padding-left: 0;
+    }
+
+    .step-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 3.5rem;
+      font-weight: 800;
+      color: rgba(255,255,255,0.08);
+      line-height: 1;
+      margin-bottom: 16px;
+    }
+
+    .step h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 10px;
+    }
+
+    .step p {
+      font-size: 0.88rem;
+      color: rgba(255,255,255,0.5);
+      line-height: 1.6;
+    }
+
+    .step-dot {
+      width: 10px; height: 10px;
+      background: var(--green);
+      border-radius: 50%;
+      margin-bottom: 20px;
+    }
+
+    /* ── PRICING ── */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      max-width: 800px;
+    }
+
+    .plan-card {
+      border: 1.5px solid var(--gray-4);
+      border-radius: var(--radius);
+      padding: 36px;
+      position: relative;
+      transition: border-color 0.2s;
+    }
+
+    .plan-card:hover { border-color: var(--green); }
+
+    .plan-card.featured-plan {
+      border-color: var(--green);
+      background: var(--green-xlight);
+    }
+
+    .plan-badge {
+      position: absolute;
+      top: -12px; left: 50%;
+      transform: translateX(-50%);
+      background: var(--green);
+      color: white;
+      padding: 4px 14px;
+      border-radius: 50px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .plan-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--gray-2);
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .plan-price {
+      font-family: 'Syne', sans-serif;
+      font-size: 3rem;
+      font-weight: 800;
+      color: var(--black);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .plan-price sup {
+      font-size: 1.2rem;
+      vertical-align: super;
+      font-weight: 600;
+    }
+
+    .plan-period {
+      font-size: 0.82rem;
+      color: var(--gray-3);
+      margin-bottom: 28px;
+    }
+
+    .plan-features {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+
+    .plan-features li {
+      font-size: 0.88rem;
+      color: var(--gray-2);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .plan-features li::before {
+      content: '✓';
+      color: var(--green);
+      font-weight: 700;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+
+    .plan-features li.off {
+      color: var(--gray-4);
+    }
+
+    .plan-features li.off::before {
+      content: '✕';
+      color: var(--gray-4);
+    }
+
+    .plan-btn {
+      display: block;
+      text-align: center;
+      padding: 14px;
+      border-radius: 50px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .plan-btn.outline {
+      border: 1.5px solid var(--gray-4);
+      color: var(--gray-2);
+    }
+
+    .plan-btn.outline:hover {
+      border-color: var(--black);
+      color: var(--black);
+    }
+
+    .plan-btn.solid {
+      background: var(--green);
+      color: white;
+      box-shadow: 0 4px 16px rgba(33,196,93,0.3);
+    }
+
+    .plan-btn.solid:hover {
+      background: var(--green-dark);
+      transform: translateY(-1px);
+    }
+
+    /* ── FAQ ── */
+    .faq-list {
+      max-width: 640px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .faq-item {
+      border-bottom: 1px solid var(--gray-4);
+    }
+
+    .faq-question {
+      width: 100%;
+      background: none;
+      border: none;
+      padding: 22px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--black);
+      text-align: left;
+      gap: 16px;
+    }
+
+    .faq-question:hover { color: var(--green); }
+
+    .faq-icon {
+      font-size: 1.4rem;
+      color: var(--gray-3);
+      transition: transform 0.3s;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+
+    .faq-item.open .faq-icon { transform: rotate(45deg); color: var(--green); }
+
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.35s ease, padding 0.3s ease;
+    }
+
+    .faq-item.open .faq-answer { max-height: 200px; }
+
+    .faq-answer p {
+      padding-bottom: 20px;
+      font-size: 0.88rem;
+      color: var(--gray-3);
+      line-height: 1.7;
+    }
+
+    /* ── CTA FINAL ── */
+    .cta-section {
+      margin: 0 5% 100px;
+      background: var(--black);
+      border-radius: 24px;
+      padding: 80px 60px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-section::before {
+      content: '';
+      position: absolute;
+      bottom: -100px; right: -100px;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(33,196,93,0.2) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .cta-section h2 {
+      color: white;
+      max-width: 500px;
+      margin: 0 auto 16px;
+    }
+
+    .cta-section p {
+      color: rgba(255,255,255,0.5);
+      font-size: 0.95rem;
+      margin-bottom: 36px;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      padding: 40px 5%;
+      border-top: 1px solid var(--gray-4);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .footer-logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1rem;
+      color: var(--black);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+
+    .footer-logo span {
+      width: 22px; height: 22px;
+      background: var(--green);
+      border-radius: 6px;
+      display: inline-block;
+    }
+
+    footer p {
+      font-size: 0.82rem;
+      color: var(--gray-3);
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .mockup-bg {
+        grid-template-columns: 1fr 1fr;
+        padding: 28px 20px;
+      }
+      .mock-card.featured { grid-column: span 2; }
+      .mock-card.tall { grid-row: auto; }
+      .cta-section { padding: 48px 28px; }
+      nav { padding: 14px 4%; }
+      h1 { font-size: 2.2rem; }
+    }
+
+    @media (max-width: 480px) {
+      .mockup-bg { grid-template-columns: 1fr; }
+      .mock-card.featured { grid-column: span 1; }
+      .hero-actions { flex-direction: column; align-items: stretch; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">
+    <span></span>
+    Granii App
+  </a>
+  <!-- <a href="#precos" class="nav-cta">Comprar por R$ 9,90</a> -->
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">Granii App · Pagamento único R$ 9,90</div>
+  <h1>Seu dinheiro sob <em>controle</em>, todo mês</h1>
+  <p class="hero-sub">Registre despesas, receitas, cartões de crédito e contas bancárias em segundos. Sem complicação, sem planilha.</p>
+  <div class="hero-actions">
+    <a href="#precos" class="btn-primary">Comprar por R$ 9,90</a>
+    <a href="#funcionalidades" class="btn-secondary">Ver funcionalidades</a>
+  </div>
+  <div class="hero-social">
+    <div class="avatars">
+      <span>M</span><span>A</span><span>C</span><span>R</span>
+    </div>
+    Usado por centenas de brasileiros todo mês
+  </div>
+</section>
+
+<!-- MOCKUP -->
+<div class="mockup-section">
+  <div class="mockup-wrapper">
+    <div class="mockup-bg">
+
+      <div class="mock-card featured">
+        <div class="mock-label">Saldo do mês</div>
+        <div class="mock-value">R$ 1.840<span style="font-size:1.2rem">,00</span></div>
+        <div style="font-size:0.78rem; color:rgba(255,255,255,0.5); margin-top:12px;">Maio 2025</div>
+      </div>
+
+      <div class="mock-card tall">
+        <div class="mock-label">Receitas</div>
+        <div class="mock-value green">+R$ 3.200</div>
+        <div class="mock-donut"></div>
+        <div class="mock-tag">↑ 12% este mês</div>
+      </div>
+
+      <div class="mock-card">
+        <div class="mock-label">Despesas</div>
+        <div class="mock-value red">−R$ 1.360</div>
+        <div class="mock-list">
+          <div class="mock-list-item"><span class="name">Nubank</span><span class="val neg">−R$ 480</span></div>
+          <div class="mock-list-item"><span class="name">Inter</span><span class="val neg">−R$ 210</span></div>
+          <div class="mock-list-item"><span class="name">C6 Bank</span><span class="val neg">−R$ 670</span></div>
+        </div>
+      </div>
+
+      <div class="mock-card">
+        <div class="mock-label">Próx. vencimento</div>
+        <div class="mock-value" style="font-size:1.3rem">Nubank</div>
+        <div style="font-size:0.78rem; color:#737373; margin-top:6px">Dia 10 · R$ 480,00</div>
+        <div class="mock-tag" style="background:#fef3c7; color:#92400e;">⏰ Em 3 dias</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section class="section" id="funcionalidades">
+  <div class="section-label">Funcionalidades</div>
+  <h2>Tudo que você precisa para <em>organizar</em> as finanças</h2>
+  <div class="features-grid">
+    <div class="feature-card reveal">
+      <div class="feature-icon">📊</div>
+      <h3>Visão mensal completa</h3>
+      <p>Veja receitas, despesas e saldo do mês num único painel. Navegue entre meses com um toque.</p>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feature-icon">💳</div>
+      <h3>Gerenciar cartões de crédito</h3>
+      <p>Cadastre todos os seus cartões, acompanhe o limite disponível e saiba quando vence cada fatura.</p>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feature-icon">🏦</div>
+      <h3>Contas bancárias</h3>
+      <p>Registre seus saldos em conta corrente, poupança ou carteira. Tudo centralizado em um lugar.</p>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feature-icon">🔁</div>
+      <h3>Lançamentos parcelados</h3>
+      <p>Registre compras parceladas e veja automaticamente o impacto em cada mês futuro.</p>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feature-icon">📱</div>
+      <h3>Funciona offline</h3>
+      <p>Sem internet? Sem problema. O app salva tudo no celular e sincroniza quando a conexão voltar.</p>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feature-icon">🔒</div>
+      <h3>Dados seguros na nuvem</h3>
+      <p>Sua conta e seus dados ficam protegidos com autenticação segura. Acesse de qualquer dispositivo.</p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-section" id="como-funciona">
+  <div class="section-label">Como funciona</div>
+  <h2>Comece a usar em <em>menos de 2 minutos</em></h2>
+  <div class="steps">
+    <div class="step reveal">
+      <div class="step-num">01</div>
+      <div class="step-dot"></div>
+      <h3>Instale no celular</h3>
+      <p>Abra o link no Chrome, toque em "Adicionar à tela inicial" e pronto. Sem app store, sem download.</p>
+    </div>
+    <div class="step reveal">
+      <div class="step-num">02</div>
+      <div class="step-dot"></div>
+      <h3>Crie sua conta</h3>
+      <p>Cadastre seu e-mail em segundos. Seus dados ficam salvos na nuvem com segurança.</p>
+    </div>
+    <div class="step reveal">
+      <div class="step-num">03</div>
+      <div class="step-dot"></div>
+      <h3>Registre seus gastos</h3>
+      <p>Adicione despesas e receitas pelo botão "+". Escolha o cartão e o valor.</p>
+    </div>
+    <div class="step reveal">
+      <div class="step-num">04</div>
+      <div class="step-dot"></div>
+      <h3>Acompanhe o mês</h3>
+      <p>Veja em tempo real quanto gastou, quanto entrou e qual é seu saldo disponível.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="section" id="precos">
+  <div class="section-label">Planos</div>
+  <h2>Um preço só. <em>Para sempre.</em></h2>
+  <div class="pricing-grid" style="max-width: 420px;">
+
+    <div class="plan-card featured-plan reveal">
+      <div class="plan-badge">✦ Acesso vitalício</div>
+      <div class="plan-name">Completo</div>
+      <div class="plan-price"><sup>R$</sup>9<span style="font-size:1.2rem">,90</span></div>
+      <div class="plan-period">pagamento único · sem mensalidade</div>
+      <ul class="plan-features">
+        <li>Lançamentos ilimitados</li>
+        <li>Controle mensal completo</li>
+        <li>Gerenciar cartões de crédito</li>
+        <li>Gerenciar contas bancárias</li>
+        <li>Sincronização na nuvem</li>
+        <li>Funciona offline</li>
+        <!-- <li>Múltiplos dispositivos</li> -->
+        <li>Todas as atualizações inclusas</li>
+      </ul>
+      <a href="https://pay.kiwify.com.br/JSiN9tc" class="plan-btn solid">Comprar por R$ 9,90</a>
+    </div>
+
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="section" style="padding-top: 0;" id="faq">
+  <div class="section-label">Dúvidas</div>
+  <h2>Perguntas <em>frequentes</em></h2>
+  <div class="faq-list">
+
+    <div class="faq-item">
+      <button class="faq-question">
+        Quanto custa e como funciona o pagamento?
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-answer">
+        <p>O Gastos Mensal custa R$ 9,90 em pagamento único. Você paga uma vez e tem acesso completo para sempre, incluindo todas as atualizações futuras. Sem mensalidade, sem surpresa.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-question">
+        Preciso baixar na App Store ou Play Store?
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-answer">
+        <p>Não. O Gastos Mensal é um PWA (Progressive Web App). Basta abrir o link no Chrome do seu celular Android e tocar em "Adicionar à tela inicial". Ele funciona como um app normal, sem ocupar espaço da loja.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-question">
+        Meus dados ficam salvos se eu trocar de celular?
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-answer">
+        <p>Sim. Seus dados são sincronizados automaticamente na nuvem. Basta fazer login em qualquer dispositivo e tudo estará lá.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-question">
+        Funciona sem internet?
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-answer">
+        <p>Sim! O app funciona 100% offline. Você pode registrar gastos mesmo sem conexão e, quando a internet voltar, tudo é sincronizado automaticamente.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-question">
+        As atualizações futuras estão inclusas?
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-answer">
+        <p>Sim. Pagou uma vez, tem tudo para sempre — incluindo todas as novas funcionalidades que forem adicionadas ao app.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-question">
+        O app é seguro? Onde ficam meus dados?
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-answer">
+        <p>Seus dados são armazenados com autenticação segura via Supabase. Cada usuário acessa somente seus próprios dados — nenhuma informação é compartilhada.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- CTA FINAL -->
+<div class="cta-section reveal">
+  <h2>Comece hoje a controlar seu dinheiro</h2>
+  <p>Pagamento único de R$ 9,90. Sem mensalidade, sem surpresa.</p>
+  <a href="https://pay.kiwify.com.br/JSiN9tc" class="btn-primary">Comprar Agora →</a>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <a href="#" class="footer-logo">
+    <span></span>
+    Gastos Mensal
+  </a>
+  <p>© 2025 Gastos Mensal. Feito no Brasil 🇧🇷</p>
+</footer>
+
+<script>
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => entry.target.classList.add('visible'), i * 80);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  reveals.forEach(el => observer.observe(el));
+
+  // FAQ accordion
+  document.querySelectorAll('.faq-question').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item = btn.parentElement;
+      const isOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+      if (!isOpen) item.classList.add('open');
+    });
+  });
+</script>
+
+</body>
+</html>

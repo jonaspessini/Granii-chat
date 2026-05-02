@@ -556,8 +556,9 @@ function navigateTo(pagina) {
             const totaisPorCartao = {};
             cartoesCadastrados.forEach(cartao => { totaisPorCartao[cartao.id] = 0; });
             
+            // Soma TODOS os lançamentos do cartão (pagos e não pagos)
             lancamentos.forEach(lanc => {
-                if (lanc.tipo === 'despesa' && !lanc.pago && lanc.formaPagamento && lanc.formaPagamento !== 'debito_pix') {
+                if (lanc.tipo === 'despesa' && lanc.formaPagamento && lanc.formaPagamento !== 'debito_pix') {
                     if (totaisPorCartao.hasOwnProperty(lanc.formaPagamento)) {
                         totaisPorCartao[lanc.formaPagamento] += Math.abs(lanc.valor);
                     }
@@ -566,9 +567,29 @@ function navigateTo(pagina) {
             
             let somaTotal = 0;
             cartoesCadastrados.forEach(cartao => {
-                const valorAberto = totaisPorCartao[cartao.id] || 0;
-                somaTotal += valorAberto;
-                
+                somaTotal += totaisPorCartao[cartao.id] || 0;
+            });
+
+            // Header com total
+            const header = document.createElement('div');
+            header.className = 'cartoes-header';
+            header.innerHTML = `
+                <div>
+                    <div class="cartoes-header-label">Despesas no cartão</div>
+                    <div class="cartoes-header-total">R$ ${formatToBRL(somaTotal)}</div>
+                </div>
+                <div class="cartoes-header-icon"><i class="ri-bank-card-line"></i></div>
+            `;
+            cartoesContainer.appendChild(header);
+
+            // Divisor
+            const divider = document.createElement('div');
+            divider.className = 'cartoes-divider';
+            cartoesContainer.appendChild(divider);
+            
+            // Lista de cartões
+            cartoesCadastrados.forEach(cartao => {
+                const valorCartao = totaisPorCartao[cartao.id] || 0;
                 const card = document.createElement('div');
                 card.className = 'cartao-item-card';
                 card.onclick = () => openCartaoDetails(cartao.id);
@@ -577,25 +598,17 @@ function navigateTo(pagina) {
                         <div class="cartao-item-icon"><i class="ri-bank-card-line"></i></div>
                         <div class="cartao-item-name">${cartao.nome}</div>
                     </div>
-                    <div class="cartao-item-value">R$ ${formatToBRL(valorAberto)}</div>
+                    <div class="cartao-item-value">R$ ${formatToBRL(valorCartao)}</div>
                 `;
                 cartoesContainer.appendChild(card);
             });
-            
-            const totalRow = document.createElement('div');
-            totalRow.className = 'cartao-total-geral';
-            totalRow.innerHTML = `
-                <div class="cartao-total-label">Total Faturas</div>
-                <div class="cartao-total-value">R$ ${formatToBRL(somaTotal)}</div>
-            `;
-            cartoesContainer.appendChild(totalRow);
         }
 
         // ========== MODAL DE DETALHES DO CARTÃO ==========
         function openCartaoDetails(cartaoId) {
             const lancamentos = loadCurrentMonthTransactions();
             const transacoesCartao = lancamentos.filter(lanc => 
-                lanc.tipo === 'despesa' && !lanc.pago && lanc.formaPagamento === cartaoId
+                lanc.tipo === 'despesa' && lanc.formaPagamento === cartaoId
             );
             
             if (transacoesCartao.length === 0) return;
