@@ -1,3 +1,5 @@
+* { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; user-select: none; }
+
 :root {
   --cor-principal: #21c45d;
   --primary-color: #2e7d32;
@@ -681,7 +683,7 @@ input[type="date"]:invalid {
 
 .fab-button {
   position: fixed;
-  bottom: 14px !important;
+  bottom: 75px;
   left: 50%;
   transform: translateX(-50%);
   width: 60px;
@@ -694,7 +696,7 @@ input[type="date"]:invalid {
   align-items: center;
   font-size: 2em;
   cursor: pointer;
-  box-shadow: 0 5px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.25);
   transition: background-color 0.3s ease, transform 0.2s ease;
   z-index: 1001;
   border: none;
@@ -717,7 +719,7 @@ input[type="date"]:invalid {
 
 .fab-options {
   position: fixed;
-  bottom: 110px;
+  bottom: 150px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -1292,10 +1294,16 @@ input[type="date"]:invalid {
   background-color: white;
   border-top: 1px solid var(--border-color);
   display: flex;
-  justify-content: space-between;
+  justify-content: space-around;
   align-items: center;
   padding: 1px 0px;
   z-index: 1000;
+  height: 60px;
+}
+
+/* Espaço vazio no centro para o FAB */
+.nav-fab-spacer {
+  display: none;
 }
 
 .nav-btn {
@@ -1307,12 +1315,11 @@ input[type="date"]:invalid {
   color: var(--secondary-color);
   font-size: 0.75em;
   cursor: pointer;
-  padding: 8px 12px;
+  padding: 6px 8px;
   border-radius: 8px;
   transition: all 0.2s ease;
   flex: 1;
-  max-width: 80px;
-  margin: 0 50px; /* Distancia entre botões */
+  margin: 0;
 }
 
 .nav-btn:hover {

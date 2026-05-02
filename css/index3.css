@@ -1,3 +1,5 @@
+* { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; user-select: none; }
+
 :root {
   --cor-principal: #21c45d;
   --primary-color: #2e7d32;
@@ -241,6 +243,16 @@ body {
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  animation: fadeIn 0.3s;
+}
+
+.modal-cartao.active {
+  display: flex;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 .modal-cartao-content {
@@ -250,6 +262,18 @@ body {
   width: 90%;
   max-width: 450px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 .modal-cartao-content h2 {
@@ -336,7 +360,7 @@ body {
 
 .fab-button {
   position: fixed;
-  bottom: 14px !important;
+  bottom: 75px !important;
   left: 50%;
   transform: translateX(-50%);
   width: 60px;
@@ -494,4 +518,46 @@ body {
 
 .toast-content i {
   font-size: 1.1em;
+}
+/* ===== BOTTOM NAV ===== */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: white;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: 60px;
+  z-index: 1000;
+}
+
+.nav-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: none;
+  border: none;
+  color: #616161;
+  font-size: 0.75em;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  flex: 1;
+}
+
+.nav-btn.active {
+  color: #009587;
+}
+
+.nav-btn i {
+  font-size: 1.8em;
+  margin-bottom: 4px;
+}
+
+.nav-btn .label {
+  font-weight: 500;
 }
