@@ -232,7 +232,7 @@
         /* Card de Saldo - AGORA NÃO FIXO, ROLÁVEL */
         .header-balance-card {
             width: 100%;
-            background: rgb(194, 12, 12);
+            background: white;
             border-radius: 20px;
             padding: 20px;
             text-align: center;
