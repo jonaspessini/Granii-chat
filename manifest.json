@@ -1,6 +1,6 @@
 {
   "name": "Gastos Mensal",
-  "short_name": "Gastos",
+  "short_name": "Gastos Mensal",
   "description": "Controle financeiro mensal",
   "start_url": "./index.html",
   "display": "standalone",
