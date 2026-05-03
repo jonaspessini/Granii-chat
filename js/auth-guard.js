@@ -5,39 +5,37 @@ import { loadUserData, syncAllToSupabase } from './supabase-sync.js';
 // Limpar dados do localStorage
 function clearUserDataFromLocalStorage() {
     console.log('🧹 Limpando dados do localStorage...');
-    const keysToRemove = [];
-    for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
+    var keysToRemove = [];
+    for (var i = 0; i < localStorage.length; i++) {
+        var key = localStorage.key(i);
         if (key && (key.startsWith('lancamentos_') || key === 'cartoes_credito')) {
             keysToRemove.push(key);
         }
     }
-    keysToRemove.forEach(key => localStorage.removeItem(key));
+    keysToRemove.forEach(function(k) { localStorage.removeItem(k); });
     console.log('✅ Removidas ' + keysToRemove.length + ' chaves');
 }
 
 // Verificar autenticação e carregar dados do usuário
 async function checkAuthAndLoadData() {
     try {
-        const { data: { session } } = await supabase.auth.getSession();
+        var sessionData = await supabase.auth.getSession();
+        var session = sessionData.data.session;
 
         if (!session) {
             window.location.replace('./login.html');
             return false;
         }
 
-        // ⭐ LIMPAR DADOS ANTIGOS ANTES DE CARREGAR ⭐
         clearUserDataFromLocalStorage();
 
-        // Carregar dados do usuário do Supabase
-        const user = await getCurrentUser();
+        var user = await getCurrentUser();
         if (user) {
             console.log('👤 Usuário logado: ' + user.email);
             await loadUserData();
         }
 
-        // Mostrar email na interface
-        const userEmailElement = document.getElementById('userEmail');
+        var userEmailElement = document.getElementById('userEmail');
         if (userEmailElement) {
             userEmailElement.textContent = session.user.email;
         }
@@ -50,113 +48,171 @@ async function checkAuthAndLoadData() {
     }
 }
 
+// Mostrar tela de loading de logout (bloqueia tudo e mostra spinner)
+function showLoadingLogout() {
+    // Injetar @keyframes no <head> — única forma garantida no Android WebView/PWA
+    if (!document.getElementById('logout-spinner-style')) {
+        var styleTag = document.createElement('style');
+        styleTag.id = 'logout-spinner-style';
+        styleTag.textContent = [
+            '@keyframes logout-spin {',
+            '  0%   { transform: rotate(0deg); }',
+            '  100% { transform: rotate(360deg); }',
+            '}'
+        ].join('');
+        document.head.appendChild(styleTag);
+    }
+
+    // Overlay que cobre TUDO
+    var overlay = document.createElement('div');
+    overlay.id = 'logout-loading-overlay';
+    overlay.style.position      = 'fixed';
+    overlay.style.top           = '0';
+    overlay.style.left          = '0';
+    overlay.style.width         = '100vw';
+    overlay.style.height        = '100vh';
+    overlay.style.background    = '#ffffff';
+    overlay.style.display       = 'flex';
+    overlay.style.flexDirection = 'column';
+    overlay.style.alignItems    = 'center';
+    overlay.style.justifyContent = 'center';
+    overlay.style.gap           = '18px';
+    overlay.style.zIndex        = '2147483647';
+    overlay.style.pointerEvents = 'all';
+
+    // Spinner
+    var spinner = document.createElement('div');
+    spinner.style.width          = '56px';
+    spinner.style.height         = '56px';
+    spinner.style.border         = '6px solid #e0e0e0';
+    spinner.style.borderTopColor = '#21c45d';
+    spinner.style.borderRadius   = '50%';
+    spinner.style.animation      = 'logout-spin 0.8s linear infinite';
+
+    // Texto "Saindo..."
+    var txt1 = document.createElement('p');
+    txt1.textContent      = 'Saindo...';
+    txt1.style.margin     = '0';
+    txt1.style.fontFamily = 'sans-serif';
+    txt1.style.fontWeight = '700';
+    txt1.style.fontSize   = '20px';
+    txt1.style.color      = '#1a1a1a';
+
+    // Texto secundário
+    var txt2 = document.createElement('p');
+    txt2.textContent      = 'Sincronizando seus dados';
+    txt2.style.margin     = '0';
+    txt2.style.fontFamily = 'sans-serif';
+    txt2.style.fontSize   = '13px';
+    txt2.style.color      = '#999';
+
+    overlay.appendChild(spinner);
+    overlay.appendChild(txt1);
+    overlay.appendChild(txt2);
+
+    // Adiciona direto no <html> para não ser afetado por overflow:hidden do body
+    document.documentElement.appendChild(overlay);
+}
+
 // Mostrar modal de confirmação (substitui confirm() que não funciona em PWA Android)
 function showLogoutModal() {
-    // Evitar duplicata
     if (document.getElementById('logout-modal-overlay')) return;
 
-    const overlay = document.createElement('div');
+    var overlay = document.createElement('div');
     overlay.id = 'logout-modal-overlay';
-    overlay.style.cssText = `
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.55);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 999999;
-    `;
+    overlay.style.position      = 'fixed';
+    overlay.style.top           = '0';
+    overlay.style.left          = '0';
+    overlay.style.width         = '100vw';
+    overlay.style.height        = '100vh';
+    overlay.style.background    = 'rgba(0,0,0,0.55)';
+    overlay.style.display       = 'flex';
+    overlay.style.alignItems    = 'center';
+    overlay.style.justifyContent = 'center';
+    overlay.style.zIndex        = '2147483646';
 
-    overlay.innerHTML = `
-        <div style="
-            background: #fff;
-            border-radius: 20px;
-            padding: 28px 24px;
-            margin: 20px;
-            text-align: center;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-            max-width: 320px;
-            width: 100%;
-        ">
-            <div style="font-size: 40px; margin-bottom: 12px;">👋</div>
-            <p style="font-size: 16px; font-weight: 700; color: #1a1a1a; margin-bottom: 6px;">Deseja sair da conta?</p>
-            <p style="font-size: 13px; color: #666; margin-bottom: 24px;">Seus dados serão sincronizados antes de sair.</p>
-            <div style="display: flex; gap: 10px; justify-content: center;">
-                <button id="logout-cancelar" style="
-                    background: #f0f0f0;
-                    color: #333;
-                    border: none;
-                    border-radius: 10px;
-                    padding: 12px 24px;
-                    font-size: 15px;
-                    font-weight: 600;
-                    cursor: pointer;
-                    flex: 1;
-                ">Cancelar</button>
-                <button id="logout-confirmar" style="
-                    background: #e53935;
-                    color: #fff;
-                    border: none;
-                    border-radius: 10px;
-                    padding: 12px 24px;
-                    font-size: 15px;
-                    font-weight: 600;
-                    cursor: pointer;
-                    flex: 1;
-                ">Sair</button>
-            </div>
-        </div>
-    `;
+    var card = document.createElement('div');
+    card.style.background    = '#fff';
+    card.style.borderRadius  = '20px';
+    card.style.padding       = '28px 24px';
+    card.style.margin        = '20px';
+    card.style.textAlign     = 'center';
+    card.style.boxShadow     = '0 8px 32px rgba(0,0,0,0.18)';
+    card.style.maxWidth      = '320px';
+    card.style.width         = '100%';
+    card.style.fontFamily    = 'sans-serif';
 
-    document.body.appendChild(overlay);
+    var emoji = document.createElement('div');
+    emoji.textContent        = '👋';
+    emoji.style.fontSize     = '40px';
+    emoji.style.marginBottom = '12px';
 
-    document.getElementById('logout-cancelar').onclick = function() {
-        overlay.remove();
-    };
+    var titulo = document.createElement('p');
+    titulo.textContent      = 'Deseja sair da conta?';
+    titulo.style.fontWeight = '700';
+    titulo.style.fontSize   = '16px';
+    titulo.style.color      = '#1a1a1a';
+    titulo.style.margin     = '0 0 6px 0';
 
-    document.getElementById('logout-confirmar').onclick = function() {
+    var subtitulo = document.createElement('p');
+    subtitulo.textContent   = 'Seus dados serão sincronizados antes de sair.';
+    subtitulo.style.fontSize = '13px';
+    subtitulo.style.color   = '#666';
+    subtitulo.style.margin  = '0 0 24px 0';
+
+    var btnRow = document.createElement('div');
+    btnRow.style.display = 'flex';
+    btnRow.style.gap     = '10px';
+
+    var btnCancelar = document.createElement('button');
+    btnCancelar.textContent        = 'Cancelar';
+    btnCancelar.style.flex         = '1';
+    btnCancelar.style.background   = '#f0f0f0';
+    btnCancelar.style.color        = '#333';
+    btnCancelar.style.border       = 'none';
+    btnCancelar.style.borderRadius = '10px';
+    btnCancelar.style.padding      = '12px';
+    btnCancelar.style.fontSize     = '15px';
+    btnCancelar.style.fontWeight   = '600';
+    btnCancelar.style.cursor       = 'pointer';
+
+    var btnConfirmar = document.createElement('button');
+    btnConfirmar.textContent        = 'Sair';
+    btnConfirmar.style.flex         = '1';
+    btnConfirmar.style.background   = '#e53935';
+    btnConfirmar.style.color        = '#fff';
+    btnConfirmar.style.border       = 'none';
+    btnConfirmar.style.borderRadius = '10px';
+    btnConfirmar.style.padding      = '12px';
+    btnConfirmar.style.fontSize     = '15px';
+    btnConfirmar.style.fontWeight   = '600';
+    btnConfirmar.style.cursor       = 'pointer';
+
+    btnCancelar.onclick = function() { overlay.remove(); };
+    btnConfirmar.onclick = function() {
         overlay.remove();
         executeLogout();
     };
+
+    btnRow.appendChild(btnCancelar);
+    btnRow.appendChild(btnConfirmar);
+    card.appendChild(emoji);
+    card.appendChild(titulo);
+    card.appendChild(subtitulo);
+    card.appendChild(btnRow);
+    overlay.appendChild(card);
+
+    document.documentElement.appendChild(overlay);
 }
 
-// Executar o logout de fato (separado do modal)
+// Executar o logout de fato
 async function executeLogout() {
-    // Mostrar feedback visual de "aguarde"
-    const loadingOverlay = document.createElement('div');
-    loadingOverlay.style.cssText = `
-        position: fixed;
-        inset: 0;
-        background: rgba(255,255,255,0.85);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        z-index: 999999;
-        font-size: 15px;
-        color: #333;
-        gap: 12px;
-    `;
-    loadingOverlay.innerHTML = `
-        <div style="
-            width: 48px; height: 48px;
-            border: 5px solid #e0e0e0;
-            border-top-color: #21c45d;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        "></div>
-        <p style="font-weight: 700; font-size: 15px; color: #1a1a1a;">Saindo...</p>
-        <p style="font-size: 12px; color: #888;">Sincronizando seus dados</p>
-        <style>
-            @keyframes spin { to { transform: rotate(360deg); } }
-        </style>
-    `;
-    document.body.appendChild(loadingOverlay);
+    // Mostrar tela de loading ANTES de qualquer await
+    showLoadingLogout();
 
     try {
-        // Sync com timeout de 6s para não travar indefinidamente
-        const syncPromise = syncAllToSupabase();
-        const timeout = new Promise(function(resolve) { setTimeout(resolve, 3000); });
+        var syncPromise = syncAllToSupabase();
+        var timeout = new Promise(function(resolve) { setTimeout(resolve, 3000); });
         await Promise.race([syncPromise, timeout]);
     } catch (e) {
         console.warn('⚠️ Sync falhou, saindo mesmo assim:', e);
@@ -168,7 +224,6 @@ async function executeLogout() {
         console.warn('⚠️ signOut falhou:', e);
     }
 
-    // Garantir navegação para o login
     window.location.replace('./login.html');
 }
 
@@ -181,35 +236,33 @@ async function logoutAndSync() {
 function addLogoutButton() {
     if (document.getElementById('global-logout-btn')) return;
 
-    const logoutBtn = document.createElement('button');
+    var logoutBtn = document.createElement('button');
     logoutBtn.id = 'global-logout-btn';
     logoutBtn.innerHTML = '<i class="ri-logout-box-r-line"></i> Sair';
-    logoutBtn.style.cssText = `
-        position: fixed;
-        bottom: 80px;
-        right: 20px;
-        background: #e53935;
-        color: white;
-        border: none;
-        border-radius: 30px;
-        padding: 10px 20px;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-        z-index: 9999;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    `;
+    logoutBtn.style.position     = 'fixed';
+    logoutBtn.style.bottom       = '80px';
+    logoutBtn.style.right        = '20px';
+    logoutBtn.style.background   = '#e53935';
+    logoutBtn.style.color        = 'white';
+    logoutBtn.style.border       = 'none';
+    logoutBtn.style.borderRadius = '30px';
+    logoutBtn.style.padding      = '10px 20px';
+    logoutBtn.style.fontSize     = '14px';
+    logoutBtn.style.fontWeight   = '600';
+    logoutBtn.style.cursor       = 'pointer';
+    logoutBtn.style.zIndex       = '9999';
+    logoutBtn.style.boxShadow    = '0 2px 10px rgba(0,0,0,0.2)';
+    logoutBtn.style.display      = 'flex';
+    logoutBtn.style.alignItems   = 'center';
+    logoutBtn.style.gap          = '8px';
 
     logoutBtn.onclick = showLogoutModal;
     document.body.appendChild(logoutBtn);
 }
 
-// Executar
+// Executar ao carregar página
 document.addEventListener('DOMContentLoaded', async function() {
-    const isAuthenticated = await checkAuthAndLoadData();
+    var isAuthenticated = await checkAuthAndLoadData();
     if (isAuthenticated) {
         addLogoutButton();
     }
