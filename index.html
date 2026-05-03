@@ -178,6 +178,7 @@ function navigateTo(pagina) {
     import { supabase, getCurrentUser, signOut } from './js/supabase-config.js';
     import { syncAllToSupabase } from './js/supabase-sync.js';
     import { startSingleSessionGuard } from './js/single-session.js';
+    import './js/logout-helper.js';
     window.initSupabase = initSupabaseForUser;
 
     function limparDadosLocaisAoSair() {
@@ -223,30 +224,8 @@ function navigateTo(pagina) {
         }
     }
 
-    async function sairDaHome() {
-        const logoutBtn = document.getElementById('homeLogoutBtn');
-
-        if (!confirm('Deseja realmente sair da sua conta? Seus dados serao salvos.')) {
-            return;
-        }
-
-        if (logoutBtn) logoutBtn.disabled = true;
-
-        try {
-            await syncAllToSupabase();
-        } catch (syncError) {
-            console.warn('Erro ao sincronizar antes de sair:', syncError);
-        }
-
-        try {
-            await signOut();
-        } catch (logoutError) {
-            console.warn('Erro ao sair:', logoutError);
-        }
-
-        limparDadosLocaisAoSair();
-        sessionStorage.setItem('_from_logout', '1');
-        window.location.href = 'login.html';
+    function sairDaHome() {
+        confirmarLogout();
     }
 
     document.getElementById('homeLogoutBtn')?.addEventListener('click', sairDaHome);

@@ -608,6 +608,7 @@ index2
     import { supabase, getCurrentUser } from './js/supabase-config.js';
     import { loadUserData } from './js/supabase-sync.js';
     import { startSingleSessionGuard } from './js/single-session.js';
+    import './js/logout-helper.js';
 
     async function initPage() {
         // getSession garante a sessao real atual do Supabase
@@ -4568,51 +4569,10 @@ function navigateTo(pagina) {
   }
 
 // FUNÇÃO DE LOGOUT CORRETA
-async function sairDoApp() {
-    const menuDropdown = document.getElementById('menuDropdown');
+function sairDoApp() {
+    var menuDropdown = document.getElementById('menuDropdown');
     if (menuDropdown) menuDropdown.classList.remove('active');
-    
-    if (!confirm('Deseja realmente sair da sua conta? Seus dados serão salvos.')) {
-        return;
-    }
-    
-    try {
-        console.log('Sincronizando dados antes de sair...');
-        
-        try {
-            const { syncAllToSupabase } = await import('./js/supabase-sync.js');
-            await syncAllToSupabase();
-            console.log('✅ Dados sincronizados!');
-        } catch (syncError) {
-            console.warn('Erro na sincronização:', syncError);
-        }
-        
-        try {
-            const { signOut } = await import('./js/supabase-config.js');
-            await signOut();
-        } catch (logoutError) {
-            console.warn('Erro no logout:', logoutError);
-        }
-        
-        // Limpar todos os dados locais ao sair (dados do app + sessao do Supabase)
-        const _ko = [];
-        for (let i = 0; i < localStorage.length; i++) {
-            const _k = localStorage.key(i);
-            if (_k && (
-                _k.startsWith('lancamentos_') ||
-                _k === 'cartoes_credito' ||
-                _k === '_last_user_id' ||
-                _k.startsWith('sb-')  // token de sessao do Supabase
-            )) _ko.push(_k);
-        }
-        _ko.forEach(k => localStorage.removeItem(k));
-        sessionStorage.setItem('_from_logout', '1');
-        window.location.href = 'login.html';
-        
-    } catch (error) {
-        console.error('Erro ao sair:', error);
-        window.location.href = 'login.html';
-    }
+    confirmarLogout();
 }
 </script>
 </body>
