@@ -610,6 +610,94 @@ index2
     import { startSingleSessionGuard } from './js/single-session.js';
     import './js/logout-helper.js';
 
+    // ===== FUNÇÕES DO SPLASH DE SINCRONIZAÇÃO =====
+    function mostrarSyncSplash() {
+        // Evita criar múltiplos splashes
+        if (document.getElementById('_sync-loading')) return;
+        
+        // Estilos do splash
+        if (!document.getElementById('_sync-style')) {
+            var s = document.createElement('style');
+            s.id = '_sync-style';
+            s.textContent = '@keyframes _sync-spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}' +
+                            '@keyframes _sync-fade{0%{opacity:1}80%{opacity:1}100%{opacity:0}}';
+            document.head.appendChild(s);
+        }
+
+        var overlay = document.createElement('div');
+        overlay.id = '_sync-loading';
+        overlay.style.position       = 'fixed';
+        overlay.style.top            = '0';
+        overlay.style.left           = '0';
+        overlay.style.width          = '100vw';
+        overlay.style.height         = '100vh';
+        overlay.style.background     = '#ffffff';
+        overlay.style.display        = 'flex';
+        overlay.style.flexDirection  = 'column';
+        overlay.style.alignItems     = 'center';
+        overlay.style.justifyContent = 'center';
+        overlay.style.gap            = '18px';
+        overlay.style.zIndex         = '2147483647';
+        overlay.style.pointerEvents  = 'all';
+
+        var logo = document.createElement('div');
+        logo.textContent      = '💰';
+        logo.style.fontSize   = '48px';
+        logo.style.marginBottom = '4px';
+
+        var spinner = document.createElement('div');
+        spinner.style.width          = '52px';
+        spinner.style.height         = '52px';
+        spinner.style.border         = '6px solid #e0e0e0';
+        spinner.style.borderTopColor = '#21c45d';
+        spinner.style.borderRadius   = '50%';
+        spinner.style.animation      = '_sync-spin 0.8s linear infinite';
+
+        var t1 = document.createElement('p');
+        t1.textContent      = 'Sincronizando dados...';
+        t1.style.margin     = '0';
+        t1.style.fontFamily = 'sans-serif';
+        t1.style.fontWeight = '700';
+        t1.style.fontSize   = '18px';
+        t1.style.color      = '#1a1a1a';
+
+        var t2 = document.createElement('p');
+        t2.textContent      = 'Preparando suas finanças';
+        t2.style.margin     = '0';
+        t2.style.fontFamily = 'sans-serif';
+        t2.style.fontSize   = '13px';
+        t2.style.color      = '#999';
+
+        overlay.appendChild(logo);
+        overlay.appendChild(spinner);
+        overlay.appendChild(t1);
+        overlay.appendChild(t2);
+        document.documentElement.appendChild(overlay);
+    }
+
+    function esconderSyncSplash() {
+        var overlay = document.getElementById('_sync-loading');
+        if (!overlay) return;
+        // fade out suave antes de remover
+        overlay.style.transition = 'opacity 0.4s ease';
+        overlay.style.opacity = '0';
+        setTimeout(function() { 
+            if (overlay && overlay.remove) overlay.remove(); 
+        }, 400);
+    }
+
+    // Função para verificar se é uma nova sessão de login
+    function isNewLoginSession(userId) {
+        const lastSessionDate = localStorage.getItem('_last_session_date_' + userId);
+        const today = new Date().toDateString();
+        
+        if (lastSessionDate !== today) {
+            localStorage.setItem('_last_session_date_' + userId, today);
+            return true;
+        }
+        return false;
+    }
+
     async function initPage() {
         // getSession garante a sessao real atual do Supabase
         const { data: { session } } = await supabase.auth.getSession();
@@ -621,9 +709,12 @@ index2
 
         const user = session.user;
         const lastUserId = localStorage.getItem('_last_user_id');
-
+        
+        // PRIMEIRO CASO: Novo usuário ou troca de conta
         if (lastUserId !== user.id) {
-            console.log('Novo usuario: ' + user.email + '. Limpando dados antigos...');
+            console.log('Novo usuario: ' + user.email + '. Mostrando splash...');
+            mostrarSyncSplash();
+            
             const keysToRemove = [];
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
@@ -634,9 +725,37 @@ index2
             keysToRemove.forEach(key => localStorage.removeItem(key));
             localStorage.setItem('_last_user_id', user.id);
             console.log('Carregando dados do Supabase para: ' + user.email);
+            
             await loadUserData();
+            esconderSyncSplash();
             location.reload();
             return;
+        }
+        
+        // SEGUNDO CASO: Usuário já logado - SÓ MOSTRA SPLASH se for primeira vez do dia
+        const isFirstLoginToday = isNewLoginSession(user.id);
+        
+        if (isFirstLoginToday) {
+            console.log('Primeiro login do dia, mostrando splash...');
+            mostrarSyncSplash();
+            
+            try {
+                await loadUserData();
+            } catch (error) {
+                console.error('Erro ao sincronizar:', error);
+            }
+            
+            // Pequeno delay para garantir que o splash seja visto
+            await new Promise(r => setTimeout(r, 1500));
+            esconderSyncSplash();
+        } else {
+            // Já logado hoje - NÃO MOSTRA SPLASH, carrega em background
+            console.log('Usuario ja logado hoje (' + user.email + '), carregando sem splash...');
+            try {
+                await loadUserData();
+            } catch (error) {
+                console.error('Erro ao sincronizar:', error);
+            }
         }
 
         console.log('Usuario carregado: ' + user.email);
