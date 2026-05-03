@@ -138,15 +138,25 @@ async function executeLogout() {
         gap: 12px;
     `;
     loadingOverlay.innerHTML = `
-        <div style="font-size: 32px;">⏳</div>
-        <p style="font-weight: 600;">Sincronizando dados...</p>
+        <div style="
+            width: 48px; height: 48px;
+            border: 5px solid #e0e0e0;
+            border-top-color: #21c45d;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        "></div>
+        <p style="font-weight: 700; font-size: 15px; color: #1a1a1a;">Saindo...</p>
+        <p style="font-size: 12px; color: #888;">Sincronizando seus dados</p>
+        <style>
+            @keyframes spin { to { transform: rotate(360deg); } }
+        </style>
     `;
     document.body.appendChild(loadingOverlay);
 
     try {
         // Sync com timeout de 6s para não travar indefinidamente
         const syncPromise = syncAllToSupabase();
-        const timeout = new Promise(function(resolve) { setTimeout(resolve, 6000); });
+        const timeout = new Promise(function(resolve) { setTimeout(resolve, 3000); });
         await Promise.race([syncPromise, timeout]);
     } catch (e) {
         console.warn('⚠️ Sync falhou, saindo mesmo assim:', e);
