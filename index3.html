@@ -447,11 +447,96 @@ function mostrarToast(mensagem, tipo = 'success') {
     </script>
 
 <script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js').catch(() => {});
+  // ===== CÓDIGO PARA NOTIFICAÇÃO DE ATUALIZAÇÃO DO PWA =====
+  let pendingServiceWorker = null;
+
+  function showUpdateNotification() {
+    // Remove notificação existente se houver
+    const existingNotif = document.getElementById('pwa-update-notification');
+    if (existingNotif) existingNotif.remove();
+    
+    const notification = document.createElement('div');
+    notification.id = 'pwa-update-notification';
+    notification.innerHTML = `
+      <div style="
+        position: fixed;
+        bottom: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #21c45d;
+        color: white;
+        padding: 14px 20px;
+        border-radius: 50px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        z-index: 10000;
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        font-family: 'Inter', sans-serif;
+        font-weight: 500;
+        backdrop-filter: blur(8px);
+        background: rgba(33, 196, 93, 0.95);
+      ">
+        <span>🔄 Nova versão disponível!</span>
+        <button onclick="updateToNewVersion()" style="
+          background: white;
+          color: #21c45d;
+          border: none;
+          padding: 8px 18px;
+          border-radius: 40px;
+          cursor: pointer;
+          font-weight: bold;
+          font-size: 14px;
+        ">Atualizar</button>
+      </div>
+    `;
+    document.body.appendChild(notification);
+  }
+
+  window.updateToNewVersion = function() {
+    if (pendingServiceWorker) {
+      pendingServiceWorker.postMessage({ type: 'SKIP_WAITING' });
+    }
+  };
+
+  function refreshOnNewServiceWorker() {
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      const notification = document.getElementById('pwa-update-notification');
+      if (notification) notification.remove();
+      window.location.reload();
     });
   }
+
+  function registerServiceWorkerWithUpdate() {
+    if ('serviceWorker' in navigator) {
+      refreshOnNewServiceWorker();
+      
+      navigator.serviceWorker.register('./sw.js')
+        .then(registration => {
+          console.log('Service Worker registrado');
+          
+          if (registration.waiting) {
+            pendingServiceWorker = registration.waiting;
+            showUpdateNotification();
+          }
+          
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            pendingServiceWorker = newWorker;
+            
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                showUpdateNotification();
+              }
+            });
+          });
+        })
+        .catch(error => console.log('Service Worker error:', error));
+    }
+  }
+
+  // Iniciar o registro
+  registerServiceWorkerWithUpdate();
 </script>
 
 <div class="bottom-nav">
