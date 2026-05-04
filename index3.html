@@ -447,96 +447,146 @@ function mostrarToast(mensagem, tipo = 'success') {
     </script>
 
 <script>
-  // ===== CÓDIGO PARA NOTIFICAÇÃO DE ATUALIZAÇÃO DO PWA =====
-  let pendingServiceWorker = null;
+// ===== CÓDIGO PARA NOTIFICAÇÃO NATIVA DO NAVEGADOR =====
+let pendingServiceWorker = null;
 
-  function showUpdateNotification() {
-    // Remove notificação existente se houver
-    const existingNotif = document.getElementById('pwa-update-notification');
-    if (existingNotif) existingNotif.remove();
-    
-    const notification = document.createElement('div');
-    notification.id = 'pwa-update-notification';
-    notification.innerHTML = `
-      <div style="
-        position: fixed;
-        bottom: 80px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: #21c45d;
-        color: white;
-        padding: 14px 20px;
-        border-radius: 50px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        z-index: 10000;
-        display: flex;
-        gap: 16px;
-        align-items: center;
-        font-family: 'Inter', sans-serif;
-        font-weight: 500;
-        backdrop-filter: blur(8px);
-        background: rgba(33, 196, 93, 0.95);
-      ">
-        <span>🔄 Nova versão disponível!</span>
-        <button onclick="updateToNewVersion()" style="
-          background: white;
-          color: #21c45d;
-          border: none;
-          padding: 8px 18px;
-          border-radius: 40px;
-          cursor: pointer;
-          font-weight: bold;
-          font-size: 14px;
-        ">Atualizar</button>
-      </div>
-    `;
-    document.body.appendChild(notification);
+// Solicitar permissão para notificações ao carregar a página
+function requestNotificationPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+}
+
+function showNativeUpdateNotification() {
+  // Verifica se o navegador suporta notificações
+  if (!('Notification' in window)) {
+    console.log('Navegador não suporta notificações');
+    return;
   }
 
-  window.updateToNewVersion = function() {
-    if (pendingServiceWorker) {
-      pendingServiceWorker.postMessage({ type: 'SKIP_WAITING' });
-    }
-  };
-
-  function refreshOnNewServiceWorker() {
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      const notification = document.getElementById('pwa-update-notification');
-      if (notification) notification.remove();
-      window.location.reload();
+  // Se já tiver permissão, mostra a notificação
+  if (Notification.permission === 'granted') {
+    const notification = new Notification('🔄 Atualização disponível!', {
+      body: 'Uma nova versão do app está disponível. Clique para atualizar agora.',
+      icon: './img/logo.png', // seu logo
+      badge: './img/logo.png',
+      tag: 'pwa-update',
+      vibrate: [200, 100, 200],
+      requireInteraction: true // Notificação fica até o usuário interagir
     });
-  }
 
-  function registerServiceWorkerWithUpdate() {
-    if ('serviceWorker' in navigator) {
-      refreshOnNewServiceWorker();
-      
-      navigator.serviceWorker.register('./sw.js')
-        .then(registration => {
-          console.log('Service Worker registrado');
+    // Quando clicar na notificação, atualiza
+    notification.onclick = () => {
+      window.focus();
+      updateToNewVersion();
+      notification.close();
+    };
+  }
+  // Se não tem permissão, pede e mostra um toast alternativo
+  else if (Notification.permission !== 'denied') {
+    Notification.requestPermission().then(permission => {
+      if (permission === 'granted') {
+        showNativeUpdateNotification();
+      } else {
+        showFallbackNotification(); // fallback visual
+      }
+    });
+  } else {
+    showFallbackNotification(); // usuário negou notificações
+  }
+}
+
+// Fallback para quando o usuário negou notificações
+function showFallbackNotification() {
+  const notification = document.createElement('div');
+  notification.id = 'pwa-update-notification';
+  notification.innerHTML = `
+    <div style="
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #21c45d;
+      color: white;
+      padding: 12px 18px;
+      border-radius: 50px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      z-index: 10000;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+    ">
+      <span>🔄 Nova versão!</span>
+      <button onclick="updateToNewVersion()" style="
+        background: white;
+        color: #21c45d;
+        border: none;
+        padding: 6px 14px;
+        border-radius: 40px;
+        cursor: pointer;
+        font-weight: bold;
+      ">Atualizar</button>
+    </div>
+  `;
+  document.body.appendChild(notification);
+  
+  // Auto remove após 10 segundos
+  setTimeout(() => {
+    const el = document.getElementById('pwa-update-notification');
+    if (el) el.remove();
+  }, 10000);
+}
+
+window.updateToNewVersion = function() {
+  if (pendingServiceWorker) {
+    pendingServiceWorker.postMessage({ type: 'SKIP_WAITING' });
+    // Fecha notificação fallback se existir
+    const fallback = document.getElementById('pwa-update-notification');
+    if (fallback) fallback.remove();
+  }
+};
+
+function refreshOnNewServiceWorker() {
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    window.location.reload();
+  });
+}
+
+function registerServiceWorkerWithUpdate() {
+  if ('serviceWorker' in navigator) {
+    refreshOnNewServiceWorker();
+    
+    navigator.serviceWorker.register('./sw.js')
+      .then(registration => {
+        console.log('Service Worker registrado');
+        
+        if (registration.waiting) {
+          pendingServiceWorker = registration.waiting;
+          showNativeUpdateNotification();
+        }
+        
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing;
+          pendingServiceWorker = newWorker;
           
-          if (registration.waiting) {
-            pendingServiceWorker = registration.waiting;
-            showUpdateNotification();
-          }
-          
-          registration.addEventListener('updatefound', () => {
-            const newWorker = registration.installing;
-            pendingServiceWorker = newWorker;
-            
-            newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                showUpdateNotification();
-              }
-            });
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              showNativeUpdateNotification();
+            }
           });
-        })
-        .catch(error => console.log('Service Worker error:', error));
-    }
+        });
+      })
+      .catch(error => console.log('Service Worker error:', error));
   }
+}
 
-  // Iniciar o registro
+// Solicitar permissão ao carregar a página
+document.addEventListener('DOMContentLoaded', () => {
+  requestNotificationPermission();
   registerServiceWorkerWithUpdate();
+});
 </script>
 
 <div class="bottom-nav">

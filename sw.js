@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gastos-mensal-v4.9';
+const CACHE_NAME = 'gastos-mensal-v4.9.1';
 
 // Apenas assets verdadeiramente estáticos — CSS, fontes, imagens
 const ASSETS_TO_CACHE = [
@@ -25,9 +25,6 @@ const NEVER_CACHE = [
   'login.html'
 ];
 
-// ⭐ NOVO: Armazenar referência do novo worker
-let newWorker = null;
-
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -39,6 +36,7 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
+    // Apaga TODOS os caches antigos ao ativar nova versão
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
@@ -51,14 +49,6 @@ self.addEventListener('activate', (event) => {
     })
   );
   self.clients.claim();
-});
-
-// ⭐ NOVO: Escutar mensagens do app principal
-self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    console.log('[SW] Atualizando para nova versão');
-    self.skipWaiting();
-  }
 });
 
 self.addEventListener('fetch', (event) => {
