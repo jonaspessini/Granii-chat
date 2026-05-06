@@ -3661,3 +3661,360 @@ font-size: 1.5em;
 #modal .btn-group .btn-danger:active {
   background: #fef3c7;
 }
+/* ===== CATEGORIA BADGE NA LINHA ===== */
+.categoria-badge {
+  display: inline-flex;
+  align-items: center;
+  background: #f0f0f0;
+  color: #555;
+  font-size: 0.72em;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ===== CATEGORIA INLINE DISCRETA ===== */
+.transaction-date .categoria-inline {
+  color: #555;
+  font-size: 0.85em;
+  font-weight: 400;
+  margin-left: 2px;
+}
+
+/* ===== SELECT DE CATEGORIA NO MODAL ===== */
+#categoriaLancamento {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  font-size: 1em;
+  font-family: var(--font-family, "Inter", sans-serif);
+  background: var(--background-color);
+  color: var(--text-color);
+  margin-bottom: 12px;
+  appearance: auto;
+}
+
+#categoriaLancamento:focus {
+  outline: none;
+  border-color: var(--cor-principal);
+  background: white;
+}
+
+/* ===================================================
+   MODAL DE CONFIRMAÇÃO DE EDIÇÃO (PARCELADO/FIXO)
+   ESTILO MINIMALISTA - COR ÚNICA
+   =================================================== */
+
+/* Modal específico para edição de parcelas */
+#editParceladoModal {
+    z-index: 10000;
+}
+
+#editParceladoModal .modal-content {
+    max-width: 380px;
+    width: 90%;
+    height: auto;
+    max-height: 90vh;
+    border-radius: 24px;
+    padding: 0;
+    overflow: hidden;
+    background: white;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    animation: modalEditSlideUp 0.3s ease-out;
+}
+
+@keyframes modalEditSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Cabeçalho do modal */
+#editParceladoModal .modal-content h2 {
+    text-align: center;
+    padding: 28px 24px 16px 24px;
+    margin: 0;
+    font-size: 1.4em;
+    font-weight: 600;
+    color: #1a1a2e;
+    border-bottom: none;
+    position: relative;
+}
+
+/* Linha decorativa no título */
+#editParceladoModal .modal-content h2::after {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 3px;
+    background: var(--cor-principal, #21c45d);
+    margin: 12px auto 0;
+    border-radius: 2px;
+}
+
+/* Ícone decorativo no título */
+#editParceladoModal .modal-content h2::before {
+    content: '✎';
+    display: inline-block;
+    margin-right: 10px;
+    font-size: 1.2em;
+    color: var(--cor-principal, #21c45d);
+}
+
+/* Descrição do modal */
+#editParceladoModal .modal-content p {
+    text-align: center;
+    padding: 0 24px 20px 24px;
+    margin: 0;
+    font-size: 0.95em;
+    color: #666;
+    line-height: 1.5;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+/* Container dos botões */
+#editParceladoModal .btn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 20px 24px 28px 24px;
+    margin: 0;
+}
+
+/* Estilo base dos botões - TODOS IGUAIS */
+#editParceladoModal .btn-group .btn {
+    width: 100%;
+    padding: 14px 20px;
+    border-radius: 12px;
+    font-size: 0.95em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Botões primários (opções de edição) - TODOS COM A MESMA COR */
+#editParceladoModal .btn-group .btn-primary {
+    background: var(--cor-principal, #21c45d);
+    color: white;
+    box-shadow: 0 2px 8px rgba(33, 196, 93, 0.2);
+}
+
+#editParceladoModal .btn-group .btn-primary:hover {
+    transform: translateY(-1px);
+    background: #1a9e4a;
+    box-shadow: 0 4px 12px rgba(33, 196, 93, 0.3);
+}
+
+#editParceladoModal .btn-group .btn-primary:active {
+    transform: translateY(0);
+}
+
+/* Ícones para os botões */
+#editParceladoModal .btn-group .btn-primary:first-child::before {
+    content: '🔸';
+    font-size: 1em;
+    transition: transform 0.2s ease;
+}
+
+#editParceladoModal .btn-group .btn-primary:nth-child(2)::before {
+    content: '➡️';
+    font-size: 1em;
+    transition: transform 0.2s ease;
+}
+
+#editParceladoModal .btn-group .btn-primary:last-of-type::before {
+    content: '📅';
+    font-size: 1em;
+    transition: transform 0.2s ease;
+}
+
+#editParceladoModal .btn-group .btn-primary:hover::before {
+    transform: scale(1.1);
+}
+
+/* Efeito ripple nos botões */
+#editParceladoModal .btn-group .btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.4s ease, height 0.4s ease;
+}
+
+#editParceladoModal .btn-group .btn:active::after {
+    width: 200%;
+    height: 200%;
+}
+
+/* Efeito de brilho ao passar o mouse */
+#editParceladoModal .btn-group .btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+    transition: left 0.5s ease;
+}
+
+#editParceladoModal .btn-group .btn:hover::before {
+    left: 100%;
+}
+
+/* Botão Cancelar */
+#editParceladoModal .btn-group .btn-secondary {
+    background: #f5f5f5;
+    color: #666;
+    border: 1px solid #e0e0e0;
+    margin-top: 4px;
+}
+
+#editParceladoModal .btn-group .btn-secondary:hover {
+    background: #eeeeee;
+    border-color: #ccc;
+    transform: translateY(-1px);
+}
+
+#editParceladoModal .btn-group .btn-secondary:active {
+    transform: translateY(0);
+}
+
+/* Ícone para Cancelar */
+#editParceladoModal .btn-group .btn-secondary::before {
+    content: '✕';
+    font-size: 1em;
+    color: #999;
+    transition: transform 0.2s ease;
+}
+
+#editParceladoModal .btn-group .btn-secondary:hover::before {
+    transform: scale(1.1);
+    color: #666;
+}
+
+/* Linha de destaque no topo do modal */
+#editParceladoModal::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 4px;
+    background: var(--cor-principal, #21c45d);
+    z-index: 10001;
+    border-radius: 2px;
+}
+
+/* Responsividade */
+@media (max-width: 480px) {
+    #editParceladoModal .modal-content {
+        width: 85%;
+        border-radius: 20px;
+    }
+    
+    #editParceladoModal .modal-content h2 {
+        padding: 24px 20px 12px 20px;
+        font-size: 1.3em;
+    }
+    
+    #editParceladoModal .modal-content p {
+        padding: 0 20px 16px 20px;
+        font-size: 0.9em;
+    }
+    
+    #editParceladoModal .btn-group {
+        padding: 16px 20px 24px 20px;
+        gap: 10px;
+    }
+    
+    #editParceladoModal .btn-group .btn {
+        padding: 12px 16px;
+        font-size: 0.9em;
+    }
+}
+
+/* Versão para tema escuro */
+@media (prefers-color-scheme: dark) {
+    #editParceladoModal .modal-content {
+        background: #1e1e2e;
+    }
+    
+    #editParceladoModal .modal-content h2 {
+        color: #ffffff;
+    }
+    
+    #editParceladoModal .modal-content p {
+        color: #a0a0a0;
+        border-bottom-color: #2a2a3a;
+    }
+    
+    #editParceladoModal .btn-group .btn-primary {
+        background: var(--cor-principal, #21c45d);
+    }
+    
+    #editParceladoModal .btn-group .btn-secondary {
+        background: #2a2a3a;
+        color: #ccc;
+        border-color: #3a3a4a;
+    }
+    
+    #editParceladoModal .btn-group .btn-secondary:hover {
+        background: #333344;
+    }
+}
+
+/* Acessibilidade - foco visível */
+#editParceladoModal .btn-group .btn:focus-visible {
+    outline: 2px solid var(--cor-principal, #21c45d);
+    outline-offset: 2px;
+}
+
+/* Tooltips informativos (apenas em desktop) */
+@media (hover: hover) {
+    #editParceladoModal .btn-group .btn-primary {
+        position: relative;
+    }
+    
+    #editParceladoModal .btn-group .btn-primary:hover::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 4px 10px;
+        border-radius: 8px;
+        font-size: 0.7em;
+        font-weight: normal;
+        white-space: nowrap;
+        margin-bottom: 8px;
+        pointer-events: none;
+        z-index: 100;
+        font-family: 'Inter', sans-serif;
+    }
+}

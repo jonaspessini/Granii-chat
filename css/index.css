@@ -831,3 +831,135 @@
     border-left-color: #FFD700; 
     background: #fff9db;
 }
+
+/* ===== CARD DE GASTOS POR CATEGORIA ===== */
+.categorias-container {
+    background: white;
+    border-radius: 20px;
+    padding: 18px;
+    margin-bottom: 18px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.categorias-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.categorias-title {
+    font-size: 1em;
+    font-weight: 600;
+    color: #1a1a2e;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.categorias-title i {
+    font-size: 1.2em;
+    color: #21c45d;
+}
+
+.categorias-total {
+    font-size: 0.85em;
+    color: #6c757d;
+    background: #f0f0f0;
+    padding: 4px 10px;
+    border-radius: 20px;
+}
+
+.categorias-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.categoria-item-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 12px;
+    transition: background 0.2s;
+}
+
+.categoria-item-row:active {
+    background: #f8f9fa;
+}
+
+.categoria-icon {
+    width: 40px;
+    height: 40px;
+    background: #f5f5f5;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+}
+
+.categoria-item-row.despesa .categoria-icon {
+    background: #ffe0e0;
+}
+
+.categoria-info {
+    flex: 1;
+}
+
+.categoria-nome {
+    font-weight: 600;
+    font-size: 0.9em;
+    color: #1a1a2e;
+    margin-bottom: 4px;
+}
+
+.categoria-percent-bar {
+    height: 4px;
+    background: #e9ecef;
+    border-radius: 2px;
+    overflow: hidden;
+    width: 100%;
+}
+
+.categoria-percent-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}
+
+.categoria-item-row.despesa .categoria-percent-fill {
+    background: linear-gradient(90deg, #f44336, #e53935);
+}
+
+.categoria-valor {
+    text-align: right;
+    min-width: 90px;
+}
+
+.categoria-valor-amount {
+    font-weight: 700;
+    font-size: 0.9em;
+    color: #f44336;
+}
+
+.categoria-valor-percent {
+    font-size: 0.7em;
+    color: #6c757d;
+    margin-top: 2px;
+}
+
+.categoria-empty {
+    text-align: center;
+    padding: 30px;
+    color: #6c757d;
+}
+
+.categoria-empty i {
+    font-size: 2em;
+    margin-bottom: 10px;
+    opacity: 0.5;
+}

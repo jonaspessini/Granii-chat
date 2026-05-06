@@ -98,6 +98,11 @@ index2
     Pagar Cartão
   </div>
 
+  <div class="menu-item" onclick="window.location.href='categorias.html'">
+    <i class="ri-price-tag-3-line"></i>
+    Categorias
+  </div>
+
   <!-- <div class="menu-item" onclick="navigateToCartoes()">
     <i class="ri-bank-card-line"></i>
     Gerenciar Cartões
@@ -478,6 +483,10 @@ index2
     </select>
     <input type="date" id="dataVencimento" />
 
+    <select id="categoriaLancamento" style="margin-bottom: 0;">
+      <option value="">— Sem categoria —</option>
+    </select>
+
     <select id="formaPagamento" style="display: none;">
       <option value="debito_pix">Débito/Pix</option>
     </select>
@@ -532,6 +541,20 @@ index2
           <button class="btn btn-danger" onclick="excluirLancamentoConfirmado('future')">Apagar esta e futuras</button>
           <button class="btn btn-danger" onclick="excluirLancamentoConfirmado('all')">Apagar todas</button>
           <button class="btn btn-secondary" onclick="closeDeleteParceladoModal()">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Confirmação de Edição de Lançamento Parcelado/Fixo -->
+    <div id="editParceladoModal" class="modal">
+      <div class="modal-content">
+        <h2 id="editParceladoModalTitle">Editar Lançamento</h2>
+        <p id="editParceladoModalDesc">Este é um lançamento parcelado. Qual alteração você deseja fazer?</p>
+        <div class="btn-group">
+          <button class="btn btn-primary" onclick="confirmarEdicaoParcelado('current')">Somente esta</button>
+          <button class="btn btn-primary" onclick="confirmarEdicaoParcelado('future')">Esta e futuras</button>
+          <button class="btn btn-primary" onclick="confirmarEdicaoParcelado('all')">Todas</button>
+          <button class="btn btn-secondary" onclick="closeEditParceladoModal()">Cancelar</button>
         </div>
       </div>
     </div>
@@ -823,6 +846,7 @@ function getDataHoje() {
     const fluxoCaixaEl = document.getElementById('fluxoCaixa');
     const modal = document.getElementById('modal');
     const deleteParceladoModal = document.getElementById('deleteParceladoModal');
+    const editParceladoModal = document.getElementById('editParceladoModal');
     const monthYearPickerModal = document.getElementById('monthYearPickerModal');
     const descricaoInput = document.getElementById('descricao');
     const tipoInput = document.getElementById('tipo');
@@ -1375,7 +1399,9 @@ function openTransactionDetails(index) {
     document.getElementById('detailData').textContent = 'Sem data';
   }
   
-  document.getElementById('detailCategoria').textContent = transaction.tipo === 'receita' ? 'Receita' : 'Despesa';
+  // Mostra categoria real se existir
+  var nomeCategoria = getNomeCategoriaById(transaction.categoria);
+  document.getElementById('detailCategoria').textContent = nomeCategoria || (transaction.tipo === 'receita' ? 'Receita' : 'Despesa');
   
   // NOVO: Preencher forma de pagamento
   const formaPagamentoItem = document.getElementById('detailFormaPagamentoItem');
@@ -1499,6 +1525,7 @@ function openModal(typeToPreselect = null, originalIndex = null) {
         toggleFormaPagamento();
         carregarFormasPagamento();
         document.getElementById('formaPagamento').value = lanc.formaPagamento || 'debito_pix';
+        carregarCategoriasNoModal(lanc.tipo, lanc.categoria || '');
 
         const pagoToggle = document.getElementById('pagoToggle');
         pagoToggle.checked = !!lanc.pago;
@@ -1576,6 +1603,10 @@ setTimeout(() => abrirCalculadora(), 100);
         document.getElementById('formaPagamento').value = lanc.formaPagamento || 'debito_pix';
         document.getElementById('pagoToggle').checked = !!lanc.pago;
         atualizarTextoPago();
+        carregarCategoriasNoModal(lanc.tipo, lanc.categoria || '');
+    } else {
+        var tipoAtual = document.getElementById('tipo').value || tipoModal || 'despesa';
+        carregarCategoriasNoModal(tipoAtual, '');
     }
 }
 
@@ -1614,6 +1645,160 @@ function closeModal() {
     function closeDeleteParceladoModal() { 
       deleteParceladoModal.style.display = 'none'; 
     }
+
+    // Dados pendentes de edição (preenchidos em salvarLancamento antes de mostrar o modal)
+    var _edicaoPendente = null;
+
+    function closeEditParceladoModal() {
+      editParceladoModal.style.display = 'none';
+      _edicaoPendente = null;
+    }
+
+async function confirmarEdicaoParcelado(opcao) {
+  if (editIndex === null || !_edicaoPendente) return;
+
+  const ed = _edicaoPendente;
+  const lancOrigem = lancamentos[editIndex];
+  const parc = lancOrigem.parcelamento;
+  const baseDescription = parc.baseDescription;
+  const totalParcelas   = parc.total;
+  const parcelaAtual    = parc.atual;
+  const isFixo          = parc.isFixo;
+  const touchedMonthKeys = new Set();
+
+  // Helper: aplicar edição em um lançamento preservando parcelamento
+  function aplicarEdicao(lanc, novaDescricao, novaParcela) {
+    lanc.descricao        = novaDescricao;
+    lanc.tipo             = ed.tipo;
+    lanc.valor            = ed.valorFinal;
+    lanc.pago             = lanc.pago; // mantém status pago individual
+    lanc.formaPagamento   = ed.formaPagamento;
+    lanc.categoria        = ed.categoriaId;
+    if (lanc.parcelamento) {
+      lanc.parcelamento.valorOriginal  = ed.valorFinal;
+      lanc.parcelamento.baseDescription = ed.descricaoBase;
+    }
+  }
+
+  switch (opcao) {
+    case 'current': {
+      // Só altera este lançamento no mês atual
+      // CORREÇÃO: Remover qualquer sufixo existente da descrição base
+      let descricaoBaseLimpa = ed.descricaoBase;
+      // Remove sufixos como (1/3), (2/3) etc. se estiverem no final
+      descricaoBaseLimpa = descricaoBaseLimpa.replace(/\s*\(\d+\/\d+\)\s*$/, '');
+      
+      const novaDesc = isFixo
+        ? descricaoBaseLimpa
+        : `${descricaoBaseLimpa} (${parcelaAtual}/${totalParcelas})`;
+      
+      lancamentos[editIndex].descricao      = novaDesc;
+      lancamentos[editIndex].tipo           = ed.tipo;
+      lancamentos[editIndex].valor          = ed.valorFinal;
+      lancamentos[editIndex].dataVencimento = ed.dataVencimento;
+      lancamentos[editIndex].pago           = ed.pago;
+      lancamentos[editIndex].formaPagamento = ed.formaPagamento;
+      lancamentos[editIndex].categoria      = ed.categoriaId;
+      if (lancamentos[editIndex].parcelamento) {
+        lancamentos[editIndex].parcelamento.valorOriginal   = ed.valorFinal;
+        lancamentos[editIndex].parcelamento.baseDescription = descricaoBaseLimpa;
+      }
+      await salvarLocal(currentDate);
+      touchedMonthKeys.add(getMonthKey(currentDate));
+      break;
+    }
+
+    case 'future': {
+      // Altera este e todos os futuros (parcela >= parcelaAtual)
+      let tempDate = new Date(currentDate);
+      // CORREÇÃO: Remover qualquer sufixo existente da descrição base
+      let descricaoBaseLimpa = ed.descricaoBase;
+      descricaoBaseLimpa = descricaoBaseLimpa.replace(/\s*\(\d+\/\d+\)\s*$/, '');
+      
+      for (let i = parcelaAtual; i <= totalParcelas; i++) {
+        const monthKey = getMonthKey(tempDate);
+        let mLancs = JSON.parse(localStorage.getItem('lancamentos_' + monthKey)) || [];
+        mLancs.forEach(function(l) {
+          if (
+            l.parcelamento &&
+            l.parcelamento.baseDescription === baseDescription &&
+            l.parcelamento.total === totalParcelas &&
+            l.parcelamento.atual === i &&
+            l.parcelamento.isFixo === isFixo
+          ) {
+            const novaDesc = isFixo
+              ? descricaoBaseLimpa
+              : `${descricaoBaseLimpa} (${i}/${totalParcelas})`;
+            l.descricao        = novaDesc;
+            l.tipo             = ed.tipo;
+            l.valor            = ed.valorFinal;
+            l.formaPagamento   = ed.formaPagamento;
+            l.categoria        = ed.categoriaId;
+            if (i === parcelaAtual) { l.dataVencimento = ed.dataVencimento; l.pago = ed.pago; }
+            if (l.parcelamento) {
+              l.parcelamento.valorOriginal   = ed.valorFinal;
+              l.parcelamento.baseDescription = descricaoBaseLimpa;
+            }
+          }
+        });
+        localStorage.setItem('lancamentos_' + monthKey, JSON.stringify(mLancs));
+        touchedMonthKeys.add(monthKey);
+        tempDate.setMonth(tempDate.getMonth() + 1);
+      }
+      break;
+    }
+
+    case 'all': {
+      // Altera todas (da parcela 1 até total)
+      let tempDate = new Date(currentDate);
+      tempDate.setMonth(tempDate.getMonth() - (parcelaAtual - 1));
+      // CORREÇÃO: Remover qualquer sufixo existente da descrição base
+      let descricaoBaseLimpa = ed.descricaoBase;
+      descricaoBaseLimpa = descricaoBaseLimpa.replace(/\s*\(\d+\/\d+\)\s*$/, '');
+      
+      for (let i = 1; i <= totalParcelas; i++) {
+        const monthKey = getMonthKey(tempDate);
+        let mLancs = JSON.parse(localStorage.getItem('lancamentos_' + monthKey)) || [];
+        mLancs.forEach(function(l) {
+          if (
+            l.parcelamento &&
+            l.parcelamento.baseDescription === baseDescription &&
+            l.parcelamento.total === totalParcelas &&
+            l.parcelamento.atual === i &&
+            l.parcelamento.isFixo === isFixo
+          ) {
+            const novaDesc = isFixo
+              ? descricaoBaseLimpa
+              : `${descricaoBaseLimpa} (${i}/${totalParcelas})`;
+            l.descricao      = novaDesc;
+            l.tipo           = ed.tipo;
+            l.valor          = ed.valorFinal;
+            l.formaPagamento = ed.formaPagamento;
+            l.categoria      = ed.categoriaId;
+            if (l.parcelamento) {
+              l.parcelamento.valorOriginal   = ed.valorFinal;
+              l.parcelamento.baseDescription = descricaoBaseLimpa;
+            }
+          }
+        });
+        localStorage.setItem('lancamentos_' + monthKey, JSON.stringify(mLancs));
+        touchedMonthKeys.add(monthKey);
+        tempDate.setMonth(tempDate.getMonth() + 1);
+      }
+      break;
+    }
+  }
+
+  // Sincronizar todos os meses afetados
+  for (var mk of touchedMonthKeys) {
+    await syncLancamentosToSupabase(mk);
+  }
+
+  loadLancamentos();
+  editParceladoModal.style.display = 'none';
+  _edicaoPendente = null;
+  editIndex = null;
+}
 
     // Funções do modal de seleção de mês/ano
     function openMonthYearPickerModal() {
@@ -1728,6 +1913,7 @@ function salvarLancamento() {
   const dataVencimento = document.getElementById('dataVencimento').value;
   const pago = document.getElementById('pagoToggle').checked;
   const formaPagamento = tipo === 'despesa' ? document.getElementById('formaPagamento').value : null;
+  const categoriaId = document.getElementById('categoriaLancamento').value || null;
 
   if (!descricaoBase || isNaN(valor) || valor <= 0) { 
     alert('Preencha a descrição e valor válido.'); 
@@ -1745,24 +1931,38 @@ function salvarLancamento() {
   const dataVenc = new Date(dataVencimento + 'T12:00:00');
   const mesVencimento = new Date(dataVenc.getFullYear(), dataVenc.getMonth(), 1);
 
-  if (editIndex !== null) { 
+  if (editIndex !== null) {
+    // Se for parcelado ou fixo, mostrar modal de opção antes de salvar
+    if (lancamentos[editIndex].parcelamento) {
+      // Guardar dados pendentes de edição para usar depois da escolha
+      _edicaoPendente = {
+        descricaoBase, tipo, valorFinal, dataVencimento, pago, formaPagamento, categoriaId
+      };
+      const isFixo = lancamentos[editIndex].parcelamento.isFixo;
+      const titleEl = document.getElementById('editParceladoModalTitle');
+      const descEl  = document.getElementById('editParceladoModalDesc');
+      titleEl.textContent = isFixo ? 'Editar Lançamento Fixo' : 'Editar Lançamento Parcelado';
+      descEl.textContent  = isFixo
+        ? 'Este é um lançamento fixo. Qual alteração você deseja fazer?'
+        : 'Este é um lançamento parcelado. Qual alteração você deseja fazer?';
+      modal.style.display = 'none';
+      mainFab.style.display = 'flex';
+      editParceladoModal.style.display = 'flex';
+      return; // Aguarda a escolha no modal
+    }
+
+    // Lançamento único: editar diretamente
     lancamentos[editIndex] = {
       ...lancamentos[editIndex],
-      descricao: lancamentos[editIndex].parcelamento && lancamentos[editIndex].parcelamento.isFixo ? descricaoBase : descricaoBase,
+      descricao: descricaoBase,
       tipo: tipo,
       valor: valorFinal,
       dataVencimento: dataVencimento,
       pago: pago,
       formaPagamento: formaPagamento,
-      ultimaModificacao: lancamentos[editIndex].ultimaModificacao || (pago ? Date.now() : undefined)
+      categoria: categoriaId,
+      ultimaModificacao: pago ? Date.now() : lancamentos[editIndex].ultimaModificacao
     };
-    
-    if (lancamentos[editIndex].parcelamento) {
-      lancamentos[editIndex].parcelamento.valorOriginal = valorFinal;
-      if (lancamentos[editIndex].parcelamento.isFixo) {
-        lancamentos[editIndex].parcelamento.baseDescription = descricaoBase;
-      }
-    }
     salvarLocal(currentDate);
   } else { 
  if (selectedEntryType === 'parcelado') {
@@ -1796,6 +1996,7 @@ function salvarLancamento() {
       pago: statusPago,
       dataVencimento: dataVencimentoParcelada,
       formaPagamento: formaPagamento,
+      categoria: categoriaId,
       parcelamento: {
         total: totalParcelas,
         atual: i,
@@ -1837,6 +2038,7 @@ else if (selectedEntryType === 'fixo') {
       pago: statusPago,
       dataVencimento: dataVencimentoFixa,
       formaPagamento: formaPagamento,
+      categoria: categoriaId,
       parcelamento: {
         total: mesesFixo,
         atual: i,
@@ -1860,6 +2062,7 @@ else if (selectedEntryType === 'fixo') {
         pago: pago,
         dataVencimento: dataVencimento,
         formaPagamento: formaPagamento,
+        categoria: categoriaId,
         ultimaModificacao: pago ? Date.now() : undefined
       });
       
@@ -2034,6 +2237,20 @@ function addRowToTable(lanc, originalIndex) {
     const isCartaoCredito = lanc.formaPagamento && lanc.formaPagamento !== 'debito_pix';
     const cartaoIcon = isCartaoCredito ? '<div class="cartao-credito-icon"><i class="ri-bank-card-line"></i></div>' : '';
 
+    // Categoria discreta ao lado do vencimento (apenas nome, sem ícone)
+    let categoriaText = '';
+    if (lanc.categoria) {
+        try {
+            var dadosCat = JSON.parse(localStorage.getItem('categorias_config') || '{"despesa":[],"receita":[]}');
+            var todasCat = (dadosCat.despesa || []).concat(dadosCat.receita || []);
+            var catObj = todasCat.filter(function(c) { return c.id == lanc.categoria; })[0];
+            categoriaText = catObj ? catObj.nome : '';
+        } catch(e) { categoriaText = ''; }
+    }
+    const vencimentoComCategoria = categoriaText
+        ? `${vencimentoText} <span class="categoria-inline">| ${categoriaText}</span>`
+        : vencimentoText;
+
     card.innerHTML = `
         <div class="transaction-header">
             <div class="transaction-desc">${descricaoDisplay}</div>
@@ -2041,7 +2258,7 @@ function addRowToTable(lanc, originalIndex) {
         </div>
         <div class="transaction-footer">
             <div class="transaction-date ${vencimentoClass}">
-                ${vencimentoText}
+                ${vencimentoComCategoria}
             </div>
             <div class="transaction-actions">
                 ${cartaoIcon}
@@ -2296,6 +2513,7 @@ function loadLancamentos() {
             pago: lanc.pago === true,
             dataVencimento: lanc.dataVencimento || new Date().toISOString().split('T')[0],
             formaPagamento: lanc.formaPagamento || null,
+            categoria: lanc.categoria || null,
             parcelamento: lanc.parcelamento || undefined,
             ultimaModificacao: lanc.ultimaModificacao || undefined
         }));
@@ -2592,6 +2810,7 @@ function toggleValoresVisiveis() {
 window.onclick = (e) => {
   if (e.target == modal) closeModal();
   if (e.target == deleteParceladoModal) closeDeleteParceladoModal();
+  if (e.target == editParceladoModal) closeEditParceladoModal();
   if (e.target == monthYearPickerModal) {
     pickerCurrentYear = currentDate.getFullYear();
     pickerSelectedMonth = currentDate.getMonth();
@@ -2646,6 +2865,55 @@ function carregarFormasPagamento() {
         formaPagamentoSelect.appendChild(option);
     });
 }
+
+// ===== CATEGORIAS =====
+function carregarCategoriasNoModal(tipoSelecionado, valorAtual) {
+    var sel = document.getElementById('categoriaLancamento');
+    sel.innerHTML = '<option value="">— Sem categoria —</option>';
+
+    try {
+        var dados = JSON.parse(localStorage.getItem('categorias_config') || '{"despesa":[],"receita":[]}');
+        var lista = dados[tipoSelecionado] || [];
+        lista.forEach(function(cat) {
+            var opt = document.createElement('option');
+            opt.value = cat.id;
+            opt.textContent = (cat.icone || '') + ' ' + cat.nome;
+            sel.appendChild(opt);
+        });
+        if (valorAtual) {
+            var found = false;
+            for (var i = 0; i < sel.options.length; i++) {
+                if (sel.options[i].value == valorAtual) {
+                    sel.selectedIndex = i;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) sel.selectedIndex = 0;
+        } else {
+            sel.selectedIndex = 0;
+        }
+    } catch(e) {
+        console.warn('Erro ao carregar categorias:', e);
+    }
+}
+
+function getNomeCategoriaById(id) {
+    if (!id) return null;
+    try {
+        var dados = JSON.parse(localStorage.getItem('categorias_config') || '{"despesa":[],"receita":[]}');
+        var todas = (dados.despesa || []).concat(dados.receita || []);
+        var cat = todas.filter(function(c) { return c.id == id; })[0];
+        return cat ? (cat.icone || '') + ' ' + cat.nome : null;
+    } catch(e) { return null; }
+}
+
+// Recarregar categorias quando o tipo muda no select dentro do modal
+document.getElementById('tipo').addEventListener('change', function() {
+    carregarCategoriasNoModal(this.value, '');
+});
+
+// ===== FIM CATEGORIAS =====
 
 // Funções do dropdown
 function toggleDropdown() {

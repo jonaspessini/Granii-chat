@@ -65,6 +65,7 @@ export async function loadUserTransactionsFromSupabase() {
             pago: t.is_paid,
             dataVencimento: t.due_date,
             formaPagamento: t.payment_method,
+            categoria: t.category || null,
             parcelamento: t.installment_info ? JSON.parse(t.installment_info) : undefined,
             ultimaModificacao: t.last_modified
         });
@@ -118,7 +119,7 @@ export async function saveMonthTransactionsToSupabase(monthKey) {
         is_paid: t.pago || false,
         due_date: t.dataVencimento,
         payment_method: t.formaPagamento || null,
-        category: null,
+        category: t.categoria || null,
         installment_info: t.parcelamento ? JSON.stringify(t.parcelamento) : null,
         last_modified: t.ultimaModificacao || null
     }));
@@ -273,6 +274,116 @@ export async function saveUserCardsToSupabase() {
     return true;
 }
 
+// ── CATEGORIAS ────────────────────────────────────────────────────────────────
+
+var CATEGORIAS_PADRAO_SYNC = {
+    despesa: [
+        { id: 'desp_1', nome: 'Alimentação', icone: '🍔' },
+        { id: 'desp_2', nome: 'Moradia',      icone: '🏠' },
+        { id: 'desp_3', nome: 'Transporte',   icone: '🚗' },
+        { id: 'desp_4', nome: 'Saúde',        icone: '💊' },
+        { id: 'desp_5', nome: 'Educação',     icone: '📚' },
+        { id: 'desp_6', nome: 'Lazer',        icone: '🎮' },
+        { id: 'desp_7', nome: 'Vestuário',    icone: '👕' },
+        { id: 'desp_8', nome: 'Contas',       icone: '💡' },
+        { id: 'desp_9', nome: 'Outros',       icone: '📌' }
+    ],
+    receita: [
+        { id: 'rec_1', nome: 'Salário',      icone: '💼' },
+        { id: 'rec_2', nome: 'Freelance',    icone: '💻' },
+        { id: 'rec_3', nome: 'Investimento', icone: '📈' },
+        { id: 'rec_4', nome: 'Aluguel',      icone: '🏘️' },
+        { id: 'rec_5', nome: 'Presente',     icone: '🎁' },
+        { id: 'rec_6', nome: 'Outros',       icone: '📌' }
+    ]
+};
+
+// CARREGAR categorias do Supabase → localStorage
+export async function loadUserCategoriesFromSupabase() {
+    const user = await getCurrentUserData();
+    if (!user) return false;
+
+    const { data, error } = await supabase
+        .from('user_categories')
+        .select('*')
+        .eq('user_id', user.id);
+
+    if (error) {
+        console.error('Erro ao carregar categorias:', error);
+        return false;
+    }
+
+    // Se o usuário não tem categorias no Supabase ainda, manter o que está no localStorage
+    if (!data || data.length === 0) {
+        console.log('ℹ️ Nenhuma categoria no Supabase — mantendo localStorage');
+        return false;
+    }
+
+    // Reconstruir estrutura { despesa: [...], receita: [...] }
+    var cats = { despesa: [], receita: [] };
+    data.forEach(function(row) {
+        var tipo = row.type; // 'despesa' ou 'receita'
+        if (cats[tipo]) {
+            cats[tipo].push({ id: row.category_id, nome: row.name, icone: row.icon });
+        }
+    });
+
+    localStorage.setItem('categorias_config', JSON.stringify(cats));
+    console.log('✅ Categorias carregadas do Supabase');
+    return true;
+}
+
+// SALVAR categorias do localStorage → Supabase (upsert completo)
+export async function saveUserCategoriesToSupabase() {
+    const user = await getCurrentUserData();
+    if (!user) return false;
+
+    var raw = localStorage.getItem('categorias_config');
+    if (!raw) return false;
+
+    var cats;
+    try { cats = JSON.parse(raw); } catch(e) { return false; }
+
+    // Montar array plano para upsert
+    var rows = [];
+    ['despesa', 'receita'].forEach(function(tipo) {
+        (cats[tipo] || []).forEach(function(cat) {
+            rows.push({
+                user_id:     user.id,
+                category_id: cat.id,
+                type:        tipo,
+                name:        cat.nome,
+                icon:        cat.icone || '📌'
+            });
+        });
+    });
+
+    if (rows.length === 0) return false;
+
+    const { error } = await supabase
+        .from('user_categories')
+        .upsert(rows, { onConflict: 'user_id,category_id', ignoreDuplicates: false });
+
+    if (error) {
+        console.error('Erro ao salvar categorias:', error);
+        return false;
+    }
+
+    // Remover do Supabase categorias que foram deletadas localmente
+    var allIds = rows.map(function(r) { return r.category_id; });
+    await supabase
+        .from('user_categories')
+        .delete()
+        .eq('user_id', user.id)
+        .not('category_id', 'in', '(' + allIds.map(function(id) { return '"' + id + '"'; }).join(',') + ')');
+
+    console.log('✅ ' + rows.length + ' categorias sincronizadas');
+    return true;
+}
+
+// ── FIM CATEGORIAS ─────────────────────────────────────────────────────────────
+
+// Em supabase-sync.js, altere a função loadUserData:
 export async function loadUserData() {
     const user = await getCurrentUserData();
     if (!user) return false;
@@ -281,14 +392,18 @@ export async function loadUserData() {
 
     await loadUserTransactionsFromSupabase();
     await loadUserCardsFromSupabase();
+    await loadUserCategoriesFromSupabase();  // ← ADICIONE ESTA LINHA
 
     console.log('✅ Dados carregados!');
     return true;
 }
 
+// ── SINCRONIZAÇÃO COMPLETA ─────────────────────────────────────────────────────
+
 export async function syncAllToSupabase() {
     await saveUserTransactionsToSupabase();
     await saveUserCardsToSupabase();
+    await saveUserCategoriesToSupabase();  // Adicione também para sincronizar categorias
     console.log('✅ Sincronização completa!');
     return true;
 }

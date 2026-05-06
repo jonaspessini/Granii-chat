@@ -86,6 +86,23 @@
         </div>
     </div>
 
+        <!-- CARD 2.5: GASTOS POR CATEGORIA (DESPESAS) -->
+    <div class="categorias-container" id="categoriasContainer">
+        <div class="categorias-header">
+            <div class="categorias-title">
+                <i class="ri-pie-chart-2-line"></i>
+                <span>Gastos por categoria</span>
+            </div>
+            <div class="categorias-total" id="categoriasTotal">Total: R$ 0,00</div>
+        </div>
+        <div id="categoriasList" class="categorias-list">
+            <div class="categoria-empty">
+                <i class="ri-inbox-line"></i>
+                <div>Nenhuma despesa no mês</div>
+            </div>
+        </div>
+    </div>
+
     <!-- CARD 2: PENDÊNCIAS PRIORITÁRIAS -->
     <div class="section-card">
         <div class="section-title">
@@ -325,6 +342,165 @@ function navigateTo(pagina) {
             renderizarPendencias();
             renderizarHistorico();
         }
+
+                // ========== RENDERIZAR GASTOS POR CATEGORIA ==========
+        function renderizarCategorias() {
+            const lancamentos = loadCurrentMonthTransactions();
+            const categoriasContainer = document.getElementById('categoriasContainer');
+            const categoriasList = document.getElementById('categoriasList');
+            
+            if (!categoriasList) return;
+            
+            // Filtrar apenas despesas (valores negativos)
+            const despesas = lancamentos.filter(l => l.valor < 0);
+            
+            if (despesas.length === 0) {
+                categoriasList.innerHTML = `<div class="categoria-empty"><i class="ri-inbox-line"></i><div>Nenhuma despesa no mês</div></div>`;
+                document.getElementById('categoriasTotal').textContent = 'Total: R$ 0,00';
+                return;
+            }
+            
+            // Buscar categorias configuradas
+            let categoriasConfig = { despesa: [], receita: [] };
+            try {
+                const configRaw = localStorage.getItem('categorias_config');
+                if (configRaw) {
+                    categoriasConfig = JSON.parse(configRaw);
+                }
+            } catch(e) {
+                console.warn('Erro ao carregar categorias:', e);
+            }
+            
+            // Mapear ID da categoria para o objeto da categoria
+            const categoriaMap = new Map();
+            categoriasConfig.despesa.forEach(cat => {
+                categoriaMap.set(cat.id, { nome: cat.nome, icone: cat.icone || '📌' });
+            });
+            categoriasConfig.receita.forEach(cat => {
+                categoriaMap.set(cat.id, { nome: cat.nome, icone: cat.icone || '📌' });
+            });
+            
+            // Agrupar despesas por categoria
+            const gastosPorCategoria = {};
+            let totalDespesas = 0;
+            
+            despesas.forEach(lanc => {
+                const valor = Math.abs(lanc.valor);
+                totalDespesas += valor;
+                
+                const catId = lanc.categoria || 'sem_categoria';
+                if (!gastosPorCategoria[catId]) {
+                    gastosPorCategoria[catId] = {
+                        total: 0,
+                        transacoes: []
+                    };
+                }
+                gastosPorCategoria[catId].total += valor;
+                gastosPorCategoria[catId].transacoes.push(lanc);
+            });
+            
+            // Converter para array e ordenar por total (maior primeiro)
+            const categoriasArray = Object.entries(gastosPorCategoria).map(([id, data]) => {
+                const catInfo = categoriaMap.get(id) || { nome: id === 'sem_categoria' ? 'Sem categoria' : id, icone: '📌' };
+                const percentual = totalDespesas > 0 ? (data.total / totalDespesas) * 100 : 0;
+                return {
+                    id: id,
+                    nome: catInfo.nome,
+                    icone: catInfo.icone,
+                    total: data.total,
+                    percentual: percentual,
+                    transacoes: data.transacoes
+                };
+            });
+            
+            categoriasArray.sort((a, b) => b.total - a.total);
+            
+            // Atualizar total geral
+            document.getElementById('categoriasTotal').textContent = `Total: R$ ${formatToBRL(totalDespesas)}`;
+            
+            // Renderizar lista
+            categoriasList.innerHTML = '';
+            
+            categoriasArray.forEach(cat => {
+                const item = document.createElement('div');
+                item.className = 'categoria-item-row despesa';
+                item.onclick = () => abrirDetalhesCategoria(cat);
+                
+                item.innerHTML = `
+                    <div class="categoria-icon">${cat.icone}</div>
+                    <div class="categoria-info">
+                        <div class="categoria-nome">${escapeHtml(cat.nome)}</div>
+                        <div class="categoria-percent-bar">
+                            <div class="categoria-percent-fill" style="width: ${Math.min(cat.percentual, 100)}%"></div>
+                        </div>
+                    </div>
+                    <div class="categoria-valor">
+                        <div class="categoria-valor-amount">R$ ${formatToBRL(cat.total)}</div>
+                        <div class="categoria-valor-percent">${cat.percentual.toFixed(1)}%</div>
+                    </div>
+                `;
+                categoriasList.appendChild(item);
+            });
+        }
+        
+        // Função auxiliar para escapar HTML
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>"']/g, function(m) {
+                return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[m];
+            });
+        }
+        
+        // Função para abrir modal com detalhes da categoria
+        function abrirDetalhesCategoria(categoria) {
+            if (!categoria.transacoes || categoria.transacoes.length === 0) return;
+            
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'flex';
+            modal.style.zIndex = '1002';
+            
+            let transacoesHtml = '';
+            categoria.transacoes.forEach(trans => {
+                transacoesHtml += `
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #eee;">
+                        <div>
+                            <div style="font-weight: 500;">${escapeHtml(trans.descricao)}</div>
+                            <div style="font-size: 0.7em; color: #6c757d;">${trans.dataVencimento || 'Sem data'}</div>
+                        </div>
+                        <div style="color: #f44336; font-weight: 600;">R$ ${formatToBRL(Math.abs(trans.valor))}</div>
+                    </div>
+                `;
+            });
+            
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 400px; max-height: 80vh; overflow-y: auto;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="font-size: 2em;">${categoria.icone}</div>
+                            <div>
+                                <div style="font-weight: 700; font-size: 1.1em;">${escapeHtml(categoria.nome)}</div>
+                                <div style="font-size: 0.8em; color: #6c757d;">Total: R$ ${formatToBRL(categoria.total)} (${categoria.percentual.toFixed(1)}% das despesas)</div>
+                            </div>
+                        </div>
+                        <button style="background: none; border: none; font-size: 1.5em; cursor: pointer;" onclick="this.closest('.modal').remove()">×</button>
+                    </div>
+                    <div style="max-height: 400px; overflow-y: auto;">
+                        ${transacoesHtml || '<div style="text-align: center; padding: 20px;">Nenhuma transação</div>'}
+                    </div>
+                    <button class="modal-current-btn" style="margin-top: 20px; width: 100%;" onclick="this.closest('.modal').remove()">Fechar</button>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Fechar ao clicar fora
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.remove();
+            });
+        }
+        
+        window.abrirDetalhesCategoria = abrirDetalhesCategoria;
 
         function changeMonth(direction) {
             currentDate.setMonth(currentDate.getMonth() + direction);
@@ -708,6 +884,19 @@ function navigateTo(pagina) {
                 closeMonthYearPickerModal();
             }
         };
+
+        function updateMonthDisplay() {
+            const month = currentDate.getMonth();
+            const year = currentDate.getFullYear();
+            const nomeMes = monthNames[month];
+            currentMonthTextHeader.textContent = `${nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1)} ${year}`;
+            calcularTotais();
+            renderizarCartoes();
+            renderizarResumoMes();
+            renderizarPendencias();
+            renderizarHistorico();
+            renderizarCategorias();  // ← ADICIONE ESTA LINHA
+        }
 
         // ========== INICIALIZAÇÃO ==========
         updateMonthDisplay();

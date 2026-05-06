@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#21c45d">
+  <title>Categorias</title>
+  <link rel="manifest" href="manifest.json">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/remixicon/remixicon.css">
+  <style>
+    * {
+      -webkit-tap-highlight-color: transparent;
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --cor-principal: #21c45d;
+      --cor-despesa: #e53935;
+      --cor-receita: #21c45d;
+      --cor-despesa-light: #ffebee;
+      --cor-receita-light: #e8f5e9;
+      --text-primary: #1e1e2e;
+      --text-secondary: #6b7280;
+      --bg-page: #f8f9fc;
+      --bg-card: #ffffff;
+      --border-light: #eef2f6;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+      --border-radius: 16px;
+      --border-radius-sm: 12px;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-page);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding-bottom: 80px;
+    }
+
+    /* ── HEADER MODERNO ── */
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      background: rgba(255,255,255,0.95);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      height: 64px;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .header-back {
+      background: none;
+      border: none;
+      color: var(--text-primary);
+      font-size: 24px;
+      cursor: pointer;
+      padding: 8px;
+      margin-right: 8px;
+      display: flex;
+      align-items: center;
+      border-radius: 10px;
+      transition: background 0.2s;
+    }
+    .header-back:active { background: #f0f0f0; }
+    .header-title {
+      flex: 1;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    /* ── TABS MODERNAS (PILLS) ── */
+    .tabs {
+      position: fixed;
+      top: 64px;
+      left: 0;
+      right: 0;
+      background: var(--bg-card);
+      display: flex;
+      padding: 12px 20px;
+      gap: 12px;
+      z-index: 99;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 10px 0;
+      background: none;
+      border: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+      border-radius: 30px;
+      transition: all 0.2s ease;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .tab-btn i {
+      font-size: 18px;
+    }
+    .tab-btn.active {
+      background: var(--cor-despesa-light);
+      color: var(--cor-despesa);
+    }
+    .tab-btn.active.receita {
+      background: var(--cor-receita-light);
+      color: var(--cor-receita);
+    }
+    .tab-badge {
+      display: inline-block;
+      background: rgba(0,0,0,0.08);
+      color: var(--text-secondary);
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-weight: 500;
+      margin-left: 4px;
+    }
+    .tab-btn.active .tab-badge {
+      background: rgba(0,0,0,0.12);
+    }
+
+    /* ── CONTEÚDO ── */
+    .content {
+      margin-top: 132px;
+      padding: 16px 20px;
+    }
+
+    /* ── CARD DE CATEGORIA MODERNO ── */
+    .categoria-item {
+      background: var(--bg-card);
+      border-radius: var(--border-radius-sm);
+      padding: 16px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s ease;
+      border: 1px solid var(--border-light);
+    }
+    .categoria-item:active {
+      transform: scale(0.99);
+      background: #fafafa;
+    }
+    .cat-icone {
+      width: 48px;
+      height: 48px;
+      background: #f5f5f5;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      flex-shrink: 0;
+    }
+    .categoria-item.despesa .cat-icone {
+      background: var(--cor-despesa-light);
+    }
+    .categoria-item.receita .cat-icone {
+      background: var(--cor-receita-light);
+    }
+    .cat-nome {
+      flex: 1;
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+    .cat-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .btn-icone {
+      background: none;
+      border: none;
+      padding: 10px;
+      cursor: pointer;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      transition: all 0.15s;
+    }
+    .btn-icone.editar { color: #2196f3; }
+    .btn-icone.editar:active { background: #e3f2fd; }
+    .btn-icone.excluir { color: var(--cor-despesa); }
+    .btn-icone.excluir:active { background: var(--cor-despesa-light); }
+
+    /* ── EMPTY STATE MODERNO ── */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+    }
+    .empty-state .empty-icon {
+      width: 80px;
+      height: 80px;
+      background: #f0f0f0;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+    }
+    .empty-state .empty-icon i {
+      font-size: 40px;
+      color: var(--text-secondary);
+    }
+    .empty-state p {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    /* ── FAB MODERNO ── */
+    .fab {
+      position: fixed;
+      bottom: 80px;
+      right: 20px;
+      width: 56px;
+      height: 56px;
+      border-radius: 28px;
+      background: var(--cor-despesa);
+      color: white;
+      border: none;
+      cursor: pointer;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      z-index: 90;
+      font-size: 24px;
+    }
+    .fab.receita { background: var(--cor-receita); }
+    .fab:active { transform: scale(0.94); }
+
+    /* ── MODAL MODERNO ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-box {
+      background: var(--bg-card);
+      border-radius: 24px;
+      padding: 24px;
+      width: 90%;
+      max-width: 360px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+      animation: slideUp 0.25s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .modal-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .form-group { margin-bottom: 20px; }
+    .form-group label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1.5px solid var(--border-light);
+      border-radius: 14px;
+      font-size: 1rem;
+      font-family: 'Inter', sans-serif;
+      color: var(--text-primary);
+      background: var(--bg-card);
+      transition: all 0.2s;
+    }
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--cor-principal);
+    }
+
+    /* ── EMOJI PICKER MODERNO ── */
+    .emoji-picker-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+      display: block;
+    }
+    .emoji-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      max-height: 160px;
+      overflow-y: auto;
+      padding: 4px 0;
+    }
+    .emoji-opt {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: #f5f5f5;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      border: 2px solid transparent;
+      font-size: 1.5rem;
+    }
+    .emoji-opt.selected {
+      border-color: var(--cor-principal);
+      background: #e8f5e9;
+    }
+    .emoji-opt:active { transform: scale(0.92); }
+
+    /* ── BOTÕES DO MODAL ── */
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    .btn-modal {
+      flex: 1;
+      padding: 14px;
+      border: none;
+      border-radius: 14px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.15s;
+    }
+    .btn-modal:active { transform: scale(0.97); }
+    .btn-cancelar { background: #f0f0f0; color: var(--text-secondary); }
+    .btn-salvar { background: var(--cor-principal); color: white; }
+    .btn-salvar.despesa { background: var(--cor-despesa); }
+
+    /* ── MODAL CONFIRMAÇÃO MODERNO ── */
+    .modal-confirm .modal-box { text-align: center; }
+    .confirm-icon {
+      width: 64px;
+      height: 64px;
+      background: #f0f0f0;
+      border-radius: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+      font-size: 32px;
+    }
+    .confirm-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 6px; }
+    .confirm-sub { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 20px; }
+
+    /* ── RESET LINK MODERNO ── */
+    .reset-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      margin-top: 24px;
+      padding: 12px;
+      cursor: pointer;
+      background: var(--bg-card);
+      border-radius: var(--border-radius-sm);
+      border: 1px solid var(--border-light);
+    }
+    .reset-link i { font-size: 16px; }
+    .reset-link:active { background: #f0f0f0; }
+
+    /* ── BOTTOM NAV MODERNO ── */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0;
+      width: 100%;
+      background: var(--bg-card);
+      border-top: 1px solid var(--border-light);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      height: 64px;
+      z-index: 1000;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    .nav-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 0.7rem;
+      cursor: pointer;
+      padding: 6px 12px;
+      border-radius: 12px;
+      flex: 1;
+      transition: all 0.15s;
+    }
+    .nav-btn:active { background: #f0f0f0; }
+    .nav-btn.active { color: var(--cor-principal); }
+    .nav-btn i { font-size: 22px; margin-bottom: 4px; }
+    .nav-btn .label { font-weight: 500; }
+
+    /* ── TOAST MODERNO ── */
+    .toast {
+      position: fixed;
+      bottom: 90px;
+      left: 50%;
+      transform: translateX(-50%) translateY(30px);
+      background: #1e1e2e;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 9999;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <button class="header-back" onclick="window.location.href='index2.html'">
+    <i class="ri-arrow-left-s-line"></i>
+  </button>
+  <div class="header-title">Categorias</div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab-btn active" id="tabDespesa" onclick="trocarTab('despesa')">
+    <i class="ri-arrow-down-circle-line"></i> Despesas
+    <span class="tab-badge" id="badgeDespesa">0</span>
+  </button>
+  <button class="tab-btn receita" id="tabReceita" onclick="trocarTab('receita')">
+    <i class="ri-arrow-up-circle-line"></i> Receitas
+    <span class="tab-badge" id="badgeReceita">0</span>
+  </button>
+</div>
+
+<!-- CONTEÚDO -->
+<div class="content">
+  <div id="listaCategorias"></div>
+  <div class="reset-link" onclick="confirmarReset()">
+    <i class="ri-restart-line"></i>
+    Restaurar categorias padrão
+  </div>
+</div>
+
+<!-- FAB -->
+<button class="fab" id="fabBtn" onclick="abrirModalNova()">+</button>
+
+<!-- MODAL: NOVA / EDITAR CATEGORIA -->
+<div class="modal-overlay" id="modalForm">
+  <div class="modal-box">
+    <div class="modal-title" id="modalFormTitle">Nova Categoria</div>
+    <div class="form-group">
+      <label>Nome da categoria</label>
+      <input type="text" id="inputNome" placeholder="Ex: Alimentação, Transporte..." maxlength="30" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <span class="emoji-picker-label">Ícone</span>
+      <div class="emoji-grid" id="emojiGrid"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-modal btn-cancelar" onclick="fecharModal()">Cancelar</button>
+      <button class="btn-modal btn-salvar" id="btnSalvarModal" onclick="salvarCategoria()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CONFIRMAR EXCLUSÃO -->
+<div class="modal-overlay modal-confirm" id="modalConfirm">
+  <div class="modal-box">
+    <div class="confirm-icon">🗑️</div>
+    <div class="confirm-title">Excluir categoria?</div>
+    <div class="confirm-sub" id="confirmSubtitle">Esta ação não pode ser desfeita.</div>
+    <div class="modal-actions">
+      <button class="btn-modal btn-cancelar" onclick="fecharConfirm()">Cancelar</button>
+      <button class="btn-modal" style="background:#e53935;color:white;" onclick="confirmarExclusao()">Excluir</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CONFIRMAR RESET -->
+<div class="modal-overlay modal-confirm" id="modalReset">
+  <div class="modal-box">
+    <div class="confirm-icon">⚠️</div>
+    <div class="confirm-title">Restaurar padrão?</div>
+    <div class="confirm-sub">Todas as categorias personalizadas serão perdidas.</div>
+    <div class="modal-actions">
+      <button class="btn-modal btn-cancelar" onclick="fecharReset()">Cancelar</button>
+      <button class="btn-modal" style="background:#ff7043;color:white;" onclick="executarReset()">Restaurar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <button class="nav-btn" onclick="window.location.href='index.html'">
+    <i class="ri-home-5-line"></i>
+    <div class="label">Home</div>
+  </button>
+  <button class="nav-btn active" onclick="window.location.href='index2.html'">
+    <i class="ri-list-check-2"></i>
+    <div class="label">Transações</div>
+  </button>
+  <button class="nav-btn" onclick="window.location.href='index3.html'">
+    <i class="ri-bank-card-line"></i>
+    <div class="label">Cartões</div>
+  </button>
+  <button class="nav-btn" onclick="window.location.href='index4.html'">
+    <i class="ri-wallet-3-line"></i>
+    <div class="label">Contas</div>
+  </button>
+</div>
+
+<script type="module">
+  import { supabase } from './js/supabase-config.js';
+  import { startSingleSessionGuard } from './js/single-session.js';
+  import { loadUserCategoriesFromSupabase, saveUserCategoriesToSupabase } from './js/supabase-sync.js';
+
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    window.location.href = 'login.html';
+  } else {
+    startSingleSessionGuard();
+    await loadUserCategoriesFromSupabase();
+    renderLista();
+    window._saveCategoriasSupabase = saveUserCategoriesToSupabase;
+  }
+</script>
+
+<script>
+// ── EMOJIS DISPONÍVEIS ──
+var EMOJIS_DESPESA = ['🍔','🍕','🛒','☕','🚗','🚌','⛽','✈️','🏠','💡','💊','🏥','📚','🎓','👕','👟','🎮','🎬','🎵','💆','🐾','🧹','📞','📱','💻','🛠️','🏋️','⚽','🧴','🎁','💳','📌','💸','🔧','🏦','🍎','🥗','☕','🍷'];
+var EMOJIS_RECEITA = ['💼','💰','📈','🏘️','🎁','🤝','💻','🎨','📷','✍️','🎤','📦','🚀','⭐','🏆','💡','🌱','🔑','📊','💎','🌟','🎯','💵','🤑','📌','💸','🏦','⚡','🎉'];
+
+var tipoAtivo = 'despesa';
+var editandoId = null;
+var excluindoId = null;
+var excluindoTipo = null;
+var iconeSelecionado = null;
+
+// ── CATEGORIAS PADRÃO ──
+var CATEGORIAS_PADRAO = {
+  despesa: [
+    { id: 'desp_1', nome: 'Alimentação', icone: '🍔' },
+    { id: 'desp_2', nome: 'Moradia', icone: '🏠' },
+    { id: 'desp_3', nome: 'Transporte', icone: '🚗' },
+    { id: 'desp_4', nome: 'Saúde', icone: '💊' },
+    { id: 'desp_5', nome: 'Educação', icone: '📚' },
+    { id: 'desp_6', nome: 'Lazer', icone: '🎮' },
+    { id: 'desp_7', nome: 'Vestuário', icone: '👕' },
+    { id: 'desp_8', nome: 'Contas', icone: '💡' },
+    { id: 'desp_9', nome: 'Outros', icone: '📌' }
+  ],
+  receita: [
+    { id: 'rec_1', nome: 'Salário', icone: '💼' },
+    { id: 'rec_2', nome: 'Freelance', icone: '💻' },
+    { id: 'rec_3', nome: 'Investimento', icone: '📈' },
+    { id: 'rec_4', nome: 'Aluguel', icone: '🏘️' },
+    { id: 'rec_5', nome: 'Presente', icone: '🎁' },
+    { id: 'rec_6', nome: 'Outros', icone: '📌' }
+  ]
+};
+
+function getCategorias() {
+  try {
+    var salvas = localStorage.getItem('categorias_config');
+    if (salvas) return JSON.parse(salvas);
+  } catch(e) {}
+  localStorage.setItem('categorias_config', JSON.stringify(CATEGORIAS_PADRAO));
+  return JSON.parse(JSON.stringify(CATEGORIAS_PADRAO));
+}
+
+function salvarCategorias(cats) {
+  localStorage.setItem('categorias_config', JSON.stringify(cats));
+  if (typeof window._saveCategoriasSupabase === 'function') {
+    window._saveCategoriasSupabase().catch(function(e) {
+      console.warn('Sync de categorias falhou:', e);
+    });
+  }
+}
+
+// ── RENDER ──
+function renderLista() {
+  var cats = getCategorias();
+  var lista = tipoAtivo === 'despesa' ? cats.despesa : cats.receita;
+
+  document.getElementById('badgeDespesa').textContent = cats.despesa.length;
+  document.getElementById('badgeReceita').textContent = cats.receita.length;
+
+  var fab = document.getElementById('fabBtn');
+  fab.className = 'fab' + (tipoAtivo === 'receita' ? ' receita' : '');
+
+  var container = document.getElementById('listaCategorias');
+  if (!lista || lista.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon"><i class="ri-inbox-line"></i></div><p>Nenhuma categoria cadastrada</p></div>';
+    return;
+  }
+
+  container.innerHTML = lista.map(function(cat) {
+    var icone = cat.icone || (tipoAtivo === 'receita' ? '💰' : '📌');
+    return '<div class="categoria-item ' + tipoAtivo + '">' +
+      '<div class="cat-icone">' + icone + '</div>' +
+      '<div class="cat-nome">' + escapeHtml(cat.nome) + '</div>' +
+      '<div class="cat-actions">' +
+        '<button class="btn-icone editar" onclick="abrirModalEditar(\'' + cat.id + '\')">' +
+          '<i class="ri-pencil-line"></i>' +
+        '</button>' +
+        '<button class="btn-icone excluir" onclick="solicitarExclusao(\'' + cat.id + '\', \'' + escapeHtml(cat.nome) + '\')">' +
+          '<i class="ri-delete-bin-line"></i>' +
+        '</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, function(m) {
+    return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m];
+  });
+}
+
+// ── TABS ──
+function trocarTab(tipo) {
+  tipoAtivo = tipo;
+  document.getElementById('tabDespesa').className = 'tab-btn' + (tipo === 'despesa' ? ' active' : '');
+  document.getElementById('tabReceita').className = 'tab-btn receita' + (tipo === 'receita' ? ' active' : '');
+  renderLista();
+}
+window.trocarTab = trocarTab;
+
+// ── EMOJI GRID ──
+function renderEmojiGrid(selecionado) {
+  var emojis = tipoAtivo === 'despesa' ? EMOJIS_DESPESA : EMOJIS_RECEITA;
+  iconeSelecionado = selecionado || emojis[0];
+  document.getElementById('emojiGrid').innerHTML = emojis.map(function(e) {
+    return '<button class="emoji-opt' + (e === iconeSelecionado ? ' selected' : '') + '" onclick="selecionarEmoji(\'' + e + '\')">' + e + '</button>';
+  }).join('');
+}
+
+function selecionarEmoji(emoji) {
+  iconeSelecionado = emoji;
+  document.querySelectorAll('.emoji-opt').forEach(function(btn) {
+    btn.classList.toggle('selected', btn.textContent === emoji);
+  });
+}
+window.selecionarEmoji = selecionarEmoji;
+
+// ── MODAL NOVA CATEGORIA ──
+function abrirModalNova() {
+  editandoId = null;
+  document.getElementById('modalFormTitle').textContent = tipoAtivo === 'despesa' ? 'Nova Despesa' : 'Nova Receita';
+  document.getElementById('inputNome').value = '';
+  var btnSalvar = document.getElementById('btnSalvarModal');
+  btnSalvar.className = 'btn-modal btn-salvar' + (tipoAtivo === 'despesa' ? ' despesa' : '');
+  renderEmojiGrid(null);
+  document.getElementById('modalForm').classList.add('active');
+  setTimeout(function() { document.getElementById('inputNome').focus(); }, 300);
+}
+window.abrirModalNova = abrirModalNova;
+
+// ── MODAL EDITAR ──
+function abrirModalEditar(id) {
+  var cats = getCategorias();
+  var lista = tipoAtivo === 'despesa' ? cats.despesa : cats.receita;
+  var cat = lista.find(function(c) { return c.id === id; });
+  if (!cat) return;
+
+  editandoId = id;
+  document.getElementById('modalFormTitle').textContent = 'Editar Categoria';
+  document.getElementById('inputNome').value = cat.nome;
+  var btnSalvar = document.getElementById('btnSalvarModal');
+  btnSalvar.className = 'btn-modal btn-salvar' + (tipoAtivo === 'despesa' ? ' despesa' : '');
+  renderEmojiGrid(cat.icone);
+  document.getElementById('modalForm').classList.add('active');
+  setTimeout(function() { document.getElementById('inputNome').focus(); }, 300);
+}
+window.abrirModalEditar = abrirModalEditar;
+
+function fecharModal() {
+  document.getElementById('modalForm').classList.remove('active');
+  editandoId = null;
+}
+window.fecharModal = fecharModal;
+
+// ── SALVAR ──
+function salvarCategoria() {
+  var nome = document.getElementById('inputNome').value.trim();
+  if (!nome) {
+    document.getElementById('inputNome').focus();
+    document.getElementById('inputNome').style.borderColor = '#e53935';
+    setTimeout(function() { document.getElementById('inputNome').style.borderColor = ''; }, 1500);
+    return;
+  }
+
+  var cats = getCategorias();
+  var lista = tipoAtivo === 'despesa' ? cats.despesa : cats.receita;
+
+  if (editandoId) {
+    var cat = lista.find(function(c) { return c.id === editandoId; });
+    if (cat) {
+      cat.nome = nome;
+      cat.icone = iconeSelecionado || cat.icone;
+    }
+    mostrarToast('Categoria atualizada');
+  } else {
+    var novaCat = {
+      id: tipoAtivo.slice(0,3) + '_' + Date.now(),
+      nome: nome,
+      icone: iconeSelecionado || (tipoAtivo === 'receita' ? '💰' : '📌')
+    };
+    lista.push(novaCat);
+    mostrarToast('Categoria criada');
+  }
+
+  salvarCategorias(cats);
+  fecharModal();
+  renderLista();
+}
+window.salvarCategoria = salvarCategoria;
+
+// ── EXCLUIR ──
+function solicitarExclusao(id, nome) {
+  excluindoId = id;
+  excluindoTipo = tipoAtivo;
+  document.getElementById('confirmSubtitle').textContent = 'Excluir "' + nome + '"?';
+  document.getElementById('modalConfirm').classList.add('active');
+}
+window.solicitarExclusao = solicitarExclusao;
+
+function fecharConfirm() {
+  document.getElementById('modalConfirm').classList.remove('active');
+  excluindoId = null;
+  excluindoTipo = null;
+}
+window.fecharConfirm = fecharConfirm;
+
+function confirmarExclusao() {
+  if (!excluindoId) return;
+  var cats = getCategorias();
+  var lista = excluindoTipo === 'despesa' ? cats.despesa : cats.receita;
+  var idx = lista.findIndex(function(c) { return c.id === excluindoId; });
+  if (idx !== -1) { lista.splice(idx, 1); }
+  salvarCategorias(cats);
+  fecharConfirm();
+  renderLista();
+  mostrarToast('Categoria removida');
+}
+window.confirmarExclusao = confirmarExclusao;
+
+// ── RESET ──
+function confirmarReset() {
+  document.getElementById('modalReset').classList.add('active');
+}
+window.confirmarReset = confirmarReset;
+
+function fecharReset() {
+  document.getElementById('modalReset').classList.remove('active');
+}
+window.fecharReset = fecharReset;
+
+function executarReset() {
+  salvarCategorias(JSON.parse(JSON.stringify(CATEGORIAS_PADRAO)));
+  fecharReset();
+  renderLista();
+  mostrarToast('Categorias restauradas');
+}
+window.executarReset = executarReset;
+
+// ── TOAST ──
+function mostrarToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2400);
+}
+
+// ── FECHAR MODAIS AO CLICAR FORA ──
+document.getElementById('modalForm').addEventListener('click', function(e) {
+  if (e.target === this) fecharModal();
+});
+document.getElementById('modalConfirm').addEventListener('click', function(e) {
+  if (e.target === this) fecharConfirm();
+});
+document.getElementById('modalReset').addEventListener('click', function(e) {
+  if (e.target === this) fecharReset();
+});
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('./sw.js').catch(function() {});
+  });
+}
+</script>
+</body>
+</html>
