@@ -483,13 +483,29 @@ index2
     </select>
     <input type="date" id="dataVencimento" />
 
-    <select id="categoriaLancamento" style="margin-bottom: 0;">
-      <option value="">— Sem categoria —</option>
-    </select>
+    <!-- Categoria trigger -->
+    <div class="custom-select-trigger" id="categoriaTrigger" onclick="toggleCategoriaDropdown()" style="margin-bottom:0">
+      <span class="trigger-text">
+        <i class="ri-price-tag-3-line"></i>
+        <span id="categoriaTriggerText">— Sem categoria —</span>
+      </span>
+      <span class="trigger-arrow"><i class="ri-arrow-down-s-line"></i></span>
+    </div>
+    <input type="hidden" id="categoriaLancamento" value="">
 
-    <select id="formaPagamento" style="display: none;">
-      <option value="debito_pix">Débito/Pix</option>
-    </select>
+<!-- Trigger -->
+<div class="custom-select-trigger" onclick="abrirFormaPagamentoModal()">
+  <span class="trigger-text">
+    <i class="ri-wallet-line"></i>
+    <span id="formaPagamentoTexto">Débito/Pix</span>
+  </span>
+
+  <span class="trigger-arrow">
+    <i class="ri-arrow-down-s-line"></i>
+  </span>
+</div>
+
+<input type="hidden" id="formaPagamento" value="debito_pix">
 
     <div class="pago-toggle-group">
       <label for="pagoToggle" class="pago-toggle-label">
@@ -623,6 +639,64 @@ index2
   <!-- Toast Notification -->
 <div id="toast" class="toast">
   <span id="toastMessage"></span>
+</div>
+
+<!-- Modal de Confirmação para Categoria Vazia -->
+<div id="categoriaModal" class="modal categoria-warning-modal">
+  <div class="modal-content">
+    <div class="modal-header-warning">
+      <i class="ri-alert-line"></i>
+      <h2>Sem Categoria</h2>
+    </div>
+    <p>Você não selecionou uma categoria para esta transação.</p>
+    <p class="warning-subtitle">Deseja continuar mesmo assim?</p>
+    <div class="btn-group">
+      <button class="btn btn-secondary" onclick="fecharModalCategoria()">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmarSemCategoria()">Continuar sem categoria</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Confirmação para Exclusão de Transação Única -->
+<div id="deleteUniqueModal" class="modal delete-warning-modal">
+  <div class="modal-content">
+    <div class="modal-header-warning">
+      <i class="ri-delete-bin-line"></i>
+      <h2>Excluir Transação</h2>
+    </div>
+    <p>Tem certeza que deseja excluir esta transação?</p>
+    <p class="warning-subtitle">Esta ação não pode ser desfeita.</p>
+    <div class="btn-group">
+      <button class="btn btn-secondary" onclick="fecharModalDeleteUnique()">Cancelar</button>
+      <button class="btn btn-danger" onclick="confirmarExclusaoUnica()">Excluir</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Forma de Pagamento -->
+<div class="bottom-sheet-modal" id="formaPagamentoModal">
+
+  <div class="bottom-sheet-content">
+
+    <div class="bottom-sheet-handle"></div>
+
+    <div class="bottom-sheet-title">
+      Forma de pagamento
+    </div>
+
+    <!-- opções -->
+    <div class="bottom-sheet-options" id="formaPagamentoOptions"></div>
+
+    <!-- botão gerenciar -->
+    <button class="gerenciar-btn" onclick="abrirGerenciarCartoes()">
+
+      <i class="ri-settings-3-line"></i>
+      Gerenciar formas de pagamento
+
+    </button>
+
+  </div>
+
 </div>
 
 
@@ -816,6 +890,10 @@ const today = (() => {
     let preselectedType = null;
     let currentTransactionIndex = null;
     let currentFilter = 'transacoes'; // Valor padrão
+    // Variável para armazenar os dados da transação enquanto aguarda confirmação da categoria
+    let pendingTransactionData = null;
+    // Variável para armazenar o índice da exclusão pendente
+    let pendingDeleteIndex = null;
 
     const monthNames = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
     const monthNamesShort = ['JAN.','FEV.','MAR.','ABR.','MAI.','JUN.','JUL.','AGO.','SET.','OUT.','NOV.','DEZ.'];
@@ -1409,20 +1487,39 @@ function openTransactionDetails(index) {
   
   if (transaction.tipo === 'despesa' && transaction.formaPagamento) {
     let formaPagamentoText = '';
+    let idParaBuscar = transaction.formaPagamento;
     
-    if (transaction.formaPagamento === 'debito_pix') {
+    // CORREÇÃO: Remove o prefixo duplicado 'cartao_' se existir
+    if (idParaBuscar.startsWith('cartao_cartao_')) {
+      idParaBuscar = idParaBuscar.replace('cartao_cartao_', 'cartao_');
+      console.log('ID corrigido:', idParaBuscar);
+    }
+    
+    // Verifica se é Débito/Pix
+    if (idParaBuscar === 'debito_pix') {
       formaPagamentoText = 'Débito/Pix';
-    } else {
-      // É cartão de crédito - buscar nome do cartão
+    } 
+    // Verifica se é cartão de crédito
+    else if (idParaBuscar.startsWith('cartao_')) {
       const cartoesCadastrados = JSON.parse(localStorage.getItem('cartoes_credito') || '[]');
-      const cartaoEncontrado = cartoesCadastrados.find(cartao => cartao.id === transaction.formaPagamento);
-      formaPagamentoText = cartaoEncontrado ? cartaoEncontrado.nome : 'Cartão de Crédito';
+      const cartaoEncontrado = cartoesCadastrados.find(cartao => cartao.id === idParaBuscar);
+      
+      if (cartaoEncontrado && cartaoEncontrado.nome) {
+        formaPagamentoText = cartaoEncontrado.nome;
+        console.log('Cartão encontrado:', cartaoEncontrado.nome);
+      } else {
+        formaPagamentoText = 'Cartão de Crédito';
+        console.warn('Cartão não encontrado para ID:', idParaBuscar);
+      }
+    }
+    else {
+      formaPagamentoText = transaction.formaPagamento;
     }
     
     formaPagamentoValue.textContent = formaPagamentoText;
-    formaPagamentoItem.style.display = 'flex'; // Mostra o campo
+    formaPagamentoItem.style.display = 'flex';
   } else {
-    formaPagamentoItem.style.display = 'none'; // Esconde o campo para receitas
+    formaPagamentoItem.style.display = 'none';
   }
   
   // Status com ícone de cartão separado se aplicável
@@ -1590,7 +1687,11 @@ function openModal(typeToPreselect = null, originalIndex = null) {
         }
 
         toggleEntryTypeFields();
-        
+
+        // Sempre resetar forma de pagamento para Débito/Pix em novos lançamentos
+        document.getElementById('formaPagamento').value = 'debito_pix';
+        document.getElementById('formaPagamentoTexto').textContent = 'Débito/Pix';
+
 // ABRE A CALCULADORA PARA NOVO LANÇAMENTO
 setTimeout(() => abrirCalculadora(), 100);
     }
@@ -1612,11 +1713,14 @@ setTimeout(() => abrirCalculadora(), 100);
 
 function closeModal() {
     modal.style.display = 'none';
-    mainFab.style.display = 'flex'; // Mostrar botão de + ao fechar modal
+    mainFab.style.display = 'flex';
     modal.classList.remove('edit-mode');
     preselectedType = null;
     editIndex = null;
     modal.removeAttribute('data-tipo');
+    
+    // Limpar dados pendentes da categoria
+    pendingTransactionData = null;
     
     // RESTAURAR COR ORIGINAL DA STATUS BAR
     restoreStatusBarColor();
@@ -1628,11 +1732,9 @@ function closeModal() {
     parcelaAtualInput.value = 1;
     mesesFixoInput.value = 1;
     
-    // Reseta a forma de pagamento
     document.getElementById('formaPagamento').value = 'debito_pix';
     document.getElementById('formaPagamento').style.display = 'none';
     
-    // Reseta o toggle
     const pagoToggle = document.getElementById('pagoToggle');
     pagoToggle.checked = false;
     pagoToggle.disabled = false;
@@ -1660,34 +1762,21 @@ async function confirmarEdicaoParcelado(opcao) {
   const ed = _edicaoPendente;
   const lancOrigem = lancamentos[editIndex];
   const parc = lancOrigem.parcelamento;
-  const baseDescription = parc.baseDescription;
+  const groupId = parc.groupId;  // USA O ID DO GRUPO
   const totalParcelas   = parc.total;
   const parcelaAtual    = parc.atual;
   const isFixo          = parc.isFixo;
   const touchedMonthKeys = new Set();
 
-  // Helper: aplicar edição em um lançamento preservando parcelamento
-  function aplicarEdicao(lanc, novaDescricao, novaParcela) {
-    lanc.descricao        = novaDescricao;
-    lanc.tipo             = ed.tipo;
-    lanc.valor            = ed.valorFinal;
-    lanc.pago             = lanc.pago; // mantém status pago individual
-    lanc.formaPagamento   = ed.formaPagamento;
-    lanc.categoria        = ed.categoriaId;
-    if (lanc.parcelamento) {
-      lanc.parcelamento.valorOriginal  = ed.valorFinal;
-      lanc.parcelamento.baseDescription = ed.descricaoBase;
-    }
+  function limparDescricaoBase(desc) {
+    return desc.replace(/\s*\(\d+\/\d+\)\s*$/, '');
   }
+
+  const descricaoBaseLimpa = limparDescricaoBase(ed.descricaoBase);
 
   switch (opcao) {
     case 'current': {
-      // Só altera este lançamento no mês atual
-      // CORREÇÃO: Remover qualquer sufixo existente da descrição base
-      let descricaoBaseLimpa = ed.descricaoBase;
-      // Remove sufixos como (1/3), (2/3) etc. se estiverem no final
-      descricaoBaseLimpa = descricaoBaseLimpa.replace(/\s*\(\d+\/\d+\)\s*$/, '');
-      
+      // Somente esta parcela
       const novaDesc = isFixo
         ? descricaoBaseLimpa
         : `${descricaoBaseLimpa} (${parcelaAtual}/${totalParcelas})`;
@@ -1699,97 +1788,134 @@ async function confirmarEdicaoParcelado(opcao) {
       lancamentos[editIndex].pago           = ed.pago;
       lancamentos[editIndex].formaPagamento = ed.formaPagamento;
       lancamentos[editIndex].categoria      = ed.categoriaId;
+      
       if (lancamentos[editIndex].parcelamento) {
         lancamentos[editIndex].parcelamento.valorOriginal   = ed.valorFinal;
         lancamentos[editIndex].parcelamento.baseDescription = descricaoBaseLimpa;
+        lancamentos[editIndex].parcelamento.groupId = groupId; // Mantém o mesmo groupId
       }
+      
       await salvarLocal(currentDate);
       touchedMonthKeys.add(getMonthKey(currentDate));
+      showToast('✓ Apenas este lançamento foi alterado');
       break;
     }
 
     case 'future': {
-      // Altera este e todos os futuros (parcela >= parcelaAtual)
+      // Esta e futuras parcelas (baseado no groupId)
       let tempDate = new Date(currentDate);
-      // CORREÇÃO: Remover qualquer sufixo existente da descrição base
-      let descricaoBaseLimpa = ed.descricaoBase;
-      descricaoBaseLimpa = descricaoBaseLimpa.replace(/\s*\(\d+\/\d+\)\s*$/, '');
       
       for (let i = parcelaAtual; i <= totalParcelas; i++) {
         const monthKey = getMonthKey(tempDate);
         let mLancs = JSON.parse(localStorage.getItem('lancamentos_' + monthKey)) || [];
-        mLancs.forEach(function(l) {
-          if (
-            l.parcelamento &&
-            l.parcelamento.baseDescription === baseDescription &&
-            l.parcelamento.total === totalParcelas &&
-            l.parcelamento.atual === i &&
-            l.parcelamento.isFixo === isFixo
-          ) {
+        let encontrou = false;
+        
+        mLancs = mLancs.map(function(l) {
+          // USA O groupId EM VEZ DA baseDescription
+          if (l.parcelamento && l.parcelamento.groupId === groupId && l.parcelamento.atual === i) {
+            encontrou = true;
             const novaDesc = isFixo
               ? descricaoBaseLimpa
               : `${descricaoBaseLimpa} (${i}/${totalParcelas})`;
-            l.descricao        = novaDesc;
-            l.tipo             = ed.tipo;
-            l.valor            = ed.valorFinal;
-            l.formaPagamento   = ed.formaPagamento;
-            l.categoria        = ed.categoriaId;
-            if (i === parcelaAtual) { l.dataVencimento = ed.dataVencimento; l.pago = ed.pago; }
-            if (l.parcelamento) {
-              l.parcelamento.valorOriginal   = ed.valorFinal;
-              l.parcelamento.baseDescription = descricaoBaseLimpa;
+            
+            if (i === parcelaAtual) {
+              return {
+                ...l,
+                descricao: novaDesc,
+                tipo: ed.tipo,
+                valor: ed.valorFinal,
+                dataVencimento: ed.dataVencimento,
+                pago: ed.pago,
+                formaPagamento: ed.formaPagamento,
+                categoria: ed.categoriaId,
+                parcelamento: {
+                  ...l.parcelamento,
+                  valorOriginal: ed.valorFinal,
+                  baseDescription: descricaoBaseLimpa,
+                  groupId: groupId
+                }
+              };
+            } else {
+              return {
+                ...l,
+                descricao: novaDesc,
+                tipo: ed.tipo,
+                valor: ed.valorFinal,
+                formaPagamento: ed.formaPagamento,
+                categoria: ed.categoriaId,
+                parcelamento: {
+                  ...l.parcelamento,
+                  valorOriginal: ed.valorFinal,
+                  baseDescription: descricaoBaseLimpa,
+                  groupId: groupId
+                }
+              };
             }
           }
+          return l;
         });
-        localStorage.setItem('lancamentos_' + monthKey, JSON.stringify(mLancs));
-        touchedMonthKeys.add(monthKey);
+        
+        if (encontrou) {
+          localStorage.setItem('lancamentos_' + monthKey, JSON.stringify(mLancs));
+          touchedMonthKeys.add(monthKey);
+        }
+        
         tempDate.setMonth(tempDate.getMonth() + 1);
       }
+      
+      showToast(`✓ Alterado este e mais ${totalParcelas - parcelaAtual} lançamentos futuros`);
       break;
     }
 
     case 'all': {
-      // Altera todas (da parcela 1 até total)
+      // Todas as parcelas (baseado no groupId)
       let tempDate = new Date(currentDate);
       tempDate.setMonth(tempDate.getMonth() - (parcelaAtual - 1));
-      // CORREÇÃO: Remover qualquer sufixo existente da descrição base
-      let descricaoBaseLimpa = ed.descricaoBase;
-      descricaoBaseLimpa = descricaoBaseLimpa.replace(/\s*\(\d+\/\d+\)\s*$/, '');
       
       for (let i = 1; i <= totalParcelas; i++) {
         const monthKey = getMonthKey(tempDate);
         let mLancs = JSON.parse(localStorage.getItem('lancamentos_' + monthKey)) || [];
-        mLancs.forEach(function(l) {
-          if (
-            l.parcelamento &&
-            l.parcelamento.baseDescription === baseDescription &&
-            l.parcelamento.total === totalParcelas &&
-            l.parcelamento.atual === i &&
-            l.parcelamento.isFixo === isFixo
-          ) {
+        let encontrou = false;
+        
+        mLancs = mLancs.map(function(l) {
+          // USA O groupId EM VEZ DA baseDescription
+          if (l.parcelamento && l.parcelamento.groupId === groupId && l.parcelamento.atual === i) {
+            encontrou = true;
             const novaDesc = isFixo
               ? descricaoBaseLimpa
               : `${descricaoBaseLimpa} (${i}/${totalParcelas})`;
-            l.descricao      = novaDesc;
-            l.tipo           = ed.tipo;
-            l.valor          = ed.valorFinal;
-            l.formaPagamento = ed.formaPagamento;
-            l.categoria      = ed.categoriaId;
-            if (l.parcelamento) {
-              l.parcelamento.valorOriginal   = ed.valorFinal;
-              l.parcelamento.baseDescription = descricaoBaseLimpa;
-            }
+            
+            return {
+              ...l,
+              descricao: novaDesc,
+              tipo: ed.tipo,
+              valor: ed.valorFinal,
+              formaPagamento: ed.formaPagamento,
+              categoria: ed.categoriaId,
+              parcelamento: {
+                ...l.parcelamento,
+                valorOriginal: ed.valorFinal,
+                baseDescription: descricaoBaseLimpa,
+                groupId: groupId
+              }
+            };
           }
+          return l;
         });
-        localStorage.setItem('lancamentos_' + monthKey, JSON.stringify(mLancs));
-        touchedMonthKeys.add(monthKey);
+        
+        if (encontrou) {
+          localStorage.setItem('lancamentos_' + monthKey, JSON.stringify(mLancs));
+          touchedMonthKeys.add(monthKey);
+        }
+        
         tempDate.setMonth(tempDate.getMonth() + 1);
       }
+      
+      showToast(`✓ Todos os ${totalParcelas} lançamentos foram alterados`);
       break;
     }
   }
 
-  // Sincronizar todos os meses afetados
   for (var mk of touchedMonthKeys) {
     await syncLancamentosToSupabase(mk);
   }
@@ -1915,25 +2041,97 @@ function salvarLancamento() {
   const formaPagamento = tipo === 'despesa' ? document.getElementById('formaPagamento').value : null;
   const categoriaId = document.getElementById('categoriaLancamento').value || null;
 
-  if (!descricaoBase || isNaN(valor) || valor <= 0) { 
-    alert('Preencha a descrição e valor válido.'); 
-    return; 
-  }
-  
-  if (!dataVencimento) {
-    alert('Preencha a data de vencimento.');
+  if (!descricaoBase || isNaN(valor) || valor <= 0) {
+    if (!descricaoBase && (isNaN(valor) || valor <= 0)) {
+      showToast('Preencha a descrição e o valor.', 'error');
+    } else if (!descricaoBase) {
+      showToast('Preencha a descrição da transação.', 'error');
+    } else {
+      showToast('Informe um valor válido maior que zero.', 'error');
+    }
     return;
   }
 
-  const valorFinal = tipo === 'despesa' ? -Math.abs(valor) : Math.abs(valor);
+  if (!dataVencimento) {
+    showToast('Preencha a data de vencimento.', 'error');
+    return;
+  }
+
+  // VERIFICAR SE NÃO TEM CATEGORIA SELECIONADA
+  const isEditing = (editIndex !== null);
+  const hasNoCategory = (!categoriaId || categoriaId === '');
+  
+  // Se não tem categoria e NÃO é edição (apenas para novos lançamentos)
+  if (hasNoCategory && !isEditing) {
+    // Salvar os dados da transação pendente
+    pendingTransactionData = {
+      descricaoBase, valor, tipo, dataVencimento, pago, formaPagamento, categoriaId,
+      valorFinal: tipo === 'despesa' ? -Math.abs(valor) : Math.abs(valor),
+      isEditing: false
+    };
+    
+    // Mostrar modal de confirmação
+    const categoriaModal = document.getElementById('categoriaModal');
+    if (categoriaModal) {
+      categoriaModal.style.display = 'flex';
+    }
+    return; // Aguarda confirmação do usuário
+  }
+
+  // Se tem categoria ou é edição, prosseguir normalmente
+  executarSalvarLancamento();
+}
+
+// Função para fechar o modal de categoria
+function fecharModalCategoria() {
+  const categoriaModal = document.getElementById('categoriaModal');
+  if (categoriaModal) {
+    categoriaModal.style.display = 'none';
+    pendingTransactionData = null;
+  }
+}
+
+// Função para confirmar e continuar sem categoria
+function confirmarSemCategoria() {
+  fecharModalCategoria();
+  executarSalvarLancamento();
+}
+
+// Função principal que executa o salvamento
+function executarSalvarLancamento() {
+  // Se temos dados pendentes do modal, usar eles
+  let descricaoBase, valor, tipo, dataVencimento, pago, formaPagamento, categoriaId, valorFinal;
+  let isEditing = (editIndex !== null);
+  
+  if (pendingTransactionData) {
+    descricaoBase = pendingTransactionData.descricaoBase;
+    valor = pendingTransactionData.valor;
+    tipo = pendingTransactionData.tipo;
+    dataVencimento = pendingTransactionData.dataVencimento;
+    pago = pendingTransactionData.pago;
+    formaPagamento = pendingTransactionData.formaPagamento;
+    categoriaId = pendingTransactionData.categoriaId;
+    valorFinal = pendingTransactionData.valorFinal;
+    isEditing = pendingTransactionData.isEditing;
+    pendingTransactionData = null;
+  } else {
+    descricaoBase = descricaoInput.value.trim();
+    valor = parseBRL(valorInput.value);
+    tipo = tipoInput.value;
+    dataVencimento = document.getElementById('dataVencimento').value;
+    pago = document.getElementById('pagoToggle').checked;
+    formaPagamento = tipo === 'despesa' ? document.getElementById('formaPagamento').value : null;
+    categoriaId = document.getElementById('categoriaLancamento').value || null;
+    valorFinal = tipo === 'despesa' ? -Math.abs(valor) : Math.abs(valor);
+  }
   
   // OBTER O MÊS DO VENCIMENTO PARA SALVAR A TRANSAÇÃO
   const dataVenc = new Date(dataVencimento + 'T12:00:00');
   const mesVencimento = new Date(dataVenc.getFullYear(), dataVenc.getMonth(), 1);
 
-  if (editIndex !== null) {
+  if (isEditing) {
     // Se for parcelado ou fixo, mostrar modal de opção antes de salvar
-    if (lancamentos[editIndex].parcelamento) {
+    if (lancamentos[editIndex] && lancamentos[editIndex].parcelamento) {
       // Guardar dados pendentes de edição para usar depois da escolha
       _edicaoPendente = {
         descricaoBase, tipo, valorFinal, dataVencimento, pago, formaPagamento, categoriaId
@@ -1965,92 +2163,93 @@ function salvarLancamento() {
     };
     salvarLocal(currentDate);
   } else { 
- if (selectedEntryType === 'parcelado') {
-  const totalParcelas = parseInt(totalParcelasInput.value);
-  const parcelaAtual = parseInt(parcelaAtualInput.value);
-  
-  if (isNaN(totalParcelas) || totalParcelas <= 0 || isNaN(parcelaAtual) || parcelaAtual <= 0 || parcelaAtual > totalParcelas) {
-    alert('Preencha um número de parcelas válido.');
-    return;
-  }
-  
-  for (let i = parcelaAtual; i <= totalParcelas; i++) {
-    const descParcela = `${descricaoBase} (${i}/${totalParcelas})`;
-    
-    // NOVA LÓGICA: Usar a função auxiliar para calcular a data
-    const mesesAdicionais = i - parcelaAtual;
-    const dataVencimentoParcelada = calcularDataVencimentoProximoMes(dataVencimento, mesesAdicionais);
-    
-    // Obter o mês correto baseado na data de vencimento da parcela
-    const mesDestino = new Date(dataVencimentoParcelada + 'T12:00:00');
-    const monthKey = getMonthKey(mesDestino);
-    
-    // APENAS A PRIMEIRA PARCELA (i === parcelaAtual) HERDA O STATUS PAGO
-    const statusPago = (i === parcelaAtual) ? pago : false;
-    
-    let futureLancamentos = JSON.parse(localStorage.getItem('lancamentos_' + monthKey)) || [];
-    futureLancamentos.push({
-      descricao: descParcela,
-      tipo: tipo,
-      valor: valorFinal,
-      pago: statusPago,
-      dataVencimento: dataVencimentoParcelada,
-      formaPagamento: formaPagamento,
-      categoria: categoriaId,
-      parcelamento: {
-        total: totalParcelas,
-        atual: i,
-        baseDescription: descricaoBase,
-        valorOriginal: valorFinal,
-        isFixo: false
+    if (selectedEntryType === 'parcelado') {
+      const totalParcelas = parseInt(totalParcelasInput.value);
+      const parcelaAtual = parseInt(parcelaAtualInput.value);
+      
+      if (isNaN(totalParcelas) || totalParcelas <= 0 || isNaN(parcelaAtual) || parcelaAtual <= 0 || parcelaAtual > totalParcelas) {
+        showToast('Preencha um número de parcelas válido.', 'error');
+        return;
       }
-    });
-    localStorage.setItem('lancamentos_' + monthKey, JSON.stringify(futureLancamentos));
-    syncLancamentosToSupabase(monthKey);
-  }
-}
-
-// Para LANÇAMENTO FIXO:
-else if (selectedEntryType === 'fixo') {
-  const mesesFixo = parseInt(mesesFixoInput.value);
-  if (isNaN(mesesFixo) || mesesFixo <= 0) {
-    alert('Preencha um número de meses válido para o lançamento fixo.');
-    return;
-  }
-  
-  for (let i = 1; i <= mesesFixo; i++) {
-    // NOVA LÓGICA: Usar a função auxiliar para calcular a data
-    const mesesAdicionais = i - 1;
-    const dataVencimentoFixa = calcularDataVencimentoProximoMes(dataVencimento, mesesAdicionais);
-    
-    // Obter o mês correto baseado na data de vencimento
-    const mesDestino = new Date(dataVencimentoFixa + 'T12:00:00');
-    const monthKey = getMonthKey(mesDestino);
-    
-    // APENAS O PRIMEIRO MÊS (i === 1) HERDA O STATUS PAGO
-    const statusPago = (i === 1) ? pago : false;
-    
-    let futureLancamentos = JSON.parse(localStorage.getItem('lancamentos_' + monthKey)) || [];
-    futureLancamentos.push({
-      descricao: descricaoBase,
-      tipo: tipo,
-      valor: valorFinal,
-      pago: statusPago,
-      dataVencimento: dataVencimentoFixa,
-      formaPagamento: formaPagamento,
-      categoria: categoriaId,
-      parcelamento: {
-        total: mesesFixo,
-        atual: i,
-        baseDescription: descricaoBase,
-        valorOriginal: valorFinal,
-        isFixo: true
+      
+      // GERAR UM ID ÚNICO PARA ESTE GRUPO DE PARCELAS
+      const groupId = Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      
+      for (let i = parcelaAtual; i <= totalParcelas; i++) {
+        const descParcela = `${descricaoBase} (${i}/${totalParcelas})`;
+        
+        const mesesAdicionais = i - parcelaAtual;
+        const dataVencimentoParcelada = calcularDataVencimentoProximoMes(dataVencimento, mesesAdicionais);
+        
+        const mesDestino = new Date(dataVencimentoParcelada + 'T12:00:00');
+        const monthKey = getMonthKey(mesDestino);
+        
+        const statusPago = (i === parcelaAtual) ? pago : false;
+        
+        let futureLancamentos = JSON.parse(localStorage.getItem('lancamentos_' + monthKey)) || [];
+        futureLancamentos.push({
+          descricao: descParcela,
+          tipo: tipo,
+          valor: valorFinal,
+          pago: statusPago,
+          dataVencimento: dataVencimentoParcelada,
+          formaPagamento: formaPagamento,
+          categoria: categoriaId,
+          parcelamento: {
+            total: totalParcelas,
+            atual: i,
+            baseDescription: descricaoBase,
+            valorOriginal: valorFinal,
+            isFixo: false,
+            groupId: groupId
+          }
+        });
+        localStorage.setItem('lancamentos_' + monthKey, JSON.stringify(futureLancamentos));
+        syncLancamentosToSupabase(monthKey);
       }
-    });
-    localStorage.setItem('lancamentos_' + monthKey, JSON.stringify(futureLancamentos));
-    syncLancamentosToSupabase(monthKey);
-  }
-}else { 
+    }
+    // Para LANÇAMENTO FIXO:
+    else if (selectedEntryType === 'fixo') {
+      const mesesFixo = parseInt(mesesFixoInput.value);
+      if (isNaN(mesesFixo) || mesesFixo <= 0) {
+        showToast('Preencha um número de meses válido para o lançamento fixo.', 'error');
+        return;
+      }
+      
+      // GERAR UM ID ÚNICO PARA ESTE GRUPO DE LANÇAMENTOS FIXOS
+      const groupId = Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      
+      for (let i = 1; i <= mesesFixo; i++) {
+        const mesesAdicionais = i - 1;
+        const dataVencimentoFixa = calcularDataVencimentoProximoMes(dataVencimento, mesesAdicionais);
+        
+        const mesDestino = new Date(dataVencimentoFixa + 'T12:00:00');
+        const monthKey = getMonthKey(mesDestino);
+        
+        const statusPago = (i === 1) ? pago : false;
+        
+        let futureLancamentos = JSON.parse(localStorage.getItem('lancamentos_' + monthKey)) || [];
+        futureLancamentos.push({
+          descricao: descricaoBase,
+          tipo: tipo,
+          valor: valorFinal,
+          pago: statusPago,
+          dataVencimento: dataVencimentoFixa,
+          formaPagamento: formaPagamento,
+          categoria: categoriaId,
+          parcelamento: {
+            total: mesesFixo,
+            atual: i,
+            baseDescription: descricaoBase,
+            valorOriginal: valorFinal,
+            isFixo: true,
+            groupId: groupId
+          }
+        });
+        localStorage.setItem('lancamentos_' + monthKey, JSON.stringify(futureLancamentos));
+        syncLancamentosToSupabase(monthKey);
+      }
+    } else { 
       // LANÇAMENTO ÚNICO: Salvar no mês do vencimento
       const monthKeyVencimento = getMonthKey(mesVencimento);
       let lancamentosMesVencimento = JSON.parse(localStorage.getItem('lancamentos_' + monthKeyVencimento)) || [];
@@ -2075,88 +2274,94 @@ else if (selectedEntryType === 'fixo') {
   closeModal();
 }
 
-    async function handleDeleteClick() {
-      if (editIndex === null) return;
-      const lancamentoToDelete = lancamentos[editIndex];
+async function handleDeleteClick() {
+  if (editIndex === null) return;
+  const lancamentoToDelete = lancamentos[editIndex];
 
-      if (!lancamentoToDelete.parcelamento) {
-        if (confirm('Tem certeza que deseja excluir este lançamento?')) {
-          lancamentos.splice(editIndex, 1);
-          await salvarLocal(currentDate);
-          loadLancamentos();
-          closeModal();
-        }
-      } else {
-        modal.style.display = 'none';
-        mainFab.style.display = 'flex'; // Mostrar botão de +
-        deleteParceladoModal.style.display = 'flex';
+  // Se for parcelado/fixo, usar o modal existente
+  if (lancamentoToDelete.parcelamento) {
+    modal.style.display = 'none';
+    mainFab.style.display = 'flex';
+    deleteParceladoModal.style.display = 'flex';
+  } else {
+    // Para transação única, mostrar o novo modal de confirmação
+    pendingDeleteIndex = editIndex;
+    const deleteModal = document.getElementById('deleteUniqueModal');
+    if (deleteModal) {
+      deleteModal.style.display = 'flex';
+    }
+    modal.style.display = 'none';
+    mainFab.style.display = 'flex';
+  }
+}
+
+async function excluirLancamentoConfirmado(option) {
+  if (editIndex === null) return;
+
+  const lancamentoToDelete = lancamentos[editIndex];
+  const groupId = lancamentoToDelete.parcelamento.groupId;
+  const totalParcelas = lancamentoToDelete.parcelamento.total;
+  const parcelaAtualDoLancamento = lancamentoToDelete.parcelamento.atual;
+  const touchedMonthKeys = new Set();
+
+  switch (option) {
+    case 'current':
+      lancamentos.splice(editIndex, 1);
+      await salvarLocal(currentDate);
+      touchedMonthKeys.add(getMonthKey(currentDate));
+      showToast('🗑️ Apenas este lançamento foi excluído');
+      break;
+
+    case 'future': {
+      let tempDateForFuture = new Date(currentDate);
+
+      for (let i = parcelaAtualDoLancamento; i <= totalParcelas; i++) {
+        const monthKey = getMonthKey(tempDateForFuture);
+        let monthLancamentos = JSON.parse(localStorage.getItem('lancamentos_' + monthKey)) || [];
+
+        monthLancamentos = monthLancamentos.filter(l =>
+          !(l.parcelamento && l.parcelamento.groupId === groupId && l.parcelamento.atual === i)
+        );
+        
+        localStorage.setItem('lancamentos_' + monthKey, JSON.stringify(monthLancamentos));
+        touchedMonthKeys.add(monthKey);
+        tempDateForFuture.setMonth(tempDateForFuture.getMonth() + 1);
       }
+      
+      const futurasExcluidas = totalParcelas - parcelaAtualDoLancamento;
+      showToast(`🗑️ Excluído este e mais ${futurasExcluidas} lançamentos futuros`);
+      break;
     }
 
-    async function excluirLancamentoConfirmado(option) {
-      if (editIndex === null) return;
+    case 'all': {
+      let tempDateForAll = new Date(currentDate);
+      tempDateForAll.setMonth(tempDateForAll.getMonth() - (parcelaAtualDoLancamento - 1));
 
-      const lancamentoToDelete = lancamentos[editIndex];
-      const baseDescription = lancamentoToDelete.parcelamento.baseDescription;
-      const totalParcelas = lancamentoToDelete.parcelamento.total;
-      const parcelaAtualDoLancamento = lancamentoToDelete.parcelamento.atual;
-      const isFixo = lancamentoToDelete.parcelamento.isFixo;
-      const touchedMonthKeys = new Set();
+      for (let i = 1; i <= totalParcelas; i++) {
+        const monthKey = getMonthKey(tempDateForAll);
+        let monthLancamentos = JSON.parse(localStorage.getItem('lancamentos_' + monthKey)) || [];
 
-      switch (option) {
-        case 'current':
-          lancamentos.splice(editIndex, 1);
-          await salvarLocal(currentDate);
-          break;
-
-        case 'future':
-          let tempDateForFuture = new Date(currentDate);
-
-          for (let i = parcelaAtualDoLancamento; i <= totalParcelas; i++) {
-            const monthKey = getMonthKey(tempDateForFuture);
-            let monthLancamentos = JSON.parse(localStorage.getItem('lancamentos_' + monthKey)) || [];
-
-            monthLancamentos = monthLancamentos.filter(l =>
-              !(l.parcelamento &&
-                l.parcelamento.baseDescription === baseDescription &&
-                l.parcelamento.total === totalParcelas &&
-                l.parcelamento.atual === i &&
-                l.parcelamento.isFixo === isFixo)
-            );
-            localStorage.setItem('lancamentos_' + monthKey, JSON.stringify(monthLancamentos));
-            touchedMonthKeys.add(monthKey);
-            tempDateForFuture.setMonth(tempDateForFuture.getMonth() + 1);
-          }
-          break;
-
-        case 'all':
-          let tempDateForAll = new Date(currentDate);
-          tempDateForAll.setMonth(tempDateForAll.getMonth() - (parcelaAtualDoLancamento - 1));
-
-          for (let i = 1; i <= totalParcelas; i++) {
-            const monthKey = getMonthKey(tempDateForAll);
-            let monthLancamentos = JSON.parse(localStorage.getItem('lancamentos_' + monthKey)) || [];
-
-            monthLancamentos = monthLancamentos.filter(l =>
-              !(l.parcelamento &&
-                l.parcelamento.baseDescription === baseDescription &&
-                l.parcelamento.total === totalParcelas &&
-                l.parcelamento.isFixo === isFixo)
-            );
-            localStorage.setItem('lancamentos_' + monthKey, JSON.stringify(monthLancamentos));
-            touchedMonthKeys.add(monthKey);
-            tempDateForAll.setMonth(tempDateForAll.getMonth() + 1);
-          }
-          break;
+        monthLancamentos = monthLancamentos.filter(l =>
+          !(l.parcelamento && l.parcelamento.groupId === groupId && l.parcelamento.atual === i)
+        );
+        
+        localStorage.setItem('lancamentos_' + monthKey, JSON.stringify(monthLancamentos));
+        touchedMonthKeys.add(monthKey);
+        tempDateForAll.setMonth(tempDateForAll.getMonth() + 1);
       }
-
-      for (const monthKey of touchedMonthKeys) {
-        await syncLancamentosToSupabase(monthKey);
-      }
-
-      loadLancamentos();
-      closeDeleteParceladoModal();
+      
+      showToast(`🗑️ Todos os ${totalParcelas} lançamentos foram excluídos`);
+      break;
     }
+  }
+
+  for (const monthKey of touchedMonthKeys) {
+    await syncLancamentosToSupabase(monthKey);
+  }
+
+  loadLancamentos();
+  closeDeleteParceladoModal();
+}
 
 function toggleStatus(index) {
     if (index === -1) return;
@@ -2789,14 +2994,19 @@ function aplicarEstadoVisibilidade() {
 function toggleFormaPagamento() {
     const formaPagamentoSelect = document.getElementById('formaPagamento');
     const tipo = document.getElementById('tipo').value;
+    const triggerElement = document.querySelector('.custom-select-trigger[onclick="abrirFormaPagamentoModal()"]');
     
     // Mostra forma de pagamento apenas para despesas
     if (tipo === 'despesa') {
-        formaPagamentoSelect.style.display = 'block';
-        // Garante que os cartões estão carregados
+        if (formaPagamentoSelect) formaPagamentoSelect.style.display = 'block';
+        if (triggerElement) triggerElement.style.display = 'flex';
         carregarFormasPagamento();
     } else {
-        formaPagamentoSelect.style.display = 'none';
+        // RECEITA - esconde completamente
+        if (formaPagamentoSelect) formaPagamentoSelect.style.display = 'none';
+        if (triggerElement) triggerElement.style.display = 'none';
+        // Limpa o valor também
+        document.getElementById('formaPagamento').value = null;
     }
 }
 
@@ -2847,55 +3057,151 @@ function navigateToCartoes() {
 
 // Função para carregar os cartões cadastrados
 function carregarFormasPagamento() {
-    const formaPagamentoSelect = document.getElementById('formaPagamento');
-    
-    // Limpa opções existentes (exceto Débito/Pix)
-    while (formaPagamentoSelect.children.length > 1) {
-        formaPagamentoSelect.removeChild(formaPagamentoSelect.lastChild);
-    }
-    
-    // Carrega cartões do localStorage
-    const cartoesCadastrados = JSON.parse(localStorage.getItem('cartoes_credito') || '[]');
-    
-    // Adiciona os cartões ao select
-    cartoesCadastrados.forEach(cartao => {
-        const option = document.createElement('option');
-        option.value = cartao.id;
-        option.textContent = cartao.nome; // APENAS O NOME DO CARTÃO
-        formaPagamentoSelect.appendChild(option);
+
+  const container = document.getElementById('formaPagamentoOptions');
+
+  container.innerHTML = '';
+
+  // Débito/Pix fixo no topo
+  adicionarOpcaoFormaPagamento({
+    nome: 'Débito/Pix',
+    valor: 'debito_pix',
+    icone: 'ri-bank-line'
+  });
+
+  // cartões cadastrados
+  const cartoes = JSON.parse(localStorage.getItem('cartoes_credito')) || [];
+
+  cartoes.forEach(cartao => {
+
+    adicionarOpcaoFormaPagamento({
+      nome: cartao.nome,
+      valor: `cartao_${cartao.id}`,
+      icone: 'ri-bank-card-2-line'
     });
+
+  });
+
 }
 
 // ===== CATEGORIAS =====
+var _currentCategoriaType = 'despesa';
+
 function carregarCategoriasNoModal(tipoSelecionado, valorAtual) {
-    var sel = document.getElementById('categoriaLancamento');
-    sel.innerHTML = '<option value="">— Sem categoria —</option>';
+    _currentCategoriaType = tipoSelecionado;
+    var hidden = document.getElementById('categoriaLancamento');
+    var list   = document.getElementById('categoriaOptionsList');
+    var triggerText = document.getElementById('categoriaTriggerText');
+    if (!list) return;
+
+    list.innerHTML = '';
+
+    // Opção "Sem categoria" - PRIMEIRO ITEM
+    var semCat = document.createElement('div');
+    semCat.className = 'custom-select-option' + (!valorAtual ? ' selected' : '');
+    semCat.setAttribute('data-value', '');
+    semCat.innerHTML = '<i class="ri-close-circle-line"></i><span class="option-text">— Sem categoria —</span>';
+    semCat.onclick = function() { selecionarCategoria('', '— Sem categoria —'); };
+    list.appendChild(semCat);
 
     try {
         var dados = JSON.parse(localStorage.getItem('categorias_config') || '{"despesa":[],"receita":[]}');
         var lista = dados[tipoSelecionado] || [];
         lista.forEach(function(cat) {
-            var opt = document.createElement('option');
-            opt.value = cat.id;
-            opt.textContent = (cat.icone || '') + ' ' + cat.nome;
-            sel.appendChild(opt);
+            var opt = document.createElement('div');
+            opt.className = 'custom-select-option' + (cat.id == valorAtual ? ' selected' : '');
+            opt.setAttribute('data-value', cat.id);
+            opt.innerHTML = '<span style="font-size:1.1em;width:24px;text-align:center">' + (cat.icone || '📌') + '</span><span class="option-text">' + cat.nome + '</span>';
+            opt.onclick = (function(id, label) {
+                return function() { selecionarCategoria(id, label); };
+            })(cat.id, (cat.icone || '') + ' ' + cat.nome);
+            list.appendChild(opt);
         });
-        if (valorAtual) {
-            var found = false;
-            for (var i = 0; i < sel.options.length; i++) {
-                if (sel.options[i].value == valorAtual) {
-                    sel.selectedIndex = i;
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) sel.selectedIndex = 0;
-        } else {
-            sel.selectedIndex = 0;
-        }
     } catch(e) {
         console.warn('Erro ao carregar categorias:', e);
     }
+
+    // ===== BOTÃO GERENCIAR CATEGORIAS - AGORA COMO ÚLTIMO ITEM DA LISTA =====
+    var gerenciarItem = document.createElement('div');
+    gerenciarItem.className = 'custom-select-option categoria-manage-item';
+    gerenciarItem.setAttribute('data-value', '__gerenciar__');
+    gerenciarItem.innerHTML = '<i class="ri-settings-3-line"></i><span class="option-text">Gerenciar categorias</span>';
+    gerenciarItem.onclick = function(e) {
+        e.stopPropagation();
+        fecharCategoriaDropdown();
+        // Salvar estado atual do modal para voltar depois
+        sessionStorage.setItem('_voltarDoModal', '1');
+        window.location.href = 'categorias.html';
+    };
+    list.appendChild(gerenciarItem);
+
+    // Atualizar hidden input e trigger text
+    if (valorAtual) {
+        hidden.value = valorAtual;
+        var allOpts = list.querySelectorAll('[data-value]');
+        var found = false;
+        allOpts.forEach(function(o) {
+            if (o.getAttribute('data-value') == valorAtual) {
+                triggerText.textContent = o.querySelector('.option-text').textContent;
+                found = true;
+            }
+        });
+        if (!found) { hidden.value = ''; triggerText.textContent = '— Sem categoria —'; }
+    } else {
+        hidden.value = '';
+        triggerText.textContent = '— Sem categoria —';
+    }
+}
+
+function selecionarCategoria(id, label) {
+    var hidden = document.getElementById('categoriaLancamento');
+    var triggerText = document.getElementById('categoriaTriggerText');
+    hidden.value = id;
+    triggerText.textContent = label;
+    // Marcar selected
+    var opts = document.querySelectorAll('#categoriaOptionsList .custom-select-option');
+    opts.forEach(function(o) {
+        o.classList.toggle('selected', o.getAttribute('data-value') == id);
+    });
+    fecharCategoriaDropdown();
+}
+
+function toggleCategoriaDropdown() {
+    var overlay = document.getElementById('categoriaPopupOverlay');
+    var popup   = document.getElementById('categoriaPopup');
+    var trigger = document.getElementById('categoriaTrigger');
+    overlay.style.display = 'block';
+    popup.style.display   = 'flex';
+    trigger.classList.add('active');
+    // Animação de entrada
+    popup.style.transform = 'translateY(100%)';
+    popup.style.transition = 'transform 0.3s ease';
+    requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+            popup.style.transform = 'translateY(0)';
+        });
+    });
+}
+
+function fecharCategoriaDropdown() {
+    var overlay = document.getElementById('categoriaPopupOverlay');
+    var popup   = document.getElementById('categoriaPopup');
+    var trigger = document.getElementById('categoriaTrigger');
+    if (!popup) return;
+    popup.style.transform = 'translateY(100%)';
+    setTimeout(function() {
+        overlay.style.display = 'none';
+        popup.style.display   = 'none';
+    }, 280);
+    if (trigger) trigger.classList.remove('active');
+}
+
+function _closeCatOnOutsideClick(e) {}
+
+function irParaCategorias() {
+    // Salvar estado atual do modal para voltar depois
+    sessionStorage.setItem('_voltarDoModal', '1');
+    window.location.href = 'categorias.html';
 }
 
 function getNomeCategoriaById(id) {
@@ -3209,15 +3515,65 @@ function pagarCartao() {
   showToast(`${transacoesParaPagar.length} transações pagas com sucesso!`);
 }
 
-function showToast(message) {
-  const toast = document.getElementById('toast');
-  const toastMessage = document.getElementById('toastMessage');
-  
-  toastMessage.textContent = message;
-  toast.classList.add('show');
-  
-  setTimeout(() => {
-    toast.classList.remove('show');
+function showToast(message, type) {
+  type = type || 'success';
+
+  var colors = { error: '#f44336', warning: '#ff9800', success: '#21c45d' };
+  var icons  = { error: '\u2715', warning: '\u26a0', success: '\u2713' };
+  var bgColor = colors[type] || colors.success;
+
+  var old = document.getElementById('_toast_popup');
+  if (old) old.remove();
+
+  var toast = document.createElement('div');
+  toast.id = '_toast_popup';
+  toast.style.cssText = [
+    'position:fixed',
+    'bottom:150px',
+    'left:50%',
+    'transform:translateX(-50%) translateY(20px)',
+    'background:' + bgColor,
+    'color:#fff',
+    'padding:12px 20px',
+    'border-radius:25px',
+    'box-shadow:0 4px 16px rgba(0,0,0,0.25)',
+    'z-index:99999',
+    'opacity:0',
+    'transition:opacity 0.25s ease,transform 0.25s ease',
+    'font-family:sans-serif',
+    'font-size:14px',
+    'font-weight:600',
+    'max-width:85vw',
+    'white-space:normal',
+    'text-align:center',
+    'display:flex',
+    'align-items:center',
+    'gap:8px',
+    'pointer-events:none'
+  ].join(';');
+
+  var icon = document.createElement('span');
+  icon.style.cssText = 'font-size:16px;flex-shrink:0';
+  icon.textContent = icons[type] || icons.success;
+
+  var text = document.createElement('span');
+  text.textContent = message;
+
+  toast.appendChild(icon);
+  toast.appendChild(text);
+  document.body.appendChild(toast);
+
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateX(-50%) translateY(0)';
+    });
+  });
+
+  setTimeout(function() {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(-50%) translateY(20px)';
+    setTimeout(function() { if (toast.parentNode) toast.remove(); }, 300);
   }, 3000);
 }
 
@@ -4819,6 +5175,42 @@ document.getElementById('calcModal').addEventListener('click', function(e) {
   }
 });
 
+// Função para fechar o modal de exclusão única
+function fecharModalDeleteUnique() {
+  const deleteModal = document.getElementById('deleteUniqueModal');
+  if (deleteModal) {
+    deleteModal.style.display = 'none';
+    pendingDeleteIndex = null;
+  }
+  // Reabrir o modal de edição se necessário
+  modal.style.display = 'flex';
+  mainFab.style.display = 'none';
+}
+
+// Função para confirmar e executar a exclusão
+async function confirmarExclusaoUnica() {
+  if (pendingDeleteIndex !== null) {
+    // Remover o lançamento
+    lancamentos.splice(pendingDeleteIndex, 1);
+    await salvarLocal(currentDate);
+    loadLancamentos();
+    
+    // Fechar o modal de exclusão
+    fecharModalDeleteUnique();
+    
+    // Fechar o modal de edição
+    closeModal();
+    
+    // Mostrar toast de confirmação
+    showToast('🗑️ Transação excluída com sucesso!');
+    
+    // Limpar o índice pendente
+    pendingDeleteIndex = null;
+  } else {
+    fecharModalDeleteUnique();
+  }
+}
+
 
 
 // Esconder botão flutuante de logout injetado pelo auth-guard
@@ -4842,6 +5234,93 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }, 500);
 });
+
+function abrirFormaPagamentoModal() {
+  document
+    .getElementById('formaPagamentoModal')
+    .classList.add('active');
+}
+
+function fecharFormaPagamentoModal() {
+  document
+    .getElementById('formaPagamentoModal')
+    .classList.remove('active');
+}
+
+function selecionarFormaPagamento(elemento, valor, texto) {
+
+  document.getElementById('formaPagamento').value = valor;
+
+  document.getElementById('formaPagamentoTexto')
+    .textContent = texto;
+
+  document.querySelectorAll('.bottom-sheet-option')
+    .forEach(el => el.classList.remove('active'));
+
+  elemento.classList.add('active');
+
+  fecharFormaPagamentoModal();
+}
+
+document
+  .getElementById('formaPagamentoModal')
+  .addEventListener('click', function(e) {
+
+    if (e.target === this) {
+      fecharFormaPagamentoModal();
+    }
+
+});
+
+function adicionarOpcaoFormaPagamento(dados) {
+
+  const container = document.getElementById('formaPagamentoOptions');
+
+  const div = document.createElement('div');
+
+  const valorAtual = document.getElementById('formaPagamento').value;
+  div.className = 'bottom-sheet-option' + (dados.valor === valorAtual ? ' active' : '');
+
+  div.innerHTML = `
+    <i class="${dados.icone}"></i>
+    <span>${dados.nome}</span>
+  `;
+
+  div.onclick = () => {
+
+    document.getElementById('formaPagamento').value = dados.valor;
+
+    document.getElementById('formaPagamentoTexto')
+      .textContent = dados.nome;
+
+    document.querySelectorAll('.bottom-sheet-option')
+      .forEach(el => el.classList.remove('active'));
+
+    div.classList.add('active');
+
+    fecharFormaPagamentoModal();
+  };
+
+  container.appendChild(div);
+}
+
+function abrirFormaPagamentoModal() {
+
+  carregarFormasPagamento();
+
+  document
+    .getElementById('formaPagamentoModal')
+    .classList.add('active');
+}
+
+function abrirGerenciarCartoes() {
+
+  fecharFormaPagamentoModal();
+
+  // abre sua tela index3
+  window.location.href = 'index3.html';
+
+}
 
 // Inicialização
 currentFilter = 'transacoes'; // Garante que comece com o filtro padrão
@@ -4962,5 +5441,36 @@ function sairDoApp() {
     confirmarLogout();
 }
 </script>
+
+<!-- Popup de Categorias (Bottom Sheet) -->
+<div id="categoriaPopupOverlay" onclick="fecharCategoriaDropdown()" style="
+  display:none;
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,0.5);z-index:10100;
+"></div>
+<div id="categoriaPopup" style="
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;
+  background:var(--card-background);
+  border-radius:20px 20px 0 0;
+  z-index:10101;
+  max-height:70vh;
+  display:none;
+  flex-direction:column;
+  box-shadow:0 -4px 24px rgba(0,0,0,0.18);
+">
+  <!-- Handle -->
+  <div style="display:flex;justify-content:center;padding:12px 0 4px 0;">
+    <div style="width:40px;height:4px;background:var(--border-color);border-radius:2px;"></div>
+  </div>
+  <!-- Título -->
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 20px 12px 20px;border-bottom:1px solid var(--border-color);">
+    <span style="font-weight:700;font-size:1em;color:var(--text-color)">Categoria</span>
+    <button onclick="fecharCategoriaDropdown()" style="background:none;border:none;font-size:1.4em;color:var(--text-muted,#999);cursor:pointer;padding:0;line-height:1;">&times;</button>
+  </div>
+  <!-- Lista -->
+  <div id="categoriaOptionsList" style="overflow-y:auto;flex:1;padding:8px 0;"></div>
+</div>
+
 </body>
 </html>
