@@ -75,6 +75,19 @@
       <input type="number" id="diaVencimento" placeholder="10" 
              min="1" max="31" class="input-field">
     </div>
+
+    <div class="form-group">
+      <label>Cor do Cartão</label>
+      <input type="hidden" id="corCartao" value="#0f766e">
+      <div class="cartao-color-options" id="cartaoColorOptions">
+        <button type="button" class="cartao-color-option active" style="--cartao-color: #0f766e;" onclick="selecionarCorCartao('#0f766e', this)" aria-label="Verde"></button>
+        <button type="button" class="cartao-color-option" style="--cartao-color: #7c3aed;" onclick="selecionarCorCartao('#7c3aed', this)" aria-label="Roxo"></button>
+        <button type="button" class="cartao-color-option" style="--cartao-color: #dc2626;" onclick="selecionarCorCartao('#dc2626', this)" aria-label="Vermelho"></button>
+        <button type="button" class="cartao-color-option" style="--cartao-color: #2563eb;" onclick="selecionarCorCartao('#2563eb', this)" aria-label="Azul"></button>
+        <button type="button" class="cartao-color-option" style="--cartao-color: #ea580c;" onclick="selecionarCorCartao('#ea580c', this)" aria-label="Laranja"></button>
+        <button type="button" class="cartao-color-option" style="--cartao-color: #111827;" onclick="selecionarCorCartao('#111827', this)" aria-label="Preto"></button>
+      </div>
+    </div>
     
     <div class="btn-group">
       <button class="btn btn-secondary" onclick="fecharModalCartao()">Cancelar</button>
@@ -117,7 +130,28 @@
   // Carregar cartões
   function carregarCartoes() {
     cartoes = JSON.parse(localStorage.getItem('cartoes_credito') || '[]');
+    const coresCartoes = carregarCoresCartoes();
+    cartoes = cartoes.map(cartao => ({
+      ...cartao,
+      cor: cartao.cor || coresCartoes[cartao.id] || '#0f766e'
+    }));
     renderizarCartoes();
+  }
+
+  function carregarCoresCartoes() {
+    return JSON.parse(localStorage.getItem('cartoes_credito_cores') || '{}');
+  }
+
+  function salvarCorCartaoLocal(cartaoId, cor) {
+    const coresCartoes = carregarCoresCartoes();
+    coresCartoes[cartaoId] = cor;
+    localStorage.setItem('cartoes_credito_cores', JSON.stringify(coresCartoes));
+  }
+
+  function removerCorCartaoLocal(cartaoId) {
+    const coresCartoes = carregarCoresCartoes();
+    delete coresCartoes[cartaoId];
+    localStorage.setItem('cartoes_credito_cores', JSON.stringify(coresCartoes));
   }
 
 // Renderizar lista de cartões
@@ -151,10 +185,11 @@ function renderizarCartoes() {
   cartoes.forEach((cartao, index) => {
     const cartaoElement = document.createElement('div');
     cartaoElement.className = 'cartao-item';
+    cartaoElement.style.setProperty('--cartao-item-color', cartao.cor || '#0f766e');
     cartaoElement.innerHTML = `
       <div class="cartao-header">
         <div class="cartao-info">
-          <div class="cartao-nome">${cartao.nome}</div>
+          <div class="cartao-nome"><span class="cartao-color-dot"></span>${cartao.nome}</div>
           <div class="cartao-digitos">Limite: R$ ${formatToBRL(cartao.limite)}</div>
           <div class="cartao-vencimento">
             <i class="ri-calendar-line"></i>
@@ -187,12 +222,14 @@ function renderizarCartoes() {
       document.getElementById('nomeCartao').value = cartao.nome;
       document.getElementById('limiteCartao').value = cartao.limiteFormatado; // CORRIGIDO
       document.getElementById('diaVencimento').value = cartao.diaVencimento; // CORRIGIDO
+      selecionarCorCartao(cartao.cor || '#0f766e');
     } else {
       cartaoEditando = null;
       titulo.textContent = 'Adicionar Cartão';
       document.getElementById('nomeCartao').value = '';
       document.getElementById('limiteCartao').value = ''; // CORRIGIDO
       document.getElementById('diaVencimento').value = ''; // CORRIGIDO
+      selecionarCorCartao('#0f766e');
     }
     
     modal.classList.add('active');
@@ -203,6 +240,14 @@ function renderizarCartoes() {
   function fecharModalCartao() {
     document.getElementById('modalCartao').classList.remove('active');
     cartaoEditando = null;
+  }
+
+  function selecionarCorCartao(cor, elemento) {
+    document.getElementById('corCartao').value = cor;
+
+    document.querySelectorAll('.cartao-color-option').forEach(option => {
+      option.classList.toggle('active', option === elemento || option.style.getPropertyValue('--cartao-color').trim() === cor);
+    });
   }
 
   // Formatação de campos
@@ -246,6 +291,7 @@ function salvarCartao() {
   const nome = document.getElementById('nomeCartao').value.trim();
   const limite = document.getElementById('limiteCartao').value;
   const diaVencimento = document.getElementById('diaVencimento').value;
+  const cor = document.getElementById('corCartao').value || '#0f766e';
   
   if (!nome) {
     alert('Por favor, informe um nome para o cartão');
@@ -270,7 +316,8 @@ function salvarCartao() {
     nome: nome,
     limite: limiteNumerico,
     limiteFormatado: document.getElementById('limiteCartao').value,
-    diaVencimento: parseInt(diaVencimento)
+    diaVencimento: parseInt(diaVencimento),
+    cor: cor
   };
   
   // Se estiver editando, atualizar nas transações
@@ -286,6 +333,7 @@ function salvarCartao() {
   }
   
 localStorage.setItem('cartoes_credito', JSON.stringify(cartoes));
+  salvarCorCartaoLocal(id, cor);
   renderizarCartoes();
   fecharModalCartao();
 
@@ -343,6 +391,7 @@ function excluirCartao(index) {
   
   if (confirmar) {
     cartoes.splice(index, 1);
+    removerCorCartaoLocal(cartao.id);
     localStorage.setItem('cartoes_credito', JSON.stringify(cartoes));
     renderizarCartoes();
     mostrarToast('Cartão excluído com sucesso');
@@ -363,6 +412,7 @@ function excluirCartao(index) {
   
   if (confirmar) {
 cartoes.splice(index, 1);
+    removerCorCartaoLocal(cartao.id);
     localStorage.setItem('cartoes_credito', JSON.stringify(cartoes));
     renderizarCartoes();
     mostrarToast('Cartão excluído com sucesso', 'info');

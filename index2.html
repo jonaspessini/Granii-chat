@@ -594,7 +594,10 @@ index2
 <!-- Modal para Pagar Cartão -->
 <div class="modal" id="pagarCartaoModal">
   <div class="modal-content">
-    <h2>Pagar Cartão</h2>
+    <div class="pagar-cartao-header">
+      <span class="pagar-cartao-eyebrow">Fatura do cartão</span>
+      <h2>Pagar Cartão</h2>
+    </div>
     
     <div class="form-group">
       <label for="selecionarCartao">Selecionar Cartão:</label>
@@ -605,13 +608,24 @@ index2
     </div>
     
     <div class="resumo-pagamento" id="resumoPagamento" style="display: none;">
-      <div class="resumo-item">
-        <span>Total a pagar:</span>
-        <span id="totalPagar">R$ 0,00</span>
+      <div class="fatura-cartao-visual">
+        <div class="fatura-card-top">
+          <span id="nomeCartaoPagamento">Cartão selecionado</span>
+          <i class="ri-bank-card-line"></i>
+        </div>
+        <div class="fatura-chip"></div>
+        <div class="fatura-card-body">
+          <span>Valor da fatura</span>
+          <strong id="totalPagar">R$ 0,00</strong>
+        </div>
+        <div class="fatura-card-footer">
+          <span id="vencimentoCartaoPagamento">Vencimento não informado</span>
+          <span id="quantidadeTransacoes">0 transações</span>
+        </div>
       </div>
-      <div class="resumo-item">
-        <span>Quantidade de transações:</span>
-        <span id="quantidadeTransacoes">0</span>
+      <div class="fatura-status-line">
+        <i class="ri-checkbox-circle-line"></i>
+        <span id="statusPagamentoCartao">Pronto para marcar como pago</span>
       </div>
     </div>
     
@@ -669,6 +683,22 @@ index2
     <div class="btn-group">
       <button class="btn btn-secondary" onclick="fecharModalDeleteUnique()">Cancelar</button>
       <button class="btn btn-danger" onclick="confirmarExclusaoUnica()">Excluir</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Confirmação para Pagamento do Cartão -->
+<div id="confirmarPagamentoCartaoModal" class="modal pagamento-cartao-warning-modal">
+  <div class="modal-content">
+    <div class="modal-header-warning">
+      <i class="ri-bank-card-line"></i>
+      <h2>Confirmar Pagamento</h2>
+    </div>
+    <p id="confirmarPagamentoCartaoTexto">Deseja marcar as transações deste cartão como pagas?</p>
+    <p class="warning-subtitle">Esta ação irá atualizar o status dos lançamentos selecionados.</p>
+    <div class="btn-group">
+      <button class="btn btn-secondary" onclick="fecharConfirmacaoPagamentoCartao()">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmarPagamentoCartao()">Confirmar pagamento</button>
     </div>
   </div>
 </div>
@@ -3619,6 +3649,7 @@ function abrirModalPagarCartao() {
   carregarCartoesParaPagamento();
   
   // Resetar estado
+  selectCartao.value = '';
   resumoPagamento.style.display = 'none';
   btnPagar.disabled = true;
   
@@ -3649,15 +3680,69 @@ function carregarCartoesParaPagamento() {
   });
   
   // Adicionar event listener para quando selecionar um cartão
-  selectCartao.addEventListener('change', function() {
+  selectCartao.onchange = function() {
     calcularTotalPagar(this.value);
-  });
+  };
 }
+
+function normalizarIdCartao(valor) {
+  if (!valor) return '';
+  let id = String(valor);
+
+  while (id.startsWith('cartao_')) {
+    id = id.replace('cartao_', '');
+  }
+
+  return id;
+}
+
+function lancamentoPertenceAoCartao(lancamento, cartaoId) {
+  return normalizarIdCartao(lancamento.formaPagamento) === normalizarIdCartao(cartaoId);
+}
+
+function buscarCartaoPagamento(cartaoId) {
+  const cartoesCadastrados = JSON.parse(localStorage.getItem('cartoes_credito') || '[]');
+  const coresCartoes = JSON.parse(localStorage.getItem('cartoes_credito_cores') || '{}');
+  const cartao = cartoesCadastrados.find(cartao => normalizarIdCartao(cartao.id) === normalizarIdCartao(cartaoId));
+
+  if (!cartao) return null;
+
+  return {
+    ...cartao,
+    cor: cartao.cor || coresCartoes[cartao.id] || '#0f766e'
+  };
+}
+
+function ajustarCorHex(cor, percentual) {
+  const hex = /^#[0-9a-f]{6}$/i.test(cor) ? cor : '#0f766e';
+  const numero = parseInt(hex.slice(1), 16);
+  const limite = percentual < 0 ? 0 : 255;
+  const quantidade = Math.round(2.55 * Math.abs(percentual));
+  const r = (numero >> 16) + (limite - (numero >> 16)) * quantidade / 255;
+  const g = (numero >> 8 & 0x00ff) + (limite - (numero >> 8 & 0x00ff)) * quantidade / 255;
+  const b = (numero & 0x0000ff) + (limite - (numero & 0x0000ff)) * quantidade / 255;
+
+  return `#${(0x1000000 + (Math.round(r) << 16) + (Math.round(g) << 8) + Math.round(b)).toString(16).slice(1)}`;
+}
+
+function aplicarCorCartaoPagamento(cor) {
+  const cardVisual = document.querySelector('#pagarCartaoModal .fatura-cartao-visual');
+  const corBase = /^#[0-9a-f]{6}$/i.test(cor) ? cor : '#0f766e';
+
+  cardVisual.style.setProperty('--fatura-card-color', corBase);
+  cardVisual.style.setProperty('--fatura-card-color-dark', ajustarCorHex(corBase, -42));
+  cardVisual.style.setProperty('--fatura-card-color-soft', ajustarCorHex(corBase, 18));
+}
+
+let cartaoPendentePagamento = null;
 
 function calcularTotalPagar(cartaoId) {
   const resumoPagamento = document.getElementById('resumoPagamento');
   const totalPagarEl = document.getElementById('totalPagar');
   const quantidadeTransacoesEl = document.getElementById('quantidadeTransacoes');
+  const nomeCartaoEl = document.getElementById('nomeCartaoPagamento');
+  const vencimentoCartaoEl = document.getElementById('vencimentoCartaoPagamento');
+  const statusPagamentoEl = document.getElementById('statusPagamentoCartao');
   const btnPagar = document.getElementById('btnPagarCartao');
   
   if (!cartaoId) {
@@ -3665,18 +3750,26 @@ function calcularTotalPagar(cartaoId) {
     btnPagar.disabled = true;
     return;
   }
+
+  const cartaoSelecionado = buscarCartaoPagamento(cartaoId);
+  nomeCartaoEl.textContent = cartaoSelecionado?.nome || 'Cartão selecionado';
+  vencimentoCartaoEl.textContent = cartaoSelecionado?.diaVencimento
+    ? `Vence dia ${cartaoSelecionado.diaVencimento}`
+    : 'Vencimento não informado';
+  aplicarCorCartaoPagamento(cartaoSelecionado?.cor || '#0f766e');
   
   // Buscar todas as transações em aberto do cartão selecionado no mês atual
   const transacoesCartao = lancamentos.filter(lanc => 
     lanc.tipo === 'despesa' && 
     !lanc.pago && 
-    lanc.formaPagamento === cartaoId
+    lancamentoPertenceAoCartao(lanc, cartaoId)
   );
   
   if (transacoesCartao.length === 0) {
     resumoPagamento.style.display = 'block';
     totalPagarEl.textContent = 'R$ 0,00';
-    quantidadeTransacoesEl.textContent = '0';
+    quantidadeTransacoesEl.textContent = '0 transações';
+    statusPagamentoEl.textContent = 'Não há fatura em aberto neste cartão';
     btnPagar.disabled = true;
     resumoPagamento.classList.remove('has-transactions');
     return;
@@ -3690,7 +3783,8 @@ function calcularTotalPagar(cartaoId) {
   resumoPagamento.style.display = 'block';
   resumoPagamento.classList.add('has-transactions');
   totalPagarEl.textContent = 'R$ ' + formatToBRL(total);
-  quantidadeTransacoesEl.textContent = quantidade;
+  quantidadeTransacoesEl.textContent = quantidade === 1 ? '1 transação' : `${quantidade} transações`;
+  statusPagamentoEl.textContent = 'Pronto para marcar esta fatura como paga';
   btnPagar.disabled = false;
 }
 
@@ -3707,7 +3801,7 @@ function pagarCartao() {
   const transacoesParaPagar = lancamentos.filter(lanc => 
     lanc.tipo === 'despesa' && 
     !lanc.pago && 
-    lanc.formaPagamento === cartaoId
+    lancamentoPertenceAoCartao(lanc, cartaoId)
   );
   
   if (transacoesParaPagar.length === 0) {
@@ -3715,8 +3809,44 @@ function pagarCartao() {
     return;
   }
   
-  // Confirmar ação (ESTE PERMANECE COM BOTÃO DE CONFIRMAR)
-  if (!confirm(`Deseja marcar ${transacoesParaPagar.length} transações como pagas?`)) {
+  abrirConfirmacaoPagamentoCartao(cartaoId, transacoesParaPagar.length);
+}
+
+function abrirConfirmacaoPagamentoCartao(cartaoId, quantidadeTransacoes) {
+  cartaoPendentePagamento = cartaoId;
+
+  const modalConfirmacao = document.getElementById('confirmarPagamentoCartaoModal');
+  const textoConfirmacao = document.getElementById('confirmarPagamentoCartaoTexto');
+  const termoTransacoes = quantidadeTransacoes === 1 ? 'transação' : 'transações';
+
+  textoConfirmacao.textContent = `Deseja marcar ${quantidadeTransacoes} ${termoTransacoes} como pagas?`;
+  modalConfirmacao.style.display = 'flex';
+}
+
+function fecharConfirmacaoPagamentoCartao() {
+  const modalConfirmacao = document.getElementById('confirmarPagamentoCartaoModal');
+
+  cartaoPendentePagamento = null;
+  modalConfirmacao.style.display = 'none';
+}
+
+function confirmarPagamentoCartao() {
+  const cartaoId = cartaoPendentePagamento;
+
+  if (!cartaoId) {
+    fecharConfirmacaoPagamentoCartao();
+    return;
+  }
+
+  const transacoesParaPagar = lancamentos.filter(lanc => 
+    lanc.tipo === 'despesa' && 
+    !lanc.pago && 
+    lancamentoPertenceAoCartao(lanc, cartaoId)
+  );
+
+  if (transacoesParaPagar.length === 0) {
+    fecharConfirmacaoPagamentoCartao();
+    showToast('Não há transações em aberto para este cartão.', 'warning');
     return;
   }
   
@@ -3736,6 +3866,7 @@ function pagarCartao() {
   loadLancamentos();
   
   // Fechar modal
+  fecharConfirmacaoPagamentoCartao();
   fecharModalPagarCartao();
   
   // Mostrar toast notification (opcional - sem botão de confirmação)

@@ -192,12 +192,17 @@ export async function loadUserCardsFromSupabase() {
     }
 
     if (data && data.length > 0) {
+        const localCards = JSON.parse(localStorage.getItem('cartoes_credito') || '[]');
+        const localCardsById = new Map(localCards.map(c => [c.id, c]));
+        const cardColors = JSON.parse(localStorage.getItem('cartoes_credito_cores') || '{}');
+
         const cards = data.map(c => ({
             id: c.card_id,
             nome: c.name,
             limite: c.limit_amount,
             limiteFormatado: c.limit_amount?.toFixed(2).replace('.', ',') || '0,00',
-            diaVencimento: c.due_day
+            diaVencimento: c.due_day,
+            cor: localCardsById.get(c.card_id)?.cor || cardColors[c.card_id] || '#0f766e'
         }));
         localStorage.setItem('cartoes_credito', JSON.stringify(cards));
     }
