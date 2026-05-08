@@ -23,7 +23,7 @@ body {
   font-family: 'Inter', sans-serif;
   margin: 0;
   padding: 0;
-  background: var(--background-color);
+  background: white;
   color: var(--text-color);
   display: flex;
   flex-direction: column;
@@ -48,7 +48,6 @@ body {
   overflow: hidden;
   background-color: var(--card-background);
   padding-bottom: 70px;
-  min-height: calc(100vh - 160px);
 }
 
 .section-block {
@@ -2151,6 +2150,35 @@ font-size: 1.5em;
 .filter-select:focus {
   outline: none;
   border-color: var(--cor-principal);
+}
+
+.filter-categoria-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.categoria-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 13px;
+  border: 1.5px solid var(--border-color);
+  border-radius: 20px;
+  background: var(--card-background);
+  color: var(--text-color);
+  font-size: 0.82em;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.categoria-chip.active {
+  background: var(--cor-principal);
+  border-color: var(--cor-principal);
+  color: #fff;
 }
 
 .filter-actions {

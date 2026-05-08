@@ -3367,13 +3367,178 @@ function exportarDados() {
   menuDropdown.classList.remove('active');
 }
 
-function limparDados() {
-  if (confirm('Tem certeza que deseja limpar todos os dados? Esta ação não pode ser desfeita.')) {
-    localStorage.clear();
-    alert('Todos os dados foram limpos!');
-    location.reload();
+// ========== CATEGORIAS PADRÃO ==========
+var CATEGORIAS_PADRAO = {
+  despesa: [
+    { id: 'desp_1', nome: 'Alimentação', icone: '🍔' },
+    { id: 'desp_2', nome: 'Moradia',     icone: '🏠' },
+    { id: 'desp_3', nome: 'Transporte',  icone: '🚗' },
+    { id: 'desp_4', nome: 'Saúde',       icone: '💊' },
+    { id: 'desp_5', nome: 'Educação',    icone: '📚' },
+    { id: 'desp_6', nome: 'Lazer',       icone: '🎮' },
+    { id: 'desp_7', nome: 'Vestuário',   icone: '👕' },
+    { id: 'desp_8', nome: 'Contas',      icone: '💡' },
+    { id: 'desp_9', nome: 'Outros',      icone: '📌' }
+  ],
+  receita: [
+    { id: 'rec_1', nome: 'Salário',      icone: '💼' },
+    { id: 'rec_2', nome: 'Freelance',    icone: '💻' },
+    { id: 'rec_3', nome: 'Investimento', icone: '📈' },
+    { id: 'rec_4', nome: 'Aluguel',      icone: '🏘️' },
+    { id: 'rec_5', nome: 'Presente',     icone: '🎁' },
+    { id: 'rec_6', nome: 'Outros',       icone: '📌' }
+  ]
+};
+
+// ========== POPUP PERSONALIZADO LIMPAR DADOS ==========
+function mostrarPopupLimparDados() {
+  if (document.getElementById('_limpar-modal')) return;
+
+  // Injetar keyframes do spinner uma única vez
+  if (!document.getElementById('_limpar-style')) {
+    var s = document.createElement('style');
+    s.id = '_limpar-style';
+    s.textContent = '@keyframes _limpar-spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}';
+    document.head.appendChild(s);
   }
-  menuDropdown.classList.remove('active');
+
+  var overlay = document.createElement('div');
+  overlay.id = '_limpar-modal';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;z-index:2147483646;';
+
+  var card = document.createElement('div');
+  card.style.cssText = 'background:#fff;border-radius:20px;padding:28px 24px;margin:20px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.18);max-width:320px;width:100%;font-family:sans-serif;';
+
+  var emoji = document.createElement('div');
+  emoji.textContent = '🗑️';
+  emoji.style.cssText = 'font-size:44px;margin-bottom:12px;';
+
+  var titulo = document.createElement('p');
+  titulo.textContent = 'Limpar todos os dados?';
+  titulo.style.cssText = 'font-weight:700;font-size:17px;color:#1a1a1a;margin:0 0 6px 0;';
+
+  var sub = document.createElement('p');
+  sub.textContent = 'Transações, cartões e contas serão apagados permanentemente. As categorias serão restauradas ao padrão.';
+  sub.style.cssText = 'font-size:13px;color:#666;margin:0 0 24px 0;line-height:1.5;';
+
+  var row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:10px;';
+
+  var btnCancelar = document.createElement('button');
+  btnCancelar.textContent = 'Cancelar';
+  btnCancelar.style.cssText = 'flex:1;background:#f0f0f0;color:#333;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:600;cursor:pointer;';
+
+  var btnConfirmar = document.createElement('button');
+  btnConfirmar.textContent = 'Limpar tudo';
+  btnConfirmar.style.cssText = 'flex:1;background:#e53935;color:#fff;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:600;cursor:pointer;';
+
+  btnCancelar.onclick = function() { overlay.remove(); };
+  btnConfirmar.onclick = function() {
+    overlay.remove();
+    executarLimpezaDados();
+  };
+
+  row.appendChild(btnCancelar);
+  row.appendChild(btnConfirmar);
+  card.appendChild(emoji);
+  card.appendChild(titulo);
+  card.appendChild(sub);
+  card.appendChild(row);
+  overlay.appendChild(card);
+  document.documentElement.appendChild(overlay);
+}
+
+function mostrarLoadingLimpeza() {
+  if (!document.getElementById('_limpar-style')) {
+    var s = document.createElement('style');
+    s.id = '_limpar-style';
+    s.textContent = '@keyframes _limpar-spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}';
+    document.head.appendChild(s);
+  }
+
+  var overlay = document.createElement('div');
+  overlay.id = '_limpar-loading';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;z-index:2147483647;pointer-events:all;';
+
+  var spinner = document.createElement('div');
+  spinner.style.cssText = 'width:52px;height:52px;border:6px solid #e0e0e0;border-top-color:#e53935;border-radius:50%;animation:_limpar-spin 0.8s linear infinite;';
+
+  var t1 = document.createElement('p');
+  t1.textContent = 'Limpando dados...';
+  t1.style.cssText = 'margin:0;font-family:sans-serif;font-weight:700;font-size:20px;color:#1a1a1a;';
+
+  var t2 = document.createElement('p');
+  t2.textContent = 'Aguarde um momento';
+  t2.style.cssText = 'margin:0;font-family:sans-serif;font-size:13px;color:#999;';
+
+  overlay.appendChild(spinner);
+  overlay.appendChild(t1);
+  overlay.appendChild(t2);
+  document.documentElement.appendChild(overlay);
+}
+
+function mostrarSucessoLimpeza() {
+  var loading = document.getElementById('_limpar-loading');
+  if (loading) loading.remove();
+
+  var overlay = document.createElement('div');
+  overlay.id = '_limpar-sucesso';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:2147483647;pointer-events:all;';
+
+  var icone = document.createElement('div');
+  icone.textContent = '✅';
+  icone.style.cssText = 'font-size:52px;';
+
+  var t1 = document.createElement('p');
+  t1.textContent = 'Dados limpos com sucesso!';
+  t1.style.cssText = 'margin:0;font-family:sans-serif;font-weight:700;font-size:18px;color:#1a1a1a;';
+
+  var t2 = document.createElement('p');
+  t2.textContent = 'Recarregando...';
+  t2.style.cssText = 'margin:0;font-family:sans-serif;font-size:13px;color:#999;';
+
+  overlay.appendChild(icone);
+  overlay.appendChild(t1);
+  overlay.appendChild(t2);
+  document.documentElement.appendChild(overlay);
+
+  setTimeout(function() { location.reload(); }, 1200);
+}
+
+function mostrarErrroLimpeza(msg) {
+  var loading = document.getElementById('_limpar-loading');
+  if (loading) loading.remove();
+
+  var overlay = document.createElement('div');
+  overlay.id = '_limpar-erro';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;z-index:2147483647;';
+
+  var card = document.createElement('div');
+  card.style.cssText = 'background:#fff;border-radius:20px;padding:28px 24px;margin:20px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.18);max-width:320px;width:100%;font-family:sans-serif;';
+
+  var emoji = document.createElement('div');
+  emoji.textContent = '❌';
+  emoji.style.cssText = 'font-size:44px;margin-bottom:12px;';
+
+  var t1 = document.createElement('p');
+  t1.textContent = 'Erro ao limpar dados';
+  t1.style.cssText = 'font-weight:700;font-size:16px;color:#1a1a1a;margin:0 0 6px 0;';
+
+  var t2 = document.createElement('p');
+  t2.textContent = msg || 'Verifique sua conexão e tente novamente.';
+  t2.style.cssText = 'font-size:13px;color:#666;margin:0 0 20px 0;';
+
+  var btn = document.createElement('button');
+  btn.textContent = 'Fechar';
+  btn.style.cssText = 'width:100%;background:#e53935;color:#fff;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:600;cursor:pointer;';
+  btn.onclick = function() { overlay.remove(); };
+
+  card.appendChild(emoji);
+  card.appendChild(t1);
+  card.appendChild(t2);
+  card.appendChild(btn);
+  overlay.appendChild(card);
+  document.documentElement.appendChild(overlay);
 }
 
 // Funções para pagar cartão
@@ -3394,38 +3559,51 @@ function limparDadosLocaisDoApp() {
       key === 'contas_bancarias' ||
       key === 'contas_config' ||
       key === 'nextContaId' ||
-      key === 'valoresVisiveis'
+      key === 'valoresVisiveis' ||
+      key === 'categorias_config'
     )) {
       keysToRemove.push(key);
     }
   }
 
   keysToRemove.forEach(key => localStorage.removeItem(key));
+
+  // Restaurar categorias padrão após limpar
+  localStorage.setItem('categorias_config', JSON.stringify(CATEGORIAS_PADRAO));
+  console.log('✅ Categorias padrão restauradas');
 }
 
-async function limparDados() {
-  menuDropdown.classList.remove('active');
-
-  if (!confirm('Tem certeza que deseja limpar todos os dados? Esta acao nao pode ser desfeita.')) {
-    return;
-  }
+async function executarLimpezaDados() {
+  mostrarLoadingLimpeza();
 
   try {
-    const { deleteAllUserDataFromSupabase } = await import('./js/supabase-sync.js');
+    const { deleteAllUserDataFromSupabase, saveUserCategoriesToSupabase } = await import('./js/supabase-sync.js');
     const deletedFromSupabase = await deleteAllUserDataFromSupabase();
 
     if (!deletedFromSupabase) {
-      alert('Nao foi possivel apagar os dados do Supabase. Verifique sua conexao e tente novamente.');
+      mostrarErrroLimpeza('Não foi possível apagar os dados do servidor. Verifique sua conexão e tente novamente.');
       return;
     }
 
     limparDadosLocaisDoApp();
-    alert('Todos os dados foram limpos!');
-    location.reload();
+
+    // Sincronizar categorias padrão restauradas para o Supabase
+    try {
+      await saveUserCategoriesToSupabase();
+    } catch(e) {
+      console.warn('Aviso: categorias padrão não sincronizadas ao Supabase:', e);
+    }
+
+    mostrarSucessoLimpeza();
   } catch (error) {
     console.error('Erro ao limpar dados:', error);
-    alert('Erro ao limpar dados: ' + error.message);
+    mostrarErrroLimpeza(error.message);
   }
+}
+
+function limparDados() {
+  menuDropdown.classList.remove('active');
+  mostrarPopupLimparDados();
 }
 
 function abrirModalPagarCartao() {
