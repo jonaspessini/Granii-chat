@@ -313,9 +313,15 @@ export async function loadUserCategoriesFromSupabase() {
         return false;
     }
 
-    // Se o usuário não tem categorias no Supabase ainda, manter o que está no localStorage
+    // Se o usuário não tem categorias no Supabase ainda...
     if (!data || data.length === 0) {
-        console.log('ℹ️ Nenhuma categoria no Supabase — mantendo localStorage');
+        // Se também não tem no localStorage (ex: usuário novo), gravar as categorias padrão
+        if (!localStorage.getItem('categorias_config')) {
+            localStorage.setItem('categorias_config', JSON.stringify(CATEGORIAS_PADRAO_SYNC));
+            console.log('✅ Categorias padrão gravadas para novo usuário');
+        } else {
+            console.log('ℹ️ Nenhuma categoria no Supabase — mantendo localStorage');
+        }
         return false;
     }
 

@@ -711,10 +711,24 @@ function navigateTo(pagina) {
             const totaisPorCartao = {};
             cartoesCadastrados.forEach(cartao => { totaisPorCartao[cartao.id] = 0; });
             
+            // LOG DE DIAGNÓSTICO (pode remover depois)
+            console.log('[Cartões] IDs cadastrados:', Object.keys(totaisPorCartao));
+            console.log('[Cartões] formaPagamento nos lançamentos:', lancamentos.map(l => l.formaPagamento).filter(Boolean));
+            
             // Soma TODOS os lançamentos do cartão (pagos e não pagos)
             lancamentos.forEach(lanc => {
-                if (lanc.tipo === 'despesa' && lanc.formaPagamento && lanc.formaPagamento !== 'debito_pix') {
-                    if (totaisPorCartao.hasOwnProperty(lanc.formaPagamento)) {
+                const isDespesa = lanc.tipo === 'despesa' || (!lanc.tipo && lanc.valor < 0);
+                if (isDespesa && lanc.formaPagamento && lanc.formaPagamento !== 'debito_pix') {
+                    // Normaliza ID: o formaPagamento é salvo como 'cartao_' + cartao.id
+                    // mas cartao.id já começa com 'cartao_', gerando 'cartao_cartao_...'
+                    let fpId = lanc.formaPagamento;
+                    if (fpId.startsWith('cartao_')) {
+                        fpId = fpId.slice('cartao_'.length); // remove prefixo extra
+                    }
+                    // Tenta com ID normalizado, depois com original
+                    if (totaisPorCartao.hasOwnProperty(fpId)) {
+                        totaisPorCartao[fpId] += Math.abs(lanc.valor);
+                    } else if (totaisPorCartao.hasOwnProperty(lanc.formaPagamento)) {
                         totaisPorCartao[lanc.formaPagamento] += Math.abs(lanc.valor);
                     }
                 }
@@ -762,9 +776,14 @@ function navigateTo(pagina) {
         // ========== MODAL DE DETALHES DO CARTÃO ==========
         function openCartaoDetails(cartaoId) {
             const lancamentos = loadCurrentMonthTransactions();
-            const transacoesCartao = lancamentos.filter(lanc => 
-                lanc.tipo === 'despesa' && lanc.formaPagamento === cartaoId
-            );
+            const transacoesCartao = lancamentos.filter(lanc => {
+                const isDespesa = lanc.tipo === 'despesa' || (!lanc.tipo && lanc.valor < 0);
+                if (!isDespesa || !lanc.formaPagamento) return false;
+                // Normaliza: formaPagamento salvo como 'cartao_' + cartao.id
+                let fpId = lanc.formaPagamento;
+                if (fpId.startsWith('cartao_')) fpId = fpId.slice('cartao_'.length);
+                return fpId === cartaoId || lanc.formaPagamento === cartaoId;
+            });
             
             if (transacoesCartao.length === 0) return;
             

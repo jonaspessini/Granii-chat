@@ -48,6 +48,7 @@ body {
   overflow: hidden;
   background-color: var(--card-background);
   padding-bottom: 70px;
+  min-height: calc(100vh - 160px);
 }
 
 .section-block {
@@ -1713,11 +1714,11 @@ input:checked + .toggle-slider {
 
 .ri-arrow-down-s-line{
   /* background-color: #ff0000; */
-  color: white;
-  font-size: 1.5em;
+  color: #ffffff;
+  font-size: 0.95em;
   display: flex;
-  margin-top: 5px;
-  margin-left: -5px;
+  margin-top: 0px;
+  margin-left: 0px;
 }
 
 /* CORES DINÂMICAS APENAS PARA OS VALORES NUMÉRICOS */
@@ -3571,7 +3572,7 @@ font-size: 1.5em;
   background: #ffffff;
   border: 1px solid #e4e6ea;
   border-radius: 10px;
-  padding: 11px 14px;
+  padding: 8px 14px;
   box-shadow: none;
   color: #2d3142;
   font-size: 0.95em;
@@ -4017,4 +4018,679 @@ font-size: 1.5em;
         z-index: 100;
         font-family: 'Inter', sans-serif;
     }
+}
+
+/* ===================================================
+   MODAL DE CONFIRMAÇÃO PARA CATEGORIA VAZIA
+   =================================================== */
+
+.categoria-warning-modal {
+    z-index: 10001;
+}
+
+.categoria-warning-modal .modal-content {
+    max-width: 380px;
+    width: 90%;
+    height: auto;
+    max-height: 90vh;
+    border-radius: 24px;
+    padding: 0;
+    overflow: hidden;
+    background: white;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    animation: modalWarningSlideUp 0.3s ease-out;
+}
+
+@keyframes modalWarningSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Cabeçalho do modal de aviso */
+.categoria-warning-modal .modal-header-warning {
+    text-align: center;
+    padding: 28px 24px 16px 24px;
+    margin: 0;
+    position: relative;
+}
+
+.categoria-warning-modal .modal-header-warning i {
+    font-size: 3em;
+    color: #ff9800;
+    margin-bottom: 12px;
+    display: inline-block;
+    animation: warningPulse 0.5s ease-out;
+}
+
+@keyframes warningPulse {
+    0% {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.categoria-warning-modal .modal-header-warning h2 {
+    margin: 0;
+    font-size: 1.4em;
+    font-weight: 600;
+    color: #1a1a2e;
+}
+
+/* Linha decorativa no título */
+.categoria-warning-modal .modal-header-warning::after {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 3px;
+    background: #ff9800;
+    margin: 12px auto 0;
+    border-radius: 2px;
+}
+
+/* Descrição do modal */
+.categoria-warning-modal p {
+    text-align: center;
+    padding: 8px 24px 0 24px;
+    margin: 0;
+    font-size: 0.95em;
+    color: #666;
+    line-height: 1.5;
+}
+
+.categoria-warning-modal .warning-subtitle {
+    padding-bottom: 16px;
+    color: #ff9800;
+    font-weight: 500;
+}
+
+/* Container dos botões */
+.categoria-warning-modal .btn-group {
+    display: flex;
+    gap: 12px;
+    padding: 20px 24px 28px 24px;
+    margin: 0;
+}
+
+.categoria-warning-modal .btn-group .btn {
+    flex: 1;
+    padding: 14px 20px;
+    border-radius: 12px;
+    font-size: 0.95em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.categoria-warning-modal .btn-group .btn-secondary {
+    background: #f5f5f5;
+    color: #666;
+    border: 1px solid #e0e0e0;
+}
+
+.categoria-warning-modal .btn-group .btn-secondary:hover {
+    background: #eeeeee;
+    border-color: #ccc;
+    transform: translateY(-1px);
+}
+
+.categoria-warning-modal .btn-group .btn-primary {
+    background: #ff9800;
+    color: white;
+    box-shadow: 0 2px 8px rgba(255, 152, 0, 0.2);
+}
+
+.categoria-warning-modal .btn-group .btn-primary:hover {
+    background: #f57c00;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+}
+
+.categoria-warning-modal .btn-group .btn:active {
+    transform: translateY(0);
+}
+
+/* Linha de destaque no topo do modal */
+.categoria-warning-modal::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 4px;
+    background: #ff9800;
+    z-index: 10001;
+    border-radius: 2px;
+}
+
+/* Responsividade */
+@media (max-width: 480px) {
+    .categoria-warning-modal .modal-content {
+        width: 85%;
+        border-radius: 20px;
+    }
+    
+    .categoria-warning-modal .modal-header-warning {
+        padding: 24px 20px 12px 20px;
+    }
+    
+    .categoria-warning-modal .modal-header-warning i {
+        font-size: 2.5em;
+    }
+    
+    .categoria-warning-modal .modal-header-warning h2 {
+        font-size: 1.3em;
+    }
+    
+    .categoria-warning-modal p {
+        padding: 4px 20px 0 20px;
+        font-size: 0.9em;
+    }
+    
+    .categoria-warning-modal .btn-group {
+        padding: 16px 20px 24px 20px;
+        gap: 10px;
+    }
+    
+    .categoria-warning-modal .btn-group .btn {
+        padding: 12px 16px;
+        font-size: 0.9em;
+    }
+}
+
+/* Versão para tema escuro */
+@media (prefers-color-scheme: dark) {
+    .categoria-warning-modal .modal-content {
+        background: #1e1e2e;
+    }
+    
+    .categoria-warning-modal .modal-header-warning h2 {
+        color: #ffffff;
+    }
+    
+    .categoria-warning-modal p {
+        color: #a0a0a0;
+    }
+    
+    .categoria-warning-modal .btn-group .btn-secondary {
+        background: #2a2a3a;
+        color: #ccc;
+        border-color: #3a3a4a;
+    }
+    
+    .categoria-warning-modal .btn-group .btn-secondary:hover {
+        background: #333344;
+    }
+}
+
+/* ===================================================
+   MODAL DE CONFIRMAÇÃO PARA EXCLUSÃO DE TRANSAÇÃO ÚNICA
+   =================================================== */
+
+.delete-warning-modal {
+    z-index: 10001;
+}
+
+.delete-warning-modal .modal-content {
+    max-width: 380px;
+    width: 90%;
+    height: auto;
+    max-height: 90vh;
+    border-radius: 24px;
+    padding: 0;
+    overflow: hidden;
+    background: white;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    animation: modalDeleteSlideUp 0.3s ease-out;
+}
+
+@keyframes modalDeleteSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Cabeçalho do modal de exclusão */
+.delete-warning-modal .modal-header-warning {
+    text-align: center;
+    padding: 28px 24px 16px 24px;
+    margin: 0;
+    position: relative;
+}
+
+.delete-warning-modal .modal-header-warning i {
+    font-size: 3em;
+    color: #f44336;
+    margin-bottom: 12px;
+    display: inline-block;
+    animation: deleteWarningShake 0.5s ease-out;
+}
+
+@keyframes deleteWarningShake {
+    0% {
+        transform: scale(0.8) rotate(0deg);
+        opacity: 0;
+    }
+    25% {
+        transform: scale(1.1) rotate(-5deg);
+    }
+    50% {
+        transform: scale(1.1) rotate(5deg);
+    }
+    75% {
+        transform: scale(1.05) rotate(-2deg);
+    }
+    100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+.delete-warning-modal .modal-header-warning h2 {
+    margin: 0;
+    font-size: 1.4em;
+    font-weight: 600;
+    color: #1a1a2e;
+}
+
+/* Linha decorativa no título */
+.delete-warning-modal .modal-header-warning::after {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 3px;
+    background: #f44336;
+    margin: 12px auto 0;
+    border-radius: 2px;
+}
+
+/* Descrição do modal */
+.delete-warning-modal p {
+    text-align: center;
+    padding: 8px 24px 0 24px;
+    margin: 0;
+    font-size: 0.95em;
+    color: #666;
+    line-height: 1.5;
+}
+
+.delete-warning-modal .warning-subtitle {
+    padding-bottom: 16px;
+    color: #f44336;
+    font-weight: 500;
+    font-size: 0.85em;
+}
+
+/* Container dos botões */
+.delete-warning-modal .btn-group {
+    display: flex;
+    gap: 12px;
+    padding: 20px 24px 28px 24px;
+    margin: 0;
+}
+
+.delete-warning-modal .btn-group .btn {
+    flex: 1;
+    padding: 14px 20px;
+    border-radius: 12px;
+    font-size: 0.95em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.delete-warning-modal .btn-group .btn-secondary {
+    background: #f5f5f5;
+    color: #666;
+    border: 1px solid #e0e0e0;
+}
+
+.delete-warning-modal .btn-group .btn-secondary:hover {
+    background: #eeeeee;
+    border-color: #ccc;
+    transform: translateY(-1px);
+}
+
+.delete-warning-modal .btn-group .btn-danger {
+    background: #f44336;
+    color: white;
+    box-shadow: 0 2px 8px rgba(244, 67, 54, 0.2);
+}
+
+.delete-warning-modal .btn-group .btn-danger:hover {
+    background: #d32f2f;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+}
+
+.delete-warning-modal .btn-group .btn:active {
+    transform: translateY(0);
+}
+
+/* Linha de destaque no topo do modal */
+.delete-warning-modal::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 4px;
+    background: #f44336;
+    z-index: 10001;
+    border-radius: 2px;
+}
+
+/* Responsividade */
+@media (max-width: 480px) {
+    .delete-warning-modal .modal-content {
+        width: 85%;
+        border-radius: 20px;
+    }
+    
+    .delete-warning-modal .modal-header-warning {
+        padding: 24px 20px 12px 20px;
+    }
+    
+    .delete-warning-modal .modal-header-warning i {
+        font-size: 2.5em;
+    }
+    
+    .delete-warning-modal .modal-header-warning h2 {
+        font-size: 1.3em;
+    }
+    
+    .delete-warning-modal p {
+        padding: 4px 20px 0 20px;
+        font-size: 0.9em;
+    }
+    
+    .delete-warning-modal .btn-group {
+        padding: 16px 20px 24px 20px;
+        gap: 10px;
+    }
+    
+    .delete-warning-modal .btn-group .btn {
+        padding: 12px 16px;
+        font-size: 0.9em;
+    }
+}
+
+/* Versão para tema escuro */
+@media (prefers-color-scheme: dark) {
+    .delete-warning-modal .modal-content {
+        background: #1e1e2e;
+    }
+    
+    .delete-warning-modal .modal-header-warning h2 {
+        color: #ffffff;
+    }
+    
+    .delete-warning-modal p {
+        color: #a0a0a0;
+    }
+    
+    .delete-warning-modal .btn-group .btn-secondary {
+        background: #2a2a3a;
+        color: #ccc;
+        border-color: #3a3a4a;
+    }
+    
+    .delete-warning-modal .btn-group .btn-secondary:hover {
+        background: #333344;
+    }
+}
+
+/* Toast para erro */
+.toast.error {
+    background-color: #f44336 !important;
+}
+
+/* Toast para aviso */
+.toast.warning {
+    background-color: #ff9800 !important;
+}
+
+/* Toast para sucesso */
+.toast.success {
+    background-color: var(--cor-principal) !important;
+}
+/* ===== BOTÃO GERENCIAR CATEGORIAS NO DROPDOWN ===== */
+.categoria-manage-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 15px;
+  cursor: pointer;
+  border-top: 1px solid var(--border-color);
+  font-size: 0.88em;
+  font-weight: 600;
+  color: var(--cor-principal);
+  background: rgba(33, 196, 93, 0.05);
+  transition: background 0.2s ease;
+  position: sticky;
+  bottom: 0;
+}
+
+.categoria-manage-btn:hover {
+  background: rgba(33, 196, 93, 0.13);
+}
+
+.categoria-manage-btn i {
+  font-size: 1.1em;
+}
+
+/* ===== POPUP CATEGORIAS - ITEM SELECIONADO ===== */
+#categoriaOptionsList .custom-select-option.selected {
+  background: rgba(33, 196, 93, 0.1);
+  color: var(--cor-principal);
+  font-weight: 600;
+}
+
+#categoriaOptionsList .custom-select-option {
+  padding: 13px 20px;
+  font-size: 0.97em;
+}
+
+/* Trigger de categoria com mesmo tamanho dos outros inputs do modal */
+#modal #categoriaTrigger {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 0px 11px 14px;
+  font-size: 1em;
+  border-radius: var(--border-radius);
+  background-color: white;
+}
+
+#categoriaTrigger .trigger-arrow i {
+  color: #999;
+  margin-right: 0px;
+  font-size: 0.95em;
+}
+
+/* Estilo especial para o item Gerenciar categorias na lista */
+.custom-select-option.categoria-manage-item {
+    /* border-top: 1px solid var(--border-color); */
+    margin-top: 8px;
+    background: #ececec;
+}
+
+.custom-select-option.categoria-manage-item:hover {
+    background: rgba(33, 196, 93, 0.15);
+}
+
+.custom-select-option.categoria-manage-item i {
+    color: var(--cor-principal);
+}
+
+.bottom-sheet-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 3000;
+
+  display: flex;
+  align-items: flex-end;
+
+  opacity: 0;
+  visibility: hidden;
+  transition: 0.25s;
+}
+
+.bottom-sheet-modal.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.bottom-sheet-content {
+  width: 100%;
+  background: white;
+  border-radius: 24px 24px 0 0;
+  padding: 14px 18px 30px;
+  transform: translateY(100%);
+  transition: transform 0.25s ease;
+}
+
+.bottom-sheet-modal.active .bottom-sheet-content {
+  transform: translateY(0);
+}
+
+.bottom-sheet-handle {
+  width: 42px;
+  height: 5px;
+  border-radius: 999px;
+  background: #dcdcdc;
+  margin: 0 auto 18px;
+}
+
+.bottom-sheet-title {
+  font-size: 1.1em;
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+
+.bottom-sheet-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bottom-sheet-option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  padding: 16px;
+  border-radius: 14px;
+
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.bottom-sheet-option:active {
+  transform: scale(0.98);
+}
+
+.bottom-sheet-option:hover {
+  background: #f5f5f5;
+}
+
+.bottom-sheet-option.active {
+  background: #eefaf2;
+  color: var(--cor-principal);
+}
+
+.bottom-sheet-option i {
+  font-size: 1.2em;
+}
+
+.gerenciar-btn {
+  width: 100%;
+  margin-top: 18px;
+
+  border: none;
+  background: #f5f5f5;
+
+  padding: 16px;
+  border-radius: 14px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  font-size: 0.95em;
+  font-weight: 600;
+
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.gerenciar-btn:hover {
+  background: #ebebeb;
+}
+
+.gerenciar-btn:active {
+  transform: scale(0.98);
+}
+
+#modal #categoriaTrigger,
+#modal .custom-select-trigger {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 0px 11px 14px;
+  font-size: 1em;
+  border-radius: var(--border-radius);
+  background-color: white;
+}
+
+#categoriaTrigger .trigger-arrow i {
+  color: #999;
+  margin-right: 0px;
+  font-size: 0.95em;
+}
+
+/* Ícone do dropdown do título */
+.page-title i.ri-arrow-down-s-line {
+    color: #ffffff;
+    font-size: 1.2rem;
+}
+
+/* Ícone do dropdown de categorias */
+.custom-select-trigger .trigger-arrow i.ri-arrow-down-s-line {
+    color: #999;
+    font-size: 1rem;
+}
+
+/* Alternativa se houver um terceiro ícone em outro lugar */
+.filter-btn i.ri-arrow-down-s-line {
+    color: #ff9800;
 }
