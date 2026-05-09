@@ -2738,8 +2738,8 @@ font-size: 1.5em;
 }
 
 #pagarCartaoModal .fatura-cartao-visual {
-  position: relative;
-  min-height: 180px;
+  /* position: relative; */
+  min-height: 160px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
