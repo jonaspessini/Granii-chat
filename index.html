@@ -238,6 +238,8 @@ function navigateTo(pagina) {
             const displayName = user.user_metadata?.display_name || user.user_metadata?.name || user.email || 'Usuario conectado';
             userEmail.textContent = displayName;
             userEmail.title = user.email || displayName;
+            // Salva data de criação para o popup
+            window._userCreatedAt = user.created_at || null;
         }
     }
 
@@ -1012,6 +1014,17 @@ function navigateTo(pagina) {
       navigator.serviceWorker.register('./sw.js').catch(() => {});
     });
 
+    // Tenta ler a versão do cache ativo
+    if ('caches' in window) {
+      caches.keys().then(keys => {
+        const swCache = keys.find(k => k.startsWith('gastos-mensal-'));
+        if (swCache) {
+          const match = swCache.match(/v[\d.]+/);
+          if (match) window._appVersion = match[0];
+        }
+      });
+    }
+
     navigator.serviceWorker.addEventListener('message', (event) => {
       if (event.data && event.data.type === 'APP_UPDATED') {
         const toast = document.getElementById('appUpdateToast');
@@ -1020,6 +1033,7 @@ function navigateTo(pagina) {
         if (!toast) return;
         const rawVersion = event.data.version || '';
         const match = rawVersion.match(/v[\d.]+/);
+        if (match) window._appVersion = match[0];
         if (versionEl) versionEl.textContent = match ? match[0] : '';
         if (overlay) overlay.style.display = 'block';
         toast.style.display = 'block';
@@ -1027,5 +1041,152 @@ function navigateTo(pagina) {
     });
   }
 </script>
-</body>
-</html>
+<!-- Overlay do popup de usuário -->
+<div id="userInfoOverlay" onclick="fecharUserInfoPopup()" style="
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.45);
+  z-index: 99998;
+"></div>
+
+<!-- Popup de informações do usuário -->
+<div id="userInfoPopup" style="
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-50%);
+  background: var(--card-background, #fff);
+  color: var(--text-color, #1e293b);
+  padding: 0;
+  border-radius: 20px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+  z-index: 99999;
+  max-width: 320px;
+  width: 90%;
+  font-family: Inter, sans-serif;
+  overflow: hidden;
+  animation: popupEntrar 0.3s ease;
+">
+  <!-- Cabeçalho verde -->
+  <div style="background: #21c45d; padding: 24px 20px 20px; text-align: center;">
+    <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(255,255,255,0.25); display: flex; align-items: center; justify-content: center; margin: 0 auto 10px;">
+      <i class="ri-user-3-line" style="font-size: 1.8em; color: #fff;"></i>
+    </div>
+    <div id="popupUserNome" style="font-weight: 700; font-size: 1.05em; color: #fff; margin-bottom: 2px;">—</div>
+    <div id="popupUserEmail" style="font-size: 0.78em; color: rgba(255,255,255,0.8);">—</div>
+  </div>
+
+  <!-- Informações -->
+  <div style="padding: 16px 20px;">
+
+    <div style="display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border-color, #f0f0f0);">
+      <i class="ri-smartphone-line" style="font-size: 1.2em; color: #21c45d; width: 20px; text-align: center;"></i>
+      <div>
+        <div style="font-size: 0.72em; color: var(--text-muted, #94a3b8);">Versão do app</div>
+        <div id="popupAppVersao" style="font-size: 0.88em; font-weight: 600;">—</div>
+      </div>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border-color, #f0f0f0);">
+      <i class="ri-calendar-check-line" style="font-size: 1.2em; color: #21c45d; width: 20px; text-align: center;"></i>
+      <div>
+        <div style="font-size: 0.72em; color: var(--text-muted, #94a3b8);">Membro desde</div>
+        <div id="popupMembroDesde" style="font-size: 0.88em; font-weight: 600;">—</div>
+      </div>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border-color, #f0f0f0);">
+      <i class="ri-list-check" style="font-size: 1.2em; color: #21c45d; width: 20px; text-align: center;"></i>
+      <div>
+        <div style="font-size: 0.72em; color: var(--text-muted, #94a3b8);">Transações este mês</div>
+        <div id="popupTransacoesMes" style="font-size: 0.88em; font-weight: 600;">—</div>
+      </div>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 12px; padding: 10px 0;">
+      <i class="ri-database-2-line" style="font-size: 1.2em; color: #21c45d; width: 20px; text-align: center;"></i>
+      <div>
+        <div style="font-size: 0.72em; color: var(--text-muted, #94a3b8);">Total de transações</div>
+        <div id="popupTransacoesTotal" style="font-size: 0.88em; font-weight: 600;">—</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Botão fechar -->
+  <div style="padding: 0 20px 16px;">
+    <button onclick="fecharUserInfoPopup()" style="
+      width: 100%;
+      padding: 11px;
+      background: #21c45d;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 0.9em;
+      font-weight: 700;
+      cursor: pointer;
+    ">Fechar</button>
+  </div>
+</div>
+
+<style>
+@keyframes popupEntrar {
+  from { opacity: 0; transform: translateX(-50%) translateY(-48%) scale(0.95); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(-50%) scale(1); }
+}
+</style>
+
+<script>
+function abrirUserInfoPopup() {
+  // Pega versão do SW
+  const swVersao = window._appVersion || 'Não disponível';
+  document.getElementById('popupAppVersao').textContent = swVersao;
+
+  // Pega dados do usuário já exibidos na tela
+  const nomeEl = document.getElementById('homeUserEmail');
+  const nome = nomeEl ? nomeEl.textContent : '—';
+  document.getElementById('popupUserNome').textContent = nome;
+
+  // Email completo (guardado no title pelo atualizarUsuarioHome)
+  const emailCompleto = nomeEl ? (nomeEl.title || nome) : '—';
+  document.getElementById('popupUserEmail').textContent = emailCompleto;
+
+  // Data de cadastro via Supabase (se disponível)
+  if (window._userCreatedAt) {
+    const dt = new Date(window._userCreatedAt);
+    const opts = { day: '2-digit', month: 'long', year: 'numeric' };
+    document.getElementById('popupMembroDesde').textContent = dt.toLocaleDateString('pt-BR', opts);
+  } else {
+    document.getElementById('popupMembroDesde').textContent = 'Não disponível';
+  }
+
+  // Conta transações do mês atual
+  const agora = new Date();
+  const chave = `lancamentos_${agora.getFullYear()}_${String(agora.getMonth() + 1).padStart(2, '0')}`;
+  const mes = JSON.parse(localStorage.getItem(chave) || '[]');
+  document.getElementById('popupTransacoesMes').textContent = mes.length + ' transação(ões)';
+
+  // Conta total de transações em todos os meses
+  let total = 0;
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith('lancamentos_')) {
+      try { total += JSON.parse(localStorage.getItem(k)).length; } catch(e) {}
+    }
+  }
+  document.getElementById('popupTransacoesTotal').textContent = total + ' transação(ões)';
+
+  document.getElementById('userInfoOverlay').style.display = 'block';
+  document.getElementById('userInfoPopup').style.display = 'block';
+}
+
+function fecharUserInfoPopup() {
+  document.getElementById('userInfoOverlay').style.display = 'none';
+  document.getElementById('userInfoPopup').style.display = 'none';
+}
+
+document.getElementById('homeUserNameBtn').addEventListener('click', abrirUserInfoPopup);
+</script>
