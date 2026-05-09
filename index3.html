@@ -497,12 +497,92 @@ function mostrarToast(mensagem, tipo = 'success') {
     </script>
 
 <script>
+  function fecharUpdateToast() {
+    const toast = document.getElementById('appUpdateToast');
+    const overlay = document.getElementById('appUpdateOverlay');
+    if (!toast) return;
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 0.3s ease';
+    if (overlay) { overlay.style.opacity = '0'; overlay.style.transition = 'opacity 0.3s ease'; }
+    setTimeout(() => {
+      toast.style.display = 'none'; toast.style.opacity = '1'; toast.style.transition = '';
+      if (overlay) { overlay.style.display = 'none'; overlay.style.opacity = '1'; overlay.style.transition = ''; }
+    }, 300);
+  }
+
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('./sw.js').catch(() => {});
     });
+
+    navigator.serviceWorker.addEventListener('message', (event) => {
+      if (event.data && event.data.type === 'APP_UPDATED') {
+        const toast = document.getElementById('appUpdateToast');
+        const overlay = document.getElementById('appUpdateOverlay');
+        const versionEl = document.getElementById('appUpdateVersion');
+        if (!toast) return;
+        const rawVersion = event.data.version || '';
+        const match = rawVersion.match(/v[\d.]+/);
+        if (versionEl) versionEl.textContent = match ? match[0] : '';
+        if (overlay) overlay.style.display = 'block';
+        toast.style.display = 'block';
+      }
+    });
   }
 </script>
+
+<!-- Overlay do popup de atualização -->
+<div id="appUpdateOverlay" style="
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.55);
+  z-index: 99998;
+"></div>
+
+<!-- Popup de atualização do app -->
+<div id="appUpdateToast" style="
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-50%);
+  background: #1e293b;
+  color: #fff;
+  padding: 18px 20px 14px;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+  z-index: 99999;
+  max-width: 320px;
+  width: 90%;
+  text-align: center;
+  font-family: Inter, sans-serif;
+  animation: slideUpToast 0.35s ease;
+">
+  <div style="font-size: 1.6em; margin-bottom: 6px;"><i class="ri-sparkling-line"></i></div>
+  <div style="font-weight: 700; font-size: 1em; margin-bottom: 4px;">App atualizado!</div>
+  <div id="appUpdateVersion" style="font-size: 0.78em; color: #21c45d; font-weight: 600; margin-bottom: 6px;"></div>
+  <div style="font-size: 0.8em; color: #94a3b8; margin-bottom: 14px;">Uma nova versão foi instalada com sucesso.</div>
+  <button onclick="fecharUpdateToast()" style="
+    background: #21c45d;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 9px 32px;
+    font-size: 0.9em;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+  ">OK</button>
+</div>
+
+<style>
+@keyframes slideUpToast {
+  from { opacity: 0; transform: translateX(-50%) translateY(-50%) scale(0.95); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(-50%) scale(1); }
+}
+</style>
 
 <div class="bottom-nav">
     <button class="nav-btn" onclick="window.location.href='index.html'">

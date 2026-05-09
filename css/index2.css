@@ -2739,17 +2739,15 @@ font-size: 1.5em;
 
 #pagarCartaoModal .fatura-cartao-visual {
   position: relative;
-  min-height: 184px;
+  min-height: 180px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 22px;
+  padding: 16px 20px;
   border-radius: 20px;
   overflow: hidden;
   color: #fff;
-  background:
-    radial-gradient(circle at 88% 18%, rgba(255, 255, 255, 0.28), transparent 25%),
-    linear-gradient(135deg, var(--fatura-card-color-dark, #10241f) 0%, var(--fatura-card-color, #24624c) 52%, var(--fatura-card-color-soft, #0f766e) 100%);
+  background: var(--fatura-card-color, #0f766e);
   box-shadow: 0 18px 34px rgba(15, 118, 110, 0.28);
 }
 

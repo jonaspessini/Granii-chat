@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gastos-mensal-v4.9.8';
+const CACHE_NAME = 'gastos-mensal-v4.9.9';
 
 // Apenas assets verdadeiramente estáticos — CSS, fontes, imagens
 const ASSETS_TO_CACHE = [
@@ -36,8 +36,8 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    // Apaga TODOS os caches antigos ao ativar nova versão
     caches.keys().then((cacheNames) => {
+      const hasOldCache = cacheNames.some(name => name !== CACHE_NAME);
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
@@ -45,7 +45,16 @@ self.addEventListener('activate', (event) => {
             return caches.delete(cacheName);
           }
         })
-      );
+      ).then(() => {
+        // Só notifica se havia cache antigo (ou seja, é uma atualização real)
+        if (hasOldCache) {
+          self.clients.matchAll({ type: 'window' }).then(clients => {
+            clients.forEach(client => {
+              client.postMessage({ type: 'APP_UPDATED', version: CACHE_NAME });
+            });
+          });
+        }
+      });
     })
   );
   self.clients.claim();
