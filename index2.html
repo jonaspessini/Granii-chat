@@ -1187,13 +1187,11 @@ function filterTransactions(filter) {
 function updateFilterIcon() {
   const filterIcon = document.querySelector('.filter-btn i');
   
-  // Verifica se há algum filtro de status ativo (diferente de "all")
-  if (activeStatusFilter !== 'all') {
-    // Filtro ativo - muda para ícone preenchido
+  // Verifica se há qualquer filtro ativo (status ou cartão)
+  if (activeStatusFilter !== 'all' || activeCardFilter !== '') {
     filterIcon.className = 'ri-filter-fill';
-    filterIcon.style.color = '#fffff';
+    filterIcon.style.color = '#ffffff';
   } else {
-    // Filtro inativo (Todos) - volta para ícone vazio
     filterIcon.className = 'ri-filter-line';
     filterIcon.style.color = '';
   }
