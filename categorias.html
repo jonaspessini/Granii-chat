@@ -750,7 +750,7 @@ function abrirModalNova() {
   btnSalvar.className = 'btn-modal btn-salvar' + (tipoAtivo === 'despesa' ? ' despesa' : '');
   renderEmojiGrid(null);
   document.getElementById('modalForm').classList.add('active');
-  setTimeout(function() { document.getElementById('inputNome').focus(); }, 300);
+
 }
 window.abrirModalNova = abrirModalNova;
 
@@ -768,7 +768,7 @@ function abrirModalEditar(id) {
   btnSalvar.className = 'btn-modal btn-salvar' + (tipoAtivo === 'despesa' ? ' despesa' : '');
   renderEmojiGrid(cat.icone);
   document.getElementById('modalForm').classList.add('active');
-  setTimeout(function() { document.getElementById('inputNome').focus(); }, 300);
+
 }
 window.abrirModalEditar = abrirModalEditar;
 
@@ -782,7 +782,7 @@ window.fecharModal = fecharModal;
 function salvarCategoria() {
   var nome = document.getElementById('inputNome').value.trim();
   if (!nome) {
-    document.getElementById('inputNome').focus();
+
     document.getElementById('inputNome').style.borderColor = '#e53935';
     setTimeout(function() { document.getElementById('inputNome').style.borderColor = ''; }, 1500);
     return;
