@@ -5356,7 +5356,7 @@ function abrirCalculadoraComValor() {
   const numero = parseFloat(valorAtual);
 
   calcState = {
-    display: (!isNaN(numero) && numero > 0) ? campoValor : '0',
+    display: (!isNaN(numero) && numero > 0) ? campoValor.replace(/\./g, '') : '0',
     expression: '',
     operand: null,
     operator: null,
@@ -5401,7 +5401,7 @@ setTimeout(function() {
       calcState = { display: '0', expression: '', operand: null, operator: null, waitingNext: false };
       atualizarCalculadora();
       vibrarToque();
-    }, 600);
+    }, 300);
   }
 
   function cancelPress() {
