@@ -376,10 +376,10 @@ function navigateTo(pagina) {
             // Mapear ID da categoria para o objeto da categoria
             const categoriaMap = new Map();
             categoriasConfig.despesa.forEach(cat => {
-                categoriaMap.set(cat.id, { nome: cat.nome, icone: cat.icone || '📌' });
+                categoriaMap.set(cat.id, { nome: cat.nome, icone: cat.icone || 'ri-pushpin-line' });
             });
             categoriasConfig.receita.forEach(cat => {
-                categoriaMap.set(cat.id, { nome: cat.nome, icone: cat.icone || '📌' });
+                categoriaMap.set(cat.id, { nome: cat.nome, icone: cat.icone || 'ri-pushpin-line' });
             });
             
             // Agrupar despesas por categoria
@@ -403,7 +403,7 @@ function navigateTo(pagina) {
             
             // Converter para array e ordenar por total (maior primeiro)
             const categoriasArray = Object.entries(gastosPorCategoria).map(([id, data]) => {
-                const catInfo = categoriaMap.get(id) || { nome: id === 'sem_categoria' ? 'Sem categoria' : id, icone: '📌' };
+                const catInfo = categoriaMap.get(id) || { nome: id === 'sem_categoria' ? 'Sem categoria' : id, icone: 'ri-pushpin-line' };
                 const percentual = totalDespesas > 0 ? (data.total / totalDespesas) * 100 : 0;
                 return {
                     id: id,
@@ -429,7 +429,7 @@ function navigateTo(pagina) {
                 item.onclick = () => abrirDetalhesCategoria(cat);
                 
                 item.innerHTML = `
-                    <div class="categoria-icon">${cat.icone}</div>
+                    <div class="categoria-icon">${cat.icone && cat.icone.startsWith('ri-') ? `<i class="${cat.icone}"></i>` : cat.icone}</div>
                     <div class="categoria-info">
                         <div class="categoria-nome">${escapeHtml(cat.nome)}</div>
                         <div class="categoria-percent-bar">
@@ -479,7 +479,7 @@ function navigateTo(pagina) {
                 <div class="modal-content" style="max-width: 400px; max-height: 80vh; overflow-y: auto;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                         <div style="display: flex; align-items: center; gap: 10px;">
-                            <div style="font-size: 2em;">${categoria.icone}</div>
+                            <div style="font-size: 2em;">${categoria.icone && categoria.icone.startsWith('ri-') ? `<i class="${categoria.icone}"></i>` : categoria.icone}</div>
                             <div>
                                 <div style="font-weight: 700; font-size: 1.1em;">${escapeHtml(categoria.nome)}</div>
                                 <div style="font-size: 0.8em; color: #6c757d;">Total: R$ ${formatToBRL(categoria.total)} (${categoria.percentual.toFixed(1)}% das despesas)</div>

@@ -305,7 +305,7 @@
       border-color: var(--cor-principal);
     }
 
-    /* ── EMOJI PICKER MODERNO ── */
+    /* ── ICON PICKER MODERNO ── */
     .emoji-picker-label {
       font-size: 0.75rem;
       font-weight: 600;
@@ -319,7 +319,7 @@
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
-      max-height: 160px;
+      max-height: 180px;
       overflow-y: auto;
       padding: 4px 0;
     }
@@ -327,20 +327,23 @@
       width: 48px;
       height: 48px;
       border-radius: 14px;
-      background: #f5f5f5;
+      background: var(--bg-secondary, #f5f5f5);
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       transition: all 0.15s;
       border: 2px solid transparent;
-      font-size: 1.5rem;
+      font-size: 1.4rem;
+      color: var(--text-secondary);
     }
     .emoji-opt.selected {
       border-color: var(--cor-principal);
       background: #e8f5e9;
+      color: var(--cor-principal);
     }
     .emoji-opt:active { transform: scale(0.92); }
+    .cat-icone i { font-size: 1.3rem; }
 
     /* ── BOTÕES DO MODAL ── */
     .modal-actions {
@@ -576,44 +579,49 @@
 
 <script>
 // ── EMOJIS DISPONÍVEIS ──
-var EMOJIS_DESPESA = [
+var ICONES_DESPESA = [
   // Alimentação
-  '🍔','☕','🍷','🧃','🛒',
+  'ri-restaurant-line','ri-cup-line','ri-goblet-line','ri-shopping-cart-line','ri-store-2-line',
   // Transporte
-  '🚗','🚌','✈️','🚂','🏍️','🚲','⛽','🅿️',
+  'ri-car-line','ri-tools-line','ri-plane-line','ri-train-line','ri-bike-line','ri-gas-station-line','ri-road-map-line','ri-map-pin-line',
   // Moradia
-  '🏠','💡','🔌','🚿','🪴','🧹','🚪','🛋️','💈',
+  'ri-home-2-line','ri-lightbulb-line','ri-plug-line','ri-drop-line','ri-leaf-line','ri-door-open-line','ri-building-line','ri-tools-line','ri-hammer-line',
   // Saúde
-  '💊','🏥','🩺','🦷','👓','💉','🧬',
+  'ri-capsule-line','ri-hospital-line','ri-stethoscope-line','ri-heart-pulse-line','ri-glasses-2-line','ri-heart-line','ri-thermometer-line',
   // Educação
-  '📚','🎓','✏️','🔬','🎒',
+  'ri-book-line','ri-graduation-cap-line','ri-pencil-line','ri-microscope-line','ri-school-line',
   // Lazer & Entretenimento
-  '🎮','🎬','🎵','🎸','🎲','🎭','🎟️',
+  'ri-gamepad-line','ri-movie-line','ri-music-line','ri-headphone-line','ri-dice-line','ri-ticket-line','ri-tv-line',
   // Esportes
-  '⚽','🏋️','🏊','🚴','🥊','⛷️','🎾',
+  'ri-football-line','ri-run-line','ri-trophy-line','ri-timer-line',
   // Vestuário & Beleza
-  '👕','👟','👗','👠','👜','💄','🧴','⌚',
+  'ri-t-shirt-line','ri-scissors-line','ri-palette-line','ri-clapperboard-line','ri-shopping-bag-line',
   // Tecnologia
-  '📱','💻','📷','🎧','📺','🔋',
+  'ri-smartphone-line','ri-macbook-line','ri-camera-line','ri-printer-line','ri-battery-line','ri-wifi-line',
   // Animais
-  '🐾','🦴','🌿',
+  'ri-seedling-line','ri-plant-line','ri-earth-line',
   // Finanças & Serviços
-  '💳','🏦','🔧','📌','🧾','📋','🛍️','🎁'
+  'ri-bank-card-line','ri-bank-line','ri-pushpin-line','ri-receipt-line','ri-file-list-line','ri-gift-line','ri-service-line',
+  // Pessoal
+  'ri-user-line'
 ];
-var EMOJIS_RECEITA = [
+var EMOJIS_DESPESA = ICONES_DESPESA;
+
+var ICONES_RECEITA = [
   // Renda principal
-  '💼','💰','💵','🤑','📈','💹','🏆','💎',
+  'ri-briefcase-line','ri-money-dollar-circle-line','ri-cash-line','ri-exchange-line','ri-line-chart-line','ri-trophy-line','ri-diamond-line',
   // Freelance & Criação
-  '💻','🎨','📷','✍️','🎤','🎬','📦','🧠','⚙️',
+  'ri-macbook-line','ri-brush-line','ri-camera-line','ri-edit-line','ri-mic-line','ri-movie-line','ri-cpu-line','ri-code-line',
   // Investimentos & Patrimônio
-  '🏘️','🏦','🪙','📊','🔑',
+  'ri-home-4-line','ri-bank-line','ri-coin-line','ri-bar-chart-line','ri-key-line','ri-pie-chart-line',
   // Bônus & Presentes
-  '🎁','🎉','🥳','🎀',
+  'ri-gift-line','ri-star-line','ri-medal-line','ri-award-line',
   // Negócios & Parcerias
-  '🤝','📡','🌐','🔗','📣',
+  'ri-shake-hands-line','ri-global-line','ri-medal-line','ri-megaphone-line','ri-team-line',
   // Outros
-  '🌱','⚡','🔥','✨','🎯','🏅','🚀','💡'
+  'ri-seedling-line','ri-sun-line','ri-fire-line','ri-rocket-line','ri-lightbulb-line','ri-heart-line','ri-shield-line'
 ];
+var EMOJIS_RECEITA = ICONES_RECEITA;
 
 var tipoAtivo = 'despesa';
 var editandoId = null;
@@ -624,23 +632,24 @@ var iconeSelecionado = null;
 // ── CATEGORIAS PADRÃO ──
 var CATEGORIAS_PADRAO = {
   despesa: [
-    { id: 'desp_1', nome: 'Alimentação', icone: '🍔' },
-    { id: 'desp_2', nome: 'Moradia', icone: '🏠' },
-    { id: 'desp_3', nome: 'Transporte', icone: '🚗' },
-    { id: 'desp_4', nome: 'Saúde', icone: '💊' },
-    { id: 'desp_5', nome: 'Educação', icone: '📚' },
-    { id: 'desp_6', nome: 'Lazer', icone: '🎮' },
-    { id: 'desp_7', nome: 'Vestuário', icone: '👕' },
-    { id: 'desp_8', nome: 'Contas', icone: '💡' },
-    { id: 'desp_9', nome: 'Outros', icone: '📌' }
+    { id: 'desp_1', nome: 'Alimentação', icone: 'ri-restaurant-line' },
+    { id: 'desp_2', nome: 'Moradia',     icone: 'ri-home-2-line' },
+    { id: 'desp_3', nome: 'Transporte',  icone: 'ri-car-line' },
+    { id: 'desp_4', nome: 'Saúde',       icone: 'ri-heart-pulse-line' },
+    { id: 'desp_5', nome: 'Educação',    icone: 'ri-graduation-cap-line' },
+    { id: 'desp_6', nome: 'Lazer',       icone: 'ri-gamepad-line' },
+    { id: 'desp_7', nome: 'Vestuário',   icone: 'ri-t-shirt-line' },
+    { id: 'desp_8', nome: 'Contas',      icone: 'ri-lightbulb-line' },
+    { id: 'desp_9', nome: 'Outros',      icone: 'ri-pushpin-line' },
+    { id: 'desp_10', nome: 'Pessoal',      icone: 'ri-user-line' }
   ],
   receita: [
-    { id: 'rec_1', nome: 'Salário', icone: '💼' },
-    { id: 'rec_2', nome: 'Freelance', icone: '💻' },
-    { id: 'rec_3', nome: 'Investimento', icone: '📈' },
-    { id: 'rec_4', nome: 'Aluguel', icone: '🏘️' },
-    { id: 'rec_5', nome: 'Presente', icone: '🎁' },
-    { id: 'rec_6', nome: 'Outros', icone: '📌' }
+    { id: 'rec_1', nome: 'Salário',      icone: 'ri-briefcase-line' },
+    { id: 'rec_2', nome: 'Freelance',    icone: 'ri-macbook-line' },
+    { id: 'rec_3', nome: 'Investimento', icone: 'ri-line-chart-line' },
+    { id: 'rec_4', nome: 'Aluguel',      icone: 'ri-home-4-line' },
+    { id: 'rec_5', nome: 'Presente',     icone: 'ri-gift-line' },
+    { id: 'rec_6', nome: 'Outros',       icone: 'ri-pushpin-line' }
   ]
 };
 
@@ -680,9 +689,10 @@ function renderLista() {
   }
 
   container.innerHTML = lista.map(function(cat) {
-    var icone = cat.icone || (tipoAtivo === 'receita' ? '💰' : '📌');
+    var icone = cat.icone || (tipoAtivo === 'receita' ? 'ri-money-dollar-circle-line' : 'ri-pushpin-line');
+    var iconeHtml = icone.startsWith('ri-') ? '<i class="' + icone + '"></i>' : icone;
     return '<div class="categoria-item ' + tipoAtivo + '">' +
-      '<div class="cat-icone">' + icone + '</div>' +
+      '<div class="cat-icone">' + iconeHtml + '</div>' +
       '<div class="cat-nome">' + escapeHtml(cat.nome) + '</div>' +
       '<div class="cat-actions">' +
         '<button class="btn-icone editar" onclick="abrirModalEditar(\'' + cat.id + '\')">' +
@@ -711,19 +721,22 @@ function trocarTab(tipo) {
 }
 window.trocarTab = trocarTab;
 
-// ── EMOJI GRID ──
+// ── ICON GRID ──
 function renderEmojiGrid(selecionado) {
-  var emojis = tipoAtivo === 'despesa' ? EMOJIS_DESPESA : EMOJIS_RECEITA;
-  iconeSelecionado = selecionado || emojis[0];
-  document.getElementById('emojiGrid').innerHTML = emojis.map(function(e) {
-    return '<button class="emoji-opt' + (e === iconeSelecionado ? ' selected' : '') + '" onclick="selecionarEmoji(\'' + e + '\')">' + e + '</button>';
+  var icones = tipoAtivo === 'despesa' ? ICONES_DESPESA : ICONES_RECEITA;
+  iconeSelecionado = selecionado || icones[0];
+  document.getElementById('emojiGrid').innerHTML = icones.map(function(ic) {
+    var sel = ic === iconeSelecionado ? ' selected' : '';
+    return '<button class="emoji-opt' + sel + '" data-icone="' + ic + '" onclick="selecionarEmoji(\'' + ic + '\')">' +
+      '<i class="' + ic + '"></i>' +
+    '</button>';
   }).join('');
 }
 
-function selecionarEmoji(emoji) {
-  iconeSelecionado = emoji;
+function selecionarEmoji(icone) {
+  iconeSelecionado = icone;
   document.querySelectorAll('.emoji-opt').forEach(function(btn) {
-    btn.classList.toggle('selected', btn.textContent === emoji);
+    btn.classList.toggle('selected', btn.getAttribute('data-icone') === icone);
   });
 }
 window.selecionarEmoji = selecionarEmoji;
@@ -789,7 +802,7 @@ function salvarCategoria() {
     var novaCat = {
       id: tipoAtivo.slice(0,3) + '_' + Date.now(),
       nome: nome,
-      icone: iconeSelecionado || (tipoAtivo === 'receita' ? '💰' : '📌')
+      icone: iconeSelecionado || (tipoAtivo === 'receita' ? 'ri-money-dollar-circle-line' : 'ri-pushpin-line')
     };
     lista.push(novaCat);
     mostrarToast('Categoria criada');

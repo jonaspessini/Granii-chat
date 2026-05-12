@@ -1507,7 +1507,7 @@ function openTransactionDetails(index) {
   
   // Mostra categoria real se existir
   var nomeCategoria = getNomeCategoriaById(transaction.categoria);
-  document.getElementById('detailCategoria').textContent = nomeCategoria || (transaction.tipo === 'receita' ? 'Receita' : 'Despesa');
+  document.getElementById('detailCategoria').innerHTML = nomeCategoria || (transaction.tipo === 'receita' ? 'Receita' : 'Despesa');
   
   // NOVO: Preencher forma de pagamento
   const formaPagamentoItem = document.getElementById('detailFormaPagamentoItem');
@@ -2500,18 +2500,23 @@ function addRowToTable(lanc, originalIndex) {
     const isCartaoCredito = lanc.formaPagamento && lanc.formaPagamento !== 'debito_pix';
     const cartaoIcon = isCartaoCredito ? '<div class="cartao-credito-icon"><i class="ri-bank-card-line"></i></div>' : '';
 
-    // Categoria discreta ao lado do vencimento (apenas nome, sem ícone)
+    // Categoria discreta ao lado do vencimento
     let categoriaText = '';
+    let categoriaHtml = '';
     if (lanc.categoria) {
         try {
             var dadosCat = JSON.parse(localStorage.getItem('categorias_config') || '{"despesa":[],"receita":[]}');
             var todasCat = (dadosCat.despesa || []).concat(dadosCat.receita || []);
             var catObj = todasCat.filter(function(c) { return c.id == lanc.categoria; })[0];
-            categoriaText = catObj ? catObj.nome : '';
+            if (catObj) {
+                categoriaText = catObj.nome;
+                var ic = catObj.icone || '';
+                categoriaHtml = catObj.nome;
+            }
         } catch(e) { categoriaText = ''; }
     }
     const vencimentoComCategoria = categoriaText
-        ? `${vencimentoText} <span class="categoria-inline">| ${categoriaText}</span>`
+        ? `${vencimentoText} <span class="categoria-inline">| ${categoriaHtml}</span>`
         : vencimentoText;
 
     card.innerHTML = `
@@ -3188,10 +3193,17 @@ function carregarCategoriasNoModal(tipoSelecionado, valorAtual) {
             var opt = document.createElement('div');
             opt.className = 'custom-select-option' + (cat.id == valorAtual ? ' selected' : '');
             opt.setAttribute('data-value', cat.id);
-            opt.innerHTML = '<span style="font-size:1.1em;width:24px;text-align:center">' + (cat.icone || '📌') + '</span><span class="option-text">' + cat.nome + '</span>';
-            opt.onclick = (function(id, label) {
-                return function() { selecionarCategoria(id, label); };
-            })(cat.id, (cat.icone || '') + ' ' + cat.nome);
+            var iconeHtml = (cat.icone || '').startsWith('ri-')
+              ? '<i class="' + (cat.icone) + '" style="font-size:1.1em;width:24px;text-align:center"></i>'
+              : '<span style="font-size:1.1em;width:24px;text-align:center">' + (cat.icone || '📌') + '</span>';
+            opt.innerHTML = iconeHtml + '<span class="option-text">' + cat.nome + '</span>';
+            opt.onclick = (function(id, icone, nome) {
+                return function() {
+                    var ic = icone || '';
+                    var icHtml = ic.startsWith('ri-') ? '<i class="' + ic + '" style="font-size:1em;vertical-align:-1px;margin-right:4px"></i>' : (ic ? ic + ' ' : '');
+                    selecionarCategoria(id, icHtml + nome);
+                };
+            })(cat.id, cat.icone || '', cat.nome);
             list.appendChild(opt);
         });
     } catch(e) {
@@ -3219,7 +3231,9 @@ function carregarCategoriasNoModal(tipoSelecionado, valorAtual) {
         var found = false;
         allOpts.forEach(function(o) {
             if (o.getAttribute('data-value') == valorAtual) {
-                triggerText.textContent = o.querySelector('.option-text').textContent;
+                var icEl = o.querySelector('i');
+                var icHtml = icEl ? icEl.outerHTML + ' ' : '';
+                triggerText.innerHTML = icHtml + o.querySelector('.option-text').textContent;
                 found = true;
             }
         });
@@ -3230,11 +3244,11 @@ function carregarCategoriasNoModal(tipoSelecionado, valorAtual) {
     }
 }
 
-function selecionarCategoria(id, label) {
+function selecionarCategoria(id, labelHtml) {
     var hidden = document.getElementById('categoriaLancamento');
     var triggerText = document.getElementById('categoriaTriggerText');
     hidden.value = id;
-    triggerText.textContent = label;
+    triggerText.innerHTML = labelHtml;
     // Marcar selected
     var opts = document.querySelectorAll('#categoriaOptionsList .custom-select-option');
     opts.forEach(function(o) {
@@ -3287,7 +3301,10 @@ function getNomeCategoriaById(id) {
         var dados = JSON.parse(localStorage.getItem('categorias_config') || '{"despesa":[],"receita":[]}');
         var todas = (dados.despesa || []).concat(dados.receita || []);
         var cat = todas.filter(function(c) { return c.id == id; })[0];
-        return cat ? (cat.icone || '') + ' ' + cat.nome : null;
+        if (!cat) return null;
+        var ic = cat.icone || '';
+        var iconeHtml = ic.startsWith('ri-') ? '<i class="' + ic + '"></i> ' : (ic ? ic + ' ' : '');
+        return iconeHtml + cat.nome;
     } catch(e) { return null; }
 }
 
@@ -3395,26 +3412,27 @@ function exportarDados() {
   menuDropdown.classList.remove('active');
 }
 
-// ========== CATEGORIAS PADRÃO ==========
+// ── CATEGORIAS PADRÃO ──
 var CATEGORIAS_PADRAO = {
   despesa: [
-    { id: 'desp_1', nome: 'Alimentação', icone: '🍔' },
-    { id: 'desp_2', nome: 'Moradia',     icone: '🏠' },
-    { id: 'desp_3', nome: 'Transporte',  icone: '🚗' },
-    { id: 'desp_4', nome: 'Saúde',       icone: '💊' },
-    { id: 'desp_5', nome: 'Educação',    icone: '📚' },
-    { id: 'desp_6', nome: 'Lazer',       icone: '🎮' },
-    { id: 'desp_7', nome: 'Vestuário',   icone: '👕' },
-    { id: 'desp_8', nome: 'Contas',      icone: '💡' },
-    { id: 'desp_9', nome: 'Outros',      icone: '📌' }
+    { id: 'desp_1', nome: 'Alimentação', icone: 'ri-restaurant-line' },
+    { id: 'desp_2', nome: 'Moradia',     icone: 'ri-home-2-line' },
+    { id: 'desp_3', nome: 'Transporte',  icone: 'ri-car-line' },
+    { id: 'desp_4', nome: 'Saúde',       icone: 'ri-heart-pulse-line' },
+    { id: 'desp_5', nome: 'Educação',    icone: 'ri-graduation-cap-line' },
+    { id: 'desp_6', nome: 'Lazer',       icone: 'ri-gamepad-line' },
+    { id: 'desp_7', nome: 'Vestuário',   icone: 'ri-t-shirt-line' },
+    { id: 'desp_8', nome: 'Contas',      icone: 'ri-lightbulb-line' },
+    { id: 'desp_9', nome: 'Outros',      icone: 'ri-pushpin-line' },
+    { id: 'desp_10', nome: 'Pessoal',      icone: 'ri-user-line' }
   ],
   receita: [
-    { id: 'rec_1', nome: 'Salário',      icone: '💼' },
-    { id: 'rec_2', nome: 'Freelance',    icone: '💻' },
-    { id: 'rec_3', nome: 'Investimento', icone: '📈' },
-    { id: 'rec_4', nome: 'Aluguel',      icone: '🏘️' },
-    { id: 'rec_5', nome: 'Presente',     icone: '🎁' },
-    { id: 'rec_6', nome: 'Outros',       icone: '📌' }
+    { id: 'rec_1', nome: 'Salário',      icone: 'ri-briefcase-line' },
+    { id: 'rec_2', nome: 'Freelance',    icone: 'ri-macbook-line' },
+    { id: 'rec_3', nome: 'Investimento', icone: 'ri-line-chart-line' },
+    { id: 'rec_4', nome: 'Aluguel',      icone: 'ri-home-4-line' },
+    { id: 'rec_5', nome: 'Presente',     icone: 'ri-gift-line' },
+    { id: 'rec_6', nome: 'Outros',       icone: 'ri-pushpin-line' }
   ]
 };
 
