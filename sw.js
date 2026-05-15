@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gastos-mensal-v4.0.3';
+const CACHE_NAME = 'gastos-mensal-v4.0.2';
 const FONTS_CACHE = 'gastos-fontes-v1';
 
 // Apenas assets verdadeiramente estáticos — CSS, fontes, imagens

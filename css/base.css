@@ -70,3 +70,10 @@ body {
 .nav-btn .label {
   font-weight: 500;
 }
+
+html {
+  overflow-x: hidden;
+}
+body {
+  overflow-x: hidden;
+}
