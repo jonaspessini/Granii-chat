@@ -1,5 +1,4 @@
-const CACHE_NAME = 'gastos-mensal-v4.0.2';
-const FONTS_CACHE = 'gastos-fontes-v1';
+const CACHE_NAME = 'gastos-mensal-v4.0.3';
 
 // Apenas assets verdadeiramente estáticos — CSS, fontes, imagens
 const ASSETS_TO_CACHE = [
@@ -17,9 +16,9 @@ const ASSETS_TO_CACHE = [
 
 // Nunca cachear requisições que contenham esses termos
 const NEVER_CACHE = [
-  'supabase.co',
-  'supabase-config',
-  'supabase-sync',
+  'supabase.co',       // todas as chamadas de API do Supabase
+  'supabase-config',   // módulo de autenticação
+  'supabase-sync',     // módulo de sync
   'supabase-integration',
   'auth-guard',
   'storage-manager',
@@ -38,18 +37,16 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
-      const hasOldCache = cacheNames.some(
-        name => name !== CACHE_NAME && name !== FONTS_CACHE
-      );
+      const hasOldCache = cacheNames.some(name => name !== CACHE_NAME);
       return Promise.all(
         cacheNames.map((cacheName) => {
-          // Preserva o cache de fontes entre versões do app
-          if (cacheName !== CACHE_NAME && cacheName !== FONTS_CACHE) {
+          if (cacheName !== CACHE_NAME) {
             console.log('[SW] Removendo cache antigo:', cacheName);
             return caches.delete(cacheName);
           }
         })
       ).then(() => {
+        // Só notifica se havia cache antigo (ou seja, é uma atualização real)
         if (hasOldCache) {
           self.clients.matchAll({ type: 'window' }).then(clients => {
             clients.forEach(client => {
@@ -68,29 +65,10 @@ self.addEventListener('fetch', (event) => {
 
   const url = event.request.url;
 
-  // Nunca cachear URLs da lista NEVER_CACHE
+  // Nunca cachear URLs da lista NEVER_CACHE — sempre vai para a rede
   const shouldNeverCache = NEVER_CACHE.some(term => url.includes(term));
   if (shouldNeverCache) {
     event.respondWith(fetch(event.request));
-    return;
-  }
-
-  // Google Fonts — cache-first em cache separado (não expira com updates do app)
-  // Cobre tanto o CSS do googleapis.com quanto os .woff2 do gstatic.com
-  if (url.includes('fonts.googleapis.com') || url.includes('fonts.gstatic.com')) {
-    event.respondWith(
-      caches.open(FONTS_CACHE).then((cache) => {
-        return cache.match(event.request).then((cached) => {
-          if (cached) return cached;
-          return fetch(event.request).then((response) => {
-            if (response && response.status === 200) {
-              cache.put(event.request, response.clone());
-            }
-            return response;
-          });
-        });
-      })
-    );
     return;
   }
 
@@ -112,7 +90,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Para assets estáticos (CSS, fontes locais, imagens) — cache-first
+  // Para assets estáticos (CSS, fontes, imagens) — cache-first
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {

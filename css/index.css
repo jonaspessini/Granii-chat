@@ -19,18 +19,10 @@
   --header-text-color: #ffffff;
 }
 
-        /* * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        } */
-
         body {
             font-family: 'Inter', sans-serif;
             background: #f5f7fb;
             min-height: 100vh;
-            /* padding-bottom: 80px; */
-            overflow-x: hidden;
         }
 
         /* Header */
