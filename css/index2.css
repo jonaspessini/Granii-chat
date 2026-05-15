@@ -19,7 +19,7 @@
   --header-text-color: #ffffff;
 }
 
-body {
+/* body {
   font-family: 'Inter', sans-serif;
   margin: 0;
   padding: 0;
@@ -33,7 +33,7 @@ body {
   overflow-x: hidden;
   width: 100%;
   position: relative;
-}
+} */
 
 .main-container {
   margin-top: 160px; /* Ajustei para 160px */

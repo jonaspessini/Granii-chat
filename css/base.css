@@ -1,0 +1,72 @@
+/* base.css - versão completa */
+
+:root {
+  --cor-principal: #21c45d;
+  --secondary-color: #616161;
+  --border-color: #e0e0e0;
+  /* ... outras variáveis que são iguais ... */
+}
+
+* { 
+  -webkit-tap-highlight-color: transparent; 
+  -webkit-touch-callout: none; 
+  user-select: none; 
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  padding-bottom: 80px; /* Padrão para todas as páginas */
+  overflow-x: hidden;
+}
+
+/* Barra de Navegação Inferior - IGUAL para todas as páginas */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: white;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 1px 0px;
+  z-index: 1000;
+  height: 60px;
+}
+
+.nav-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: none;
+  border: none;
+  color: var(--secondary-color);
+  font-size: 0.75em;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  flex: 1;
+  margin: 0;
+}
+
+.nav-btn:hover {
+  background-color: var(--background-color);
+}
+
+.nav-btn.active {
+  color: var(--cor-principal);
+}
+
+.nav-btn i {
+  font-size: 1.8em;
+  margin-bottom: 4px;
+}
+
+.nav-btn .label {
+  font-weight: 500;
+}
