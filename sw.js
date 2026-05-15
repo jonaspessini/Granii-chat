@@ -1,9 +1,11 @@
-const CACHE_NAME = 'gastos-mensal-v4.0.6';
+const CACHE_NAME = 'gastos-mensal-v4.0.7';
 const FONTS_CACHE = 'gastos-fontes-v1';
 
 // Apenas assets verdadeiramente estáticos — CSS, fontes, imagens
 const ASSETS_TO_CACHE = [
   './manifest.json',
+  './js/disable-zoom.js',
+  './css/base.css',
   './css/index.css',
   './css/index2.css',
   './css/index3.css',
