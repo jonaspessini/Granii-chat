@@ -19,16 +19,21 @@
   --header-text-color: #ffffff;
 }
 
-body {
+/* body {
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+  padding: 0;
   background: white;
   color: var(--text-color);
   display: flex;
   flex-direction: column;
   align-items: center;
   min-height: 100vh;
+  padding-bottom: 0;
+  overflow-x: hidden;
   width: 100%;
   position: relative;
-}
+} */
 
 .main-container {
   margin-top: 160px; /* Ajustei para 160px */
@@ -37,9 +42,12 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0;
+  box-sizing: border-box;
+  padding: 0;
   align-items: center;
   overflow: hidden;
   background-color: var(--card-background);
+  padding-bottom: 70px;
 }
 
 .section-block {

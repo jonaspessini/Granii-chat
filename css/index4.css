@@ -14,14 +14,28 @@
     --border-radius: 8px;
 }
 
+/* * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+} */
 
-body {
+html {
+    overflow-x: hidden;
+    width: 100%;
+}
+
+/* body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     background: white;
     min-height: 100vh;
+    padding: 0 !important;
+    margin: 0 !important;
     color: var(--text-color);
+    overflow-x: hidden;
     width: 100%;
     position: relative;
-}
+} */
 
 .container {
     background: white;
