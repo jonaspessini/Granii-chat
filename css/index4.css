@@ -25,6 +25,10 @@ html {
     width: 100%;
 }
 
+body {
+    padding-bottom: 0;
+}
+
 /* body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     background: white;
@@ -44,7 +48,6 @@ html {
     padding: 0;
     margin: 0;
     position: relative;
-    min-height: 100vh;
     overflow-x: hidden;
 }
 
