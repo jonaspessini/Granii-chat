@@ -6375,6 +6375,22 @@ function sairDoApp() {
     if (menuDropdown) menuDropdown.classList.remove('active');
     confirmarLogout();
 }
+
+// FECHAR O MENU DROPDOWN AO ROLAR A TELA - VERSÃO INSTANTÂNEA
+(function setupScrollToCloseMenu() {
+    function closeMenuOnScroll() {
+        const menuDropdown = document.getElementById('menuDropdown');
+        if (menuDropdown && menuDropdown.classList.contains('active')) {
+            menuDropdown.classList.remove('active');
+        }
+    }
+    
+    window.addEventListener('scroll', closeMenuOnScroll);
+    document.addEventListener('touchmove', closeMenuOnScroll, { passive: true });
+    
+    console.log('✅ Menu dropdown fechará instantaneamente ao rolar');
+})();
+
 </script>
 
 <!-- Overlay do popup de atualização -->
