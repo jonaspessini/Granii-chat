@@ -2739,7 +2739,7 @@ font-size: 1.5em;
 
 #pagarCartaoModal .fatura-cartao-visual {
   /* position: relative; */
-  min-height: 160px;
+  min-height: 190px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -3863,6 +3863,28 @@ font-size: 1.5em;
   color: #2d3142;
   box-shadow: none;
   transition: border-color 0.2s ease;
+}
+
+#modal .card-due-date-display {
+  align-items: center;
+  min-height: 43px;
+  background: #ffffff;
+  border: 1px solid #e4e6ea;
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-size: 0.95em;
+  font-weight: 400;
+  color: #2d3142;
+  box-shadow: none;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+#modal .card-due-date-display:active {
+  background: #fff7ed;
+  border-color: #ff9800;
 }
 
 /* Garantir que o campo valor do topo NÃO seja afetado */
@@ -5027,4 +5049,99 @@ font-size: 1.5em;
 /* Alternativa se houver um terceiro ícone em outro lugar */
 .filter-btn i.ri-arrow-down-s-line {
     color: #ff9800;
+}
+/* ── TOGGLE DE AGRUPAR CARTÕES NO MENU ── */
+.menu-item-toggle {
+  justify-content: space-between;
+}
+
+.menu-item-toggle span {
+  flex: 1;
+}
+
+.menu-toggle-switch {
+  width: 38px;
+  height: 22px;
+  background: #ccc;
+  border-radius: 11px;
+  position: relative;
+  transition: background 0.25s ease;
+  flex-shrink: 0;
+}
+
+.menu-toggle-switch.ativo {
+  background: #7c4dff;
+}
+
+.menu-toggle-knob {
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border-radius: 50%;
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  transition: left 0.25s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.menu-toggle-switch.ativo .menu-toggle-knob {
+  left: 19px;
+}
+
+/* ── CARD DE FATURA AGRUPADA ── */
+.fatura-agrupada-card {
+  /* border-left: 3px solid #7c4dff; */
+  background: linear-gradient(135deg, #f8f5ff 0%, #ffffff 100%);
+}
+
+.fatura-agrupada-card.fatura-paga {
+  /* border-left-color: #9e9e9e; */
+  background: linear-gradient(135deg, #f9f9f9 0%, #ffffff 100%);
+  opacity: 0.82;
+}
+
+.fatura-desc {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fatura-agrupada-icon {
+  width: 24px;
+  height: 24px;
+  background: #7c4dff;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.fatura-agrupada-card.fatura-paga .fatura-agrupada-icon {
+  background: #9e9e9e;
+}
+
+.fatura-agrupada-icon i {
+  color: #fff;
+  font-size: 0.85em;
+}
+
+.fatura-qtd {
+  font-size: 0.78em;
+  color: #888;
+}
+
+/* ── HINT DE EXPANSÃO NA FATURA AGRUPADA ── */
+.fatura-expand-hint {
+  display: flex;
+  align-items: center;
+  color: #bbb;
+  font-size: 1.1em;
+  margin-right: 2px;
+}
+
+.fatura-agrupada-card:active {
+  transform: scale(0.985);
+  transition: transform 0.1s ease;
 }
