@@ -5070,7 +5070,7 @@ font-size: 1.5em;
 }
 
 .menu-toggle-switch.ativo {
-  background: #7c4dff;
+  background: var(--cor-principal);
 }
 
 .menu-toggle-knob {
@@ -5098,7 +5098,7 @@ font-size: 1.5em;
 .fatura-agrupada-card.fatura-paga {
   /* border-left-color: #9e9e9e; */
   background: linear-gradient(135deg, #f9f9f9 0%, #ffffff 100%);
-  opacity: 0.82;
+  opacity: 1;
 }
 
 .fatura-desc {
