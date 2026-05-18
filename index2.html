@@ -5546,7 +5546,7 @@ function abrirModalFaturaAgrupada(grupo, nomeCartao, cartaoObj) {
         const metaText = [dataText, catNome].filter(Boolean).join(' · ');
 
         return `
-            <div class="fatura-modal-item">
+            <div class="fatura-modal-item" data-idx="${lanc._idx}" style="cursor:pointer;">
                 <div class="fatura-modal-item-info">
                     <div class="fatura-modal-item-desc">${desc}</div>
                     ${metaText ? `<div class="fatura-modal-item-meta">${metaText}</div>` : ''}
@@ -5575,8 +5575,9 @@ function abrirModalFaturaAgrupada(grupo, nomeCartao, cartaoObj) {
         ">
             <style>
                 @keyframes _fatura-slidein{from{transform:translateY(100%)}to{transform:translateY(0)}}
-                .fatura-modal-item{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f0f0f0;}
+                .fatura-modal-item{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f0f0f0;transition:background 0.15s;}
                 .fatura-modal-item:last-child{border-bottom:none;}
+                .fatura-modal-item:active{background:#f5f5f5;}
                 .fatura-modal-item-info{flex:1;min-width:0;}
                 .fatura-modal-item-desc{font-size:14px;font-weight:500;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
                 .fatura-modal-item-meta{font-size:12px;color:#999;margin-top:2px;}
@@ -5625,6 +5626,18 @@ function abrirModalFaturaAgrupada(grupo, nomeCartao, cartaoObj) {
     });
 
     document.body.appendChild(overlay);
+
+    // Abrir modal de detalhes ao clicar em uma despesa da fatura
+    overlay.querySelectorAll('.fatura-modal-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const idx = parseInt(this.dataset.idx, 10);
+            if (!isNaN(idx)) {
+                overlay.remove();
+                openTransactionDetails(idx);
+            }
+        });
+    });
 
     const botaoPagamento = document.getElementById('_fatura-modal-pay-btn');
     if (botaoPagamento) {
