@@ -568,6 +568,143 @@ index2
   </div>
 </div>
 
+<!-- ===== MODAL DESPESA CARTÃO DE CRÉDITO ===== -->
+<div id="modalCC" class="modal">
+  <div class="modal-content">
+    <!-- TOPO COLORIDO -->
+    <div class="modal-top-header" id="modalCCTopHeader">
+      <div class="modal-type-label">CARTÃO DE CRÉDITO</div>
+      <div class="modal-amount-container">
+        <span class="currency-symbol">R$</span>
+        <input type="text" inputmode="none" id="ccValor" placeholder="0,00" readonly style="cursor:pointer;" />
+      </div>
+    </div>
+
+    <h2 id="modalCCTitle">Nova Despesa no Cartão</h2>
+
+    <div class="add-entry-options" id="ccAddEntryOptions">
+      <button class="btn" id="ccBtnUnico" onclick="ccSelectEntryType('unico')">Uma vez</button>
+      <button class="btn" id="ccBtnParcelado" onclick="ccSelectEntryType('parcelado')">Parcelado</button>
+      <button class="btn" id="ccBtnFixo" onclick="ccSelectEntryType('fixo')">Fixo</button>
+    </div>
+
+    <input type="text" id="ccDescricao" placeholder="Descrição" />
+
+    <!-- Seletor de Cartão (forma de pagamento) -->
+    <div class="custom-select-trigger" onclick="abrirCCSeletorCartao()">
+      <span class="trigger-text">
+        <i class="ri-bank-card-line"></i>
+        <span id="ccCartaoTexto">Selecionar cartão</span>
+      </span>
+      <span class="trigger-arrow"><i class="ri-arrow-down-s-line"></i></span>
+    </div>
+    <input type="hidden" id="ccCartao" value="">
+
+    <!-- Seletor de Fatura -->
+    <div class="custom-select-trigger" id="ccFaturaTrigger" onclick="abrirCCSeletorFatura()" style="display:none;">
+      <span class="trigger-text">
+        <i class="ri-calendar-check-line"></i>
+        <span id="ccFaturaTexto">Selecionar fatura</span>
+      </span>
+      <span class="trigger-arrow"><i class="ri-arrow-down-s-line"></i></span>
+    </div>
+    <input type="hidden" id="ccDataVencimento" value="">
+
+    <!-- Categoria -->
+    <div class="custom-select-trigger" id="ccCategoriaTrigger" onclick="toggleCCCategoriaDropdown()" style="margin-bottom:0">
+      <span class="trigger-text">
+        <i class="ri-price-tag-3-line"></i>
+        <span id="ccCategoriaTriggerText">— Sem categoria —</span>
+      </span>
+      <span class="trigger-arrow"><i class="ri-arrow-down-s-line"></i></span>
+    </div>
+    <input type="hidden" id="ccCategoriaLancamento" value="">
+
+    <!-- Pago toggle -->
+    <div class="pago-toggle-group" style="display:none;">
+      <label for="ccPagoToggle" class="pago-toggle-label">
+        <span id="ccPagoToggleText">Não foi pago</span>
+      </label>
+      <label class="toggle-switch">
+        <input type="checkbox" id="ccPagoToggle" onchange="atualizarCCTextoPago()">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+
+    <!-- Parcelamento -->
+    <div id="ccParcelamentoFields" class="parcelamento-fields" style="display:none;">
+      <div>
+        <label for="ccParcelaAtual">Parcela Atual:
+          <input type="number" id="ccParcelaAtual" min="1" value="1">
+        </label>
+        <label for="ccTotalParcelas">Total de Parcelas:
+          <input type="number" id="ccTotalParcelas" min="1" value="1">
+        </label>
+      </div>
+    </div>
+
+    <div id="ccLancamentoFixoFields" class="parcelamento-fields" style="display:none;">
+      <label for="ccMesesFixo">Repetir por quantos meses?
+        <input type="number" id="ccMesesFixo" min="1" value="1">
+      </label>
+    </div>
+
+    <div class="btn-group">
+      <button id="ccDeleteBtn" class="btn btn-danger" style="display:none;" onclick="handleCCDeleteClick()">Excluir</button>
+      <button class="btn btn-secondary" onclick="closeModalCC()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarLancamentoCC()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Bottom Sheet: Seletor de Cartão para CC -->
+<div class="bottom-sheet-modal" id="ccSeletorCartaoModal">
+  <div class="bottom-sheet-content">
+    <div class="bottom-sheet-handle"></div>
+    <div class="bottom-sheet-title">Selecionar cartão</div>
+    <div class="bottom-sheet-options" id="ccCartaoOptions"></div>
+    <button class="gerenciar-btn" onclick="window.location.href='index3.html'">
+      <i class="ri-settings-3-line"></i>
+      Gerenciar cartões
+    </button>
+  </div>
+</div>
+
+<!-- Bottom Sheet: Seletor de Fatura para CC -->
+<div class="bottom-sheet-modal" id="ccSeletorFaturaModal">
+  <div class="bottom-sheet-content">
+    <div class="bottom-sheet-handle"></div>
+    <div class="bottom-sheet-title">Selecionar fatura</div>
+    <div class="bottom-sheet-options" id="ccFaturaOptions"></div>
+  </div>
+</div>
+
+<!-- Overlay + Popup de Categorias para o modal CC -->
+<div id="ccCategoriaPopupOverlay" onclick="fecharCCCategoriaDropdown()" style="
+  display:none;
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,0.5);z-index:10200;
+"></div>
+<div id="ccCategoriaPopup" style="
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;
+  background:var(--card-background);
+  border-radius:20px 20px 0 0;
+  z-index:10201;
+  max-height:70vh;
+  flex-direction:column;
+  box-shadow:0 -4px 24px rgba(0,0,0,0.18);
+">
+  <div style="display:flex;justify-content:center;padding:12px 0 4px 0;">
+    <div style="width:40px;height:4px;background:var(--border-color);border-radius:2px;"></div>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 20px 12px 20px;border-bottom:1px solid var(--border-color);">
+    <span style="font-weight:700;font-size:1em;color:var(--text-color)">Categoria</span>
+    <button onclick="fecharCCCategoriaDropdown()" style="background:none;border:none;font-size:1.4em;color:var(--text-muted,#999);cursor:pointer;padding:0;line-height:1;">&times;</button>
+  </div>
+  <div id="ccCategoriaOptionsList" style="overflow-y:auto;flex:1;padding:8px 0;"></div>
+</div>
+
     <!-- Modal: Confirmação de Exclusão de Lançamento Parcelado -->
     <div id="deleteParceladoModal" class="modal">
       <div class="modal-content">
@@ -613,22 +750,31 @@ index2
     </div>
 
 <!-- Modal para Pagar Cartão -->
-<div class="modal" id="pagarCartaoModal">
-  <div class="modal-content">
-    <div class="pagar-cartao-header">
-      <span class="pagar-cartao-eyebrow">Fatura do cartão</span>
-      <h2>Pagar Cartão</h2>
+<!-- Bottom Sheet: Pagar Cartão -->
+<div class="bottom-sheet-modal" id="pagarCartaoModal" onclick="fecharModalPagarCartaoOutside(event)">
+  <div class="bottom-sheet-content pagar-cartao-bs-content">
+    <div class="bottom-sheet-handle"></div>
+
+    <!-- Cabeçalho -->
+    <div class="pagar-cartao-bs-header">
+      <span class="pagar-cartao-bs-title">Pagar Cartão</span>
+      <button class="pagar-cartao-bs-close" onclick="fecharModalPagarCartao()">
+        <i class="ri-close-line"></i>
+      </button>
     </div>
 
-    <div class="form-group">
-      <label for="selecionarCartao">Selecionar Cartão:</label>
-      <select id="selecionarCartao" class="form-select">
-        <option value="">Selecione um cartão</option>
-        <!-- Os cartões serão carregados dinamicamente -->
-      </select>
+    <!-- Seleção de cartão -->
+    <div class="pagar-cartao-bs-select-wrap">
+      <div class="pagar-cartao-bs-select-label">Selecionar cartão</div>
+      <div class="pagar-cartao-bs-cards" id="pagarCartaoCardsList">
+        <!-- cartões carregados dinamicamente -->
+      </div>
     </div>
 
-    <div class="resumo-pagamento" id="resumoPagamento" style="display: none;">
+    <!-- Resumo da fatura (aparece após selecionar) -->
+    <div class="pagar-cartao-bs-resumo" id="resumoPagamento" style="display:none;">
+
+      <!-- Visual do cartão -->
       <div class="fatura-cartao-visual">
         <div class="fatura-card-top">
           <span id="nomeCartaoPagamento">Cartão selecionado</span>
@@ -644,18 +790,60 @@ index2
           <span id="quantidadeTransacoes">0 transações</span>
         </div>
       </div>
+
       <div class="fatura-status-line">
         <i class="ri-checkbox-circle-line"></i>
-        <span id="statusPagamentoCartao">Pronto para marcar como pago</span>
+        <span id="statusPagamentoCartao">Pronto para pagar</span>
       </div>
+
+      <!-- Botão pagar total -->
+      <button class="pagar-cartao-bs-btn-total" id="btnPagarCartao" onclick="pagarCartao()" disabled>
+        <i class="ri-check-line"></i>
+        <span>Pagar fatura completa</span>
+        <span class="pagar-cartao-bs-btn-valor" id="btnPagarValorTotal">R$ 0,00</span>
+      </button>
+
+      <!-- Separador -->
+      <div class="pagar-cartao-bs-divisor">ou</div>
+
+      <!-- Botão pagar adiantado (expansível) -->
+      <button class="pagar-cartao-bs-btn-adiantado" id="btnAdiantadoToggle" onclick="togglePagamentoAdiantado()" disabled>
+        <i class="ri-time-line"></i>
+        <span>Pagar valor adiantado</span>
+        <i class="ri-arrow-down-s-line pagar-cartao-bs-arrow" id="adiantadoArrow"></i>
+      </button>
+
+      <!-- Campos do pagamento adiantado (expandível) -->
+      <div class="pagar-cartao-bs-adiantado-panel" id="adiantadoPanel">
+        <div class="pagar-cartao-bs-adiantado-info">
+          <i class="ri-information-line"></i>
+          <span>Informe um valor parcial para registrar como pagamento adiantado da fatura</span>
+        </div>
+        <div class="pagar-cartao-bs-adiantado-input-wrap">
+          <span class="pagar-cartao-bs-currency">R$</span>
+          <input
+            type="text"
+            id="valorPagamentoCartao"
+            inputmode="decimal"
+            placeholder="0,00"
+            class="pagar-cartao-bs-valor-input"
+            oninput="atualizarBotaoAdiantado()"
+          />
+        </div>
+        <button class="pagar-cartao-bs-btn-confirmar-adiantado" id="btnConfirmarAdiantado" onclick="pagarCartaoAdiantado()" disabled>
+          Confirmar pagamento adiantado
+        </button>
+      </div>
+
     </div>
 
-    <div class="btn-group">
-      <button class="btn btn-secondary" onclick="fecharModalPagarCartao()">Cancelar</button>
-      <button class="btn btn-primary" onclick="pagarCartao()" id="btnPagarCartao" disabled>Pagar Cartão</button>
-    </div>
+    <!-- Espaço seguro bottom -->
+    <div style="height: env(safe-area-inset-bottom, 8px);"></div>
   </div>
 </div>
+
+<!-- campo oculto para select legado (mantém compatibilidade) -->
+<select id="selecionarCartao" style="display:none;"></select>
 
     <!-- FAB (Floating Action Button) -->
     <button class="fab-button" id="mainFab" onclick="toggleFabOptions()">
@@ -664,10 +852,11 @@ index2
       </svg>
     </button>
 
-    <!-- Bolinhas de Opção (Receita/Despesa) -->
+    <!-- Bolinhas de Opção (Receita/Despesa/Cartão) -->
     <div class="fab-options" id="fabOptions">
       <button class="fab-option-btn receita" onclick="openModal('receita')">Receita</button>
       <button class="fab-option-btn despesa" onclick="openModal('despesa')">Despesa</button>
+      <button class="fab-option-btn cartao-credito" onclick="openModalCartaoCredito()"><i class="ri-bank-card-line"></i> Cartão</button>
     </div>
   </div>
 
@@ -1293,7 +1482,7 @@ function getSaldoMesAnterior() {
 
   const keyMesAnterior = 'lancamentos_' + getMonthKey(mesAnterior);
   const dataMesAnterior = localStorage.getItem(keyMesAnterior);
-  const lancamentosMesAnterior = dataMesAnterior ? JSON.parse(dataMesAnterior) : [];
+  const lancamentosMesAnterior = getLancamentosSemPagamentosFatura(dataMesAnterior ? JSON.parse(dataMesAnterior) : []);
 
   // Calcular saldo do mês anterior (receitas - despesas)
   const totalReceitasMesAnterior = lancamentosMesAnterior
@@ -1322,7 +1511,7 @@ function getSaldoAcumuladoMesesAnteriores() {
   while (dataMes >= limite) {
     const keyMes = 'lancamentos_' + getMonthKey(dataMes);
     const dataMesLancamentos = localStorage.getItem(keyMes);
-    const lancamentosMes = dataMesLancamentos ? JSON.parse(dataMesLancamentos) : [];
+    const lancamentosMes = getLancamentosSemPagamentosFatura(dataMesLancamentos ? JSON.parse(dataMesLancamentos) : []);
 
     // Calcular saldo do mês (receitas - despesas)
     const totalReceitasMes = lancamentosMes
@@ -1451,8 +1640,9 @@ function closeBalanceChart() {
 }
 
 function updateBalanceChart() {
-  const totalReceitas = lancamentos.filter(l => l.valor > 0).reduce((a, b) => a + b.valor, 0);
-  const totalDespesas = Math.abs(lancamentos.filter(l => l.valor < 0).reduce((a, b) => a + b.valor, 0));
+  const lancamentosCompetencia = getLancamentosSemPagamentosFatura(lancamentos);
+  const totalReceitas = lancamentosCompetencia.filter(l => l.valor > 0).reduce((a, b) => a + b.valor, 0);
+  const totalDespesas = Math.abs(lancamentosCompetencia.filter(l => l.valor < 0).reduce((a, b) => a + b.valor, 0));
   const saldoTotalMes = totalReceitas - totalDespesas;
 
   // CORREÇÃO: Usar saldo acumulado de TODOS os meses anteriores
@@ -1574,11 +1764,11 @@ function openTransactionDetails(index) {
 
   // Status com ícone de cartão separado se aplicável
   const statusElement = document.getElementById('detailStatus');
-  if (transaction.pago) {
+  if (!isCartaoCredito && transaction.pago) {
     statusElement.innerHTML = `${cartaoIcon}<span>${transaction.tipo === 'receita' ? 'Recebido' : 'Pago'}</span>`;
     statusElement.className = 'transaction-detail-status paid';
     document.getElementById('detailPagarBtn').textContent = transaction.tipo === 'receita' ? 'MARCAR COMO NÃO RECEBIDO' : 'MARCAR COMO NÃO PAGO';
-  } else {
+  } else if (!isCartaoCredito) {
     statusElement.innerHTML = `${cartaoIcon}<span>${transaction.tipo === 'receita' ? 'A Receber' : 'A Pagar'}</span>`;
     statusElement.className = 'transaction-detail-status unpaid';
     document.getElementById('detailPagarBtn').textContent = transaction.tipo === 'receita' ? 'RECEBER' : 'PAGAR';
@@ -1586,6 +1776,14 @@ function openTransactionDetails(index) {
 
   // Atualiza a cor do botão baseado no tipo
   const pagarBtn = document.getElementById('detailPagarBtn');
+  if (isCartaoCredito) {
+    const pagoVisualCartao = transaction.pago || isFaturaCartaoQuitadaParaVisualizacao(transaction, lancamentos);
+    statusElement.innerHTML = `${cartaoIcon}<span>${pagoVisualCartao ? 'Fatura paga' : 'Na fatura'}</span>`;
+    statusElement.className = `transaction-detail-status ${pagoVisualCartao ? 'paid' : 'unpaid'}`;
+    pagarBtn.style.display = 'none';
+  } else {
+    pagarBtn.style.display = '';
+  }
   pagarBtn.classList.remove('despesa', 'receita');
   pagarBtn.classList.add(transaction.tipo === 'receita' ? 'receita' : 'despesa');
 
@@ -1618,8 +1816,18 @@ function openTransactionDetails(index) {
 
     function editTransaction() {
       if (currentTransactionIndex !== null) {
+        const lanc = lancamentos[currentTransactionIndex];
+        if (isLancamentoCartaoCredito(lanc) && isFaturaCartaoQuitadaParaVisualizacao(lanc, lancamentos)) {
+          showToast('Reabra a fatura antes de editar esta despesa.', 'warning');
+          return;
+        }
         closeTransactionDetails();
-        openModal(null, currentTransactionIndex);
+        // Se for despesa no cartão, abrir modal CC
+        if (lanc && lanc.tipo === 'despesa' && lanc.formaPagamento && lanc.formaPagamento !== 'debito_pix') {
+          openModalCartaoCredito(currentTransactionIndex);
+        } else {
+          openModal(null, currentTransactionIndex);
+        }
       }
     }
 
@@ -2135,12 +2343,128 @@ function calcularDataVencimentoProximoMes(dataAtual, mesesAdicionais) {
 }
 
 // Funções de lançamentos
+function isFormaPagamentoCartaoCredito(formaPagamento) {
+  return !!formaPagamento && formaPagamento !== 'debito_pix';
+}
+
+function isLancamentoCartaoCredito(lancamento) {
+  return !!lancamento &&
+    lancamento.tipo === 'despesa' &&
+    isFormaPagamentoCartaoCredito(lancamento.formaPagamento);
+}
+
+function isPagamentoFaturaCartao(lancamento) {
+  return !!lancamento && (
+    lancamento.tipoSistema === 'pagamento_fatura_cartao' ||
+    (lancamento.parcelamento && lancamento.parcelamento.tipoSistema === 'pagamento_fatura_cartao')
+  );
+}
+
+function getLancamentosSemPagamentosFatura(lista) {
+  const lancs = Array.isArray(lista) ? lista : lancamentos;
+  return lancs.filter(l => !isPagamentoFaturaCartao(l));
+}
+
+function getCartaoIdPagamentoFatura(lancamento) {
+  return lancamento?.cartaoId ||
+    lancamento?.parcelamento?.cartaoId ||
+    lancamento?.formaPagamento?.replace('pagamento_fatura_cartao_', '') ||
+    '';
+}
+
+function getTotalPagamentosFaturaCartao(cartaoId, lista) {
+  const lancs = Array.isArray(lista) ? lista : lancamentos;
+  return lancs
+    .filter(l => isPagamentoFaturaCartao(l) && normalizarIdCartao(getCartaoIdPagamentoFatura(l)) === normalizarIdCartao(cartaoId))
+    .reduce((sum, l) => sum + Math.abs(l.valor || 0), 0);
+}
+
+function getUltimoPagamentoFaturaCartao(cartaoId, lista) {
+  const lancs = Array.isArray(lista) ? lista : lancamentos;
+  const pagamentos = lancs
+    .filter(l => isPagamentoFaturaCartao(l) && normalizarIdCartao(getCartaoIdPagamentoFatura(l)) === normalizarIdCartao(cartaoId))
+    .sort((a, b) => (b.ultimaModificacao || 0) - (a.ultimaModificacao || 0));
+
+  return pagamentos.length > 0 ? Math.abs(pagamentos[0].valor || 0) : 0;
+}
+
+function getPagamentosFaturaCartao(cartaoId, lista) {
+  const lancs = Array.isArray(lista) ? lista : lancamentos;
+  return lancs
+    .filter(l => isPagamentoFaturaCartao(l) && normalizarIdCartao(getCartaoIdPagamentoFatura(l)) === normalizarIdCartao(cartaoId))
+    .sort((a, b) => (a.ultimaModificacao || 0) - (b.ultimaModificacao || 0));
+}
+
+function getTotalBrutoFaturaCartao(cartaoId, lista) {
+  const lancs = getLancamentosSemPagamentosFatura(lista);
+  return lancs
+    .filter(l => isLancamentoCartaoCredito(l) && normalizarIdCartao(l.formaPagamento) === normalizarIdCartao(cartaoId))
+    .reduce((sum, l) => sum + Math.abs(l.valor || 0), 0);
+}
+
+function isMesmoPagamentoFatura(a, b) {
+  if (!a || !b) return false;
+  if (a === b) return true;
+  if (a.local_id && b.local_id && a.local_id === b.local_id) return true;
+  return Math.abs(a.valor || 0) === Math.abs(b.valor || 0) &&
+    (a.ultimaModificacao || 0) === (b.ultimaModificacao || 0) &&
+    normalizarIdCartao(getCartaoIdPagamentoFatura(a)) === normalizarIdCartao(getCartaoIdPagamentoFatura(b));
+}
+
+function isPagamentoAdiantadoFatura(lancamento, lista) {
+  if (!isPagamentoFaturaCartao(lancamento)) return false;
+
+  const cartaoId = getCartaoIdPagamentoFatura(lancamento);
+  const totalBrutoFatura = getTotalBrutoFaturaCartao(cartaoId, lista);
+  if (totalBrutoFatura <= 0) return false;
+
+  let acumulado = 0;
+  const pagamentos = getPagamentosFaturaCartao(cartaoId, lista);
+  for (const pagamento of pagamentos) {
+    acumulado += Math.abs(pagamento.valor || 0);
+    if (isMesmoPagamentoFatura(pagamento, lancamento)) {
+      return acumulado < totalBrutoFatura;
+    }
+  }
+
+  return false;
+}
+
+function calcularSaldoRestanteFatura(totalBruto, cartaoId, lista) {
+  const totalPago = getTotalPagamentosFaturaCartao(cartaoId, lista);
+  return Math.max(0, totalBruto - totalPago);
+}
+
+function isFaturaCartaoQuitadaParaVisualizacao(lancamento, lista) {
+  if (!isLancamentoCartaoCredito(lancamento) || isPagamentoFaturaCartao(lancamento)) return false;
+
+  const lancs = getLancamentosSemPagamentosFatura(lista);
+  const totalBrutoFatura = lancs
+    .filter(l =>
+      isLancamentoCartaoCredito(l) &&
+      normalizarIdCartao(l.formaPagamento) === normalizarIdCartao(lancamento.formaPagamento)
+    )
+    .reduce((sum, l) => sum + Math.abs(l.valor || 0), 0);
+
+  if (totalBrutoFatura <= 0) return false;
+
+  return calcularSaldoRestanteFatura(totalBrutoFatura, lancamento.formaPagamento, lista) <= 0;
+}
+
+function getStatusPagoPermitido(tipo, formaPagamento, statusSolicitado, statusAtual) {
+  if (tipo === 'despesa' && isFormaPagamentoCartaoCredito(formaPagamento)) {
+    return typeof statusAtual === 'boolean' ? statusAtual : false;
+  }
+
+  return !!statusSolicitado;
+}
+
 function salvarLancamento() {
   const descricaoBase = descricaoInput.value.trim();
   const valor = parseBRL(valorInput.value);
   const tipo = tipoInput.value;
   const dataVencimento = document.getElementById('dataVencimento').value;
-  const pago = document.getElementById('pagoToggle').checked;
+  let pago = document.getElementById('pagoToggle').checked;
   const formaPagamento = tipo === 'despesa' ? document.getElementById('formaPagamento').value : null;
   const categoriaId = document.getElementById('categoriaLancamento').value || null;
 
@@ -2162,6 +2486,7 @@ function salvarLancamento() {
 
   // VERIFICAR SE NÃO TEM CATEGORIA SELECIONADA
   const isEditing = (editIndex !== null);
+  pago = getStatusPagoPermitido(tipo, formaPagamento, pago, isEditing ? lancamentos[editIndex]?.pago : undefined);
   const hasNoCategory = (!categoriaId || categoriaId === '');
 
   // Se não tem categoria e NÃO é edição (apenas para novos lançamentos)
@@ -2222,8 +2547,13 @@ function executarSalvarLancamento() {
     valor = parseBRL(valorInput.value);
     tipo = tipoInput.value;
     dataVencimento = document.getElementById('dataVencimento').value;
-    pago = document.getElementById('pagoToggle').checked;
     formaPagamento = tipo === 'despesa' ? document.getElementById('formaPagamento').value : null;
+    pago = getStatusPagoPermitido(
+      tipo,
+      formaPagamento,
+      document.getElementById('pagoToggle').checked,
+      isEditing ? lancamentos[editIndex]?.pago : undefined
+    );
     categoriaId = document.getElementById('categoriaLancamento').value || null;
     valorFinal = tipo === 'despesa' ? -Math.abs(valor) : Math.abs(valor);
   }
@@ -2468,6 +2798,10 @@ async function excluirLancamentoConfirmado(option) {
 
 function toggleStatus(index) {
     if (index === -1) return;
+    if (isLancamentoCartaoCredito(lancamentos[index])) {
+        showToast('Despesas no cartao devem ser pagas pela fatura.', 'warning');
+        return;
+    }
     lancamentos[index].pago = !lancamentos[index].pago;
 
     // Registrar o timestamp quando for marcado como pago
@@ -2491,6 +2825,7 @@ function addRowToTable(lanc, originalIndex) {
 
     const card = document.createElement('div');
     card.className = 'transaction-card';
+    const isPagamentoAdiantado = isPagamentoAdiantadoFatura(lanc, lancamentos);
 
     // ADICIONAR ATRIBUTOS IMPORTANTES
     if (lanc.dataVencimento) {
@@ -2501,21 +2836,32 @@ function addRowToTable(lanc, originalIndex) {
 
     // Garantir que estamos usando o índice correto
     const correctIndex = originalIndex !== undefined ? originalIndex : lanc._idx;
-    card.addEventListener('click', () => openTransactionDetails(correctIndex));
+    card.addEventListener('click', () => {
+        if (isPagamentoAdiantado) {
+            abrirConfirmacaoExcluirPagamentoFatura(correctIndex);
+        } else {
+            openTransactionDetails(correctIndex);
+        }
+    });
 
     const valorClass = lanc.valor >= 0 ? 'valor-positivo' : 'valor-negativo';
     let valorFormatado = formatToBRL(Math.abs(lanc.valor));
 
-    let descricaoDisplay = lanc.descricao;
-    const statusText = lanc.pago ? 'Pago' : 'A Pagar';
-    const statusClass = lanc.pago ? 'paid' : 'unpaid';
+    let descricaoDisplay = isPagamentoAdiantado ? 'Pagamento adiantado' : lanc.descricao;
+    const pagoVisual = lanc.pago || isFaturaCartaoQuitadaParaVisualizacao(lanc, lancamentos);
+    const statusText = isPagamentoAdiantado ? 'Pago' : (pagoVisual ? 'Pago' : 'A Pagar');
+    const statusClass = isPagamentoAdiantado || pagoVisual ? 'paid' : 'unpaid';
+    card.setAttribute('data-paid', pagoVisual ? 'true' : 'false');
 
     // Calcular dias até o vencimento e definir texto e cor
     let vencimentoText = '';
     let vencimentoClass = '';
 
-    if (lanc.pago) {
-        vencimentoText = 'Sem pendência';
+    if (isPagamentoAdiantado) {
+        vencimentoText = 'Pagamento parcial da fatura';
+        vencimentoClass = 'pago';
+    } else if (pagoVisual) {
+        vencimentoText = isLancamentoCartaoCredito(lanc) && !lanc.pago ? 'Fatura paga' : 'Sem pendência';
         vencimentoClass = 'pago';
     } else if (lanc.dataVencimento) {
         const diasAteVencimento = calcularDiasAteVencimento(lanc.dataVencimento);
@@ -2639,14 +2985,22 @@ function renderTabela() {
 }
 
 function atualizarTotais() {
-  const totalReceitas = lancamentos.filter(l => l.valor > 0).reduce((a,b) => a + b.valor, 0);
-  const totalDespesas = lancamentos.filter(l => l.valor < 0).reduce((a,b) => a + b.valor, 0);
+  const lancamentosComuns = lancamentos.filter(l => !isPagamentoFaturaCartao(l));
+  const pagamentosFaturaCartao = lancamentos.filter(isPagamentoFaturaCartao);
+  const despesasCartao = lancamentosComuns.filter(isLancamentoCartaoCredito);
+  const totalCartaoBruto = despesasCartao.reduce((a,b) => a + Math.abs(b.valor), 0);
+  const totalPagamentosFaturaCartao = pagamentosFaturaCartao.reduce((a,b) => a + Math.abs(b.valor), 0);
+  const totalCartaoAbertoLiquido = Math.max(0, totalCartaoBruto - totalPagamentosFaturaCartao);
+  const despesasSemCartao = lancamentosComuns.filter(l => l.valor < 0 && !isLancamentoCartaoCredito(l));
 
-  const totalReceitasPagas = lancamentos.filter(l => l.valor > 0 && l.pago).reduce((a,b) => a + b.valor, 0);
-  const totalReceitasAbertas = lancamentos.filter(l => l.valor > 0 && !l.pago).reduce((a,b) => a + b.valor, 0);
+  const totalReceitas = lancamentosComuns.filter(l => l.valor > 0).reduce((a,b) => a + b.valor, 0);
+  const totalDespesas = despesasSemCartao.reduce((a,b) => a + b.valor, 0) - totalCartaoBruto;
 
-  const totalDespesasPagas = lancamentos.filter(l => l.valor < 0 && l.pago).reduce((a,b) => a + b.valor, 0);
-  const totalDespesasAbertas = lancamentos.filter(l => l.valor < 0 && !l.pago).reduce((a,b) => a + b.valor, 0);
+  const totalReceitasPagas = lancamentosComuns.filter(l => l.valor > 0 && l.pago).reduce((a,b) => a + b.valor, 0);
+  const totalReceitasAbertas = lancamentosComuns.filter(l => l.valor > 0 && !l.pago).reduce((a,b) => a + b.valor, 0);
+
+  const totalDespesasPagas = despesasSemCartao.filter(l => l.pago).reduce((a,b) => a + b.valor, 0) - totalPagamentosFaturaCartao;
+  const totalDespesasAbertas = despesasSemCartao.filter(l => !l.pago).reduce((a,b) => a + b.valor, 0) - totalCartaoAbertoLiquido;
 
   // === CÁLCULO CORRIGIDO DO SALDO ATUAL - CONSIDERA TODOS OS MESES ===
   let totalReceitasPagasGlobal = 0;
@@ -2661,7 +3015,7 @@ function atualizarTotais() {
       allMonthLancamentos.forEach(lanc => {
         const pago = lanc.hasOwnProperty('pago') ? lanc.pago : false;
 
-        if (pago) {
+        if (pago || isPagamentoFaturaCartao(lanc)) {
           if (lanc.valor > 0) {
             totalReceitasPagasGlobal += lanc.valor;
           } else {
@@ -2839,6 +3193,7 @@ function loadLancamentos() {
         }
 
         lancamentos = parsedData.filter(lanc => lanc !== null && typeof lanc === 'object').map(lanc => ({
+            local_id: lanc.local_id || undefined,
             descricao: lanc.descricao || 'Sem descrição',
             valor: typeof lanc.valor === 'number' ? lanc.valor : 0,
             tipo: lanc.tipo || 'despesa',
@@ -2846,6 +3201,8 @@ function loadLancamentos() {
             dataVencimento: lanc.dataVencimento || new Date().toISOString().split('T')[0],
             formaPagamento: lanc.formaPagamento || null,
             categoria: lanc.categoria || null,
+            tipoSistema: lanc.tipoSistema || lanc.parcelamento?.tipoSistema || undefined,
+            cartaoId: lanc.cartaoId || lanc.parcelamento?.cartaoId || undefined,
             parcelamento: lanc.parcelamento || undefined,
             ultimaModificacao: lanc.ultimaModificacao || undefined
         }));
@@ -3189,25 +3546,14 @@ function carregarFormasPagamento() {
 
   container.innerHTML = '';
 
-  // Débito/Pix fixo no topo
+  // Débito/Pix fixo no topo — ÚNICO para despesas normais (cartão de crédito usa modal separado)
   adicionarOpcaoFormaPagamento({
     nome: 'Débito/Pix',
     valor: 'debito_pix',
     icone: 'ri-bank-line'
   });
 
-  // cartões cadastrados
-  const cartoes = JSON.parse(localStorage.getItem('cartoes_credito')) || [];
-
-  cartoes.forEach(cartao => {
-
-    adicionarOpcaoFormaPagamento({
-      nome: cartao.nome,
-      valor: `cartao_${cartao.id}`,
-      icone: 'ri-bank-card-2-line'
-    });
-
-  });
+  // Cartões de crédito NÃO aparecem mais aqui — use "Despesa no Cartão" no FAB
 
 }
 
@@ -3719,51 +4065,172 @@ function limparDados() {
 
 function abrirModalPagarCartao() {
   const modal = document.getElementById('pagarCartaoModal');
-  const selectCartao = document.getElementById('selecionarCartao');
-  const resumoPagamento = document.getElementById('resumoPagamento');
-  const btnPagar = document.getElementById('btnPagarCartao');
 
   // Fechar o menu dropdown
   menuDropdown.classList.remove('active');
 
-  // Carregar cartões disponíveis
+  // Resetar estado visual
+  document.getElementById('resumoPagamento').style.display = 'none';
+  document.getElementById('btnPagarCartao').disabled = true;
+  const adiantadoPanel = document.getElementById('adiantadoPanel');
+  if (adiantadoPanel) { adiantadoPanel.classList.remove('open'); }
+  const adiantadoArrow = document.getElementById('adiantadoArrow');
+  if (adiantadoArrow) adiantadoArrow.style.transform = '';
+  const btnAdiantado = document.getElementById('btnAdiantadoToggle');
+  if (btnAdiantado) btnAdiantado.disabled = true;
+
+  // Carregar cartões como chips clicáveis
   carregarCartoesParaPagamento();
 
-  // Resetar estado
-  selectCartao.value = '';
-  resumoPagamento.style.display = 'none';
-  btnPagar.disabled = true;
-
-  // Mostrar modal
-  modal.style.display = 'flex';
+  // Abrir bottom sheet
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
 }
 
 function fecharModalPagarCartao() {
   const modal = document.getElementById('pagarCartaoModal');
-  modal.style.display = 'none';
+  modal.classList.remove('active');
+  document.body.style.overflow = '';
+  const content = document.querySelector('.pagar-cartao-bs-content');
+  if (content) content.classList.remove('adiantado-aberto');
+}
+
+function abrirModalPagarCartaoComCartao(cartaoId) {
+  // Abre o bottom sheet de pagar cartão já com o cartão pré-selecionado
+  abrirModalPagarCartao();
+  // Aguarda o DOM do bottom sheet estar pronto e seleciona o chip
+  setTimeout(() => {
+    const cartaoIdNormalizado = normalizarIdCartao(cartaoId);
+    const chip = Array.from(document.querySelectorAll('.pagar-cartao-chip'))
+      .find(item => normalizarIdCartao(item.dataset.cartaoId) === cartaoIdNormalizado);
+    if (chip) {
+      selecionarCartaoParaPagamento(chip.dataset.cartaoId, chip);
+    } else {
+      // fallback: tenta pelo select legado
+      const sel = document.getElementById('selecionarCartao');
+      if (sel) {
+        const option = Array.from(sel.options)
+          .find(opt => normalizarIdCartao(opt.value) === cartaoIdNormalizado);
+        if (option) {
+          sel.value = option.value;
+          calcularTotalPagar(option.value);
+        } else {
+          calcularTotalPagar(cartaoId);
+        }
+      }
+    }
+  }, 80);
+}
+
+function fecharModalPagarCartaoOutside(event) {
+  if (event.target === document.getElementById('pagarCartaoModal')) {
+    fecharModalPagarCartao();
+  }
 }
 
 function carregarCartoesParaPagamento() {
-  const selectCartao = document.getElementById('selecionarCartao');
+  const container = document.getElementById('pagarCartaoCardsList');
+  const selectLegado = document.getElementById('selecionarCartao');
   const cartoesCadastrados = JSON.parse(localStorage.getItem('cartoes_credito') || '[]');
 
-  // Limpar opções existentes (exceto a primeira)
-  while (selectCartao.children.length > 1) {
-    selectCartao.removeChild(selectCartao.lastChild);
+  // Atualiza select legado também (para compatibilidade com calcularTotalPagar)
+  while (selectLegado.children.length > 1) selectLegado.removeChild(selectLegado.lastChild);
+
+  container.innerHTML = '';
+
+  if (cartoesCadastrados.length === 0) {
+    container.innerHTML = '<div style="color:#aaa;font-size:0.9em;padding:8px 0;">Nenhum cartão cadastrado.</div>';
+    return;
   }
 
-  // Adicionar cartões
   cartoesCadastrados.forEach(cartao => {
-    const option = document.createElement('option');
-    option.value = cartao.id;
-    option.textContent = cartao.nome;
-    selectCartao.appendChild(option);
-  });
+    const opt = document.createElement('option');
+    opt.value = cartao.id;
+    opt.textContent = cartao.nome;
+    selectLegado.appendChild(opt);
 
-  // Adicionar event listener para quando selecionar um cartão
-  selectCartao.onchange = function() {
-    calcularTotalPagar(this.value);
-  };
+    const cor = cartao.cor || '#0f766e';
+    const chip = document.createElement('button');
+    chip.className = 'pagar-cartao-chip';
+    chip.dataset.cartaoId = cartao.id;
+    chip.style.setProperty('--chip-color', cor);
+    chip.innerHTML = `<i class="ri-bank-card-line"></i><span>${cartao.nome}</span>`;
+    chip.onclick = () => selecionarCartaoParaPagamento(cartao.id, chip);
+    container.appendChild(chip);
+  });
+}
+
+function selecionarCartaoParaPagamento(cartaoId, chipEl) {
+  // Atualiza seleção visual dos chips
+  document.querySelectorAll('.pagar-cartao-chip').forEach(c => c.classList.remove('active'));
+  if (chipEl) chipEl.classList.add('active');
+
+  // Atualiza select legado
+  const selectLegado = document.getElementById('selecionarCartao');
+  selectLegado.value = cartaoId;
+
+  // Fecha painel adiantado se estava aberto
+  const adiantadoPanel = document.getElementById('adiantadoPanel');
+  if (adiantadoPanel) adiantadoPanel.classList.remove('open');
+  const adiantadoArrow = document.getElementById('adiantadoArrow');
+  if (adiantadoArrow) adiantadoArrow.style.transform = '';
+  const valorInput = document.getElementById('valorPagamentoCartao');
+  if (valorInput) valorInput.value = '';
+
+  calcularTotalPagar(cartaoId);
+}
+
+function togglePagamentoAdiantado() {
+  const panel = document.getElementById('adiantadoPanel');
+  const arrow = document.getElementById('adiantadoArrow');
+  const content = document.querySelector('.pagar-cartao-bs-content');
+  const isOpen = panel.classList.contains('open');
+
+  if (isOpen) {
+    panel.classList.remove('open');
+    arrow.style.transform = '';
+    if (content) content.classList.remove('adiantado-aberto');
+  } else {
+    panel.classList.add('open');
+    arrow.style.transform = 'rotate(180deg)';
+    if (content) content.classList.add('adiantado-aberto');
+    setTimeout(() => {
+      const input = document.getElementById('valorPagamentoCartao');
+      if (input) input.focus();
+    }, 250);
+  }
+}
+
+function atualizarBotaoAdiantado() {
+  const input = document.getElementById('valorPagamentoCartao');
+  const btn = document.getElementById('btnConfirmarAdiantado');
+  if (!input || !btn) return;
+  const val = parseBRL(input.value);
+  btn.disabled = isNaN(val) || val <= 0;
+}
+
+function pagarCartaoAdiantado() {
+  const cartaoId = document.getElementById('selecionarCartao').value;
+  if (!cartaoId) return;
+
+  const transacoesParaPagar = obterTransacoesAbertasCartao(cartaoId);
+  const saldoAberto = obterSaldoAbertoCartao(cartaoId);
+  const valorInformado = parseBRL(document.getElementById('valorPagamentoCartao')?.value || '');
+
+  if (transacoesParaPagar.length === 0 || saldoAberto <= 0) {
+    showToast('Não há transações em aberto para este cartão.', 'warning');
+    return;
+  }
+  if (isNaN(valorInformado) || valorInformado <= 0) {
+    showToast('Informe um valor de pagamento válido.', 'warning');
+    return;
+  }
+  if (valorInformado >= saldoAberto) {
+    showToast('Para pagar o valor total, use o botão "Pagar fatura completa".', 'warning');
+    return;
+  }
+
+  abrirConfirmacaoPagamentoCartao(cartaoId, transacoesParaPagar.length, valorInformado, saldoAberto);
 }
 
 function normalizarIdCartao(valor) {
@@ -3816,6 +4283,49 @@ function aplicarCorCartaoPagamento(cor) {
 }
 
 let cartaoPendentePagamento = null;
+let valorPendentePagamentoCartao = 0;
+
+function obterTransacoesAbertasCartao(cartaoId) {
+  return lancamentos.filter(lanc =>
+    lanc.tipo === 'despesa' &&
+    !lanc.pago &&
+    !isPagamentoFaturaCartao(lanc) &&
+    lancamentoPertenceAoCartao(lanc, cartaoId)
+  );
+}
+
+function obterSaldoAbertoCartao(cartaoId) {
+  const transacoesCartao = obterTransacoesAbertasCartao(cartaoId);
+  const totalBruto = Math.abs(transacoesCartao.reduce((sum, trans) => sum + trans.valor, 0));
+  return calcularSaldoRestanteFatura(totalBruto, cartaoId, lancamentos);
+}
+
+async function registrarPagamentoFaturaCartao(cartaoId, valorPagamento) {
+  const cartao = buscarCartaoPagamento(cartaoId);
+  const hoje = new Date();
+  const dataPagamento = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`;
+  const idNormalizado = normalizarIdCartao(cartaoId);
+
+  lancamentos.push({
+    descricao: `Pagamento fatura ${cartao?.nome || 'cartao'}`,
+    tipo: 'despesa',
+    valor: -Math.abs(valorPagamento),
+    pago: true,
+    dataVencimento: dataPagamento,
+    formaPagamento: `pagamento_fatura_cartao_${idNormalizado}`,
+    categoria: null,
+    tipoSistema: 'pagamento_fatura_cartao',
+    cartaoId: idNormalizado,
+    parcelamento: {
+      tipoSistema: 'pagamento_fatura_cartao',
+      cartaoId: idNormalizado,
+      faturaMonthKey: getMonthKey(currentDate)
+    },
+    ultimaModificacao: Date.now()
+  });
+
+  await salvarLocal(currentDate);
+}
 
 function calcularTotalPagar(cartaoId) {
   const resumoPagamento = document.getElementById('resumoPagamento');
@@ -3952,6 +4462,128 @@ function confirmarPagamentoCartao() {
 
   // Mostrar toast notification (opcional - sem botão de confirmação)
   showToast(`${transacoesParaPagar.length} transações pagas com sucesso!`);
+}
+
+function calcularTotalPagar(cartaoId) {
+  const resumoPagamento = document.getElementById('resumoPagamento');
+  const totalPagarEl = document.getElementById('totalPagar');
+  const quantidadeTransacoesEl = document.getElementById('quantidadeTransacoes');
+  const nomeCartaoEl = document.getElementById('nomeCartaoPagamento');
+  const vencimentoCartaoEl = document.getElementById('vencimentoCartaoPagamento');
+  const statusPagamentoEl = document.getElementById('statusPagamentoCartao');
+  const btnPagar = document.getElementById('btnPagarCartao');
+  const btnAdiantado = document.getElementById('btnAdiantadoToggle');
+  const btnValorTotal = document.getElementById('btnPagarValorTotal');
+  const valorPagamentoEl = document.getElementById('valorPagamentoCartao');
+
+  if (!cartaoId) {
+    resumoPagamento.style.display = 'none';
+    btnPagar.disabled = true;
+    if (btnAdiantado) btnAdiantado.disabled = true;
+    if (valorPagamentoEl) valorPagamentoEl.value = '';
+    return;
+  }
+
+  const cartaoSelecionado = buscarCartaoPagamento(cartaoId);
+  nomeCartaoEl.textContent = cartaoSelecionado?.nome || 'Cartão selecionado';
+  vencimentoCartaoEl.textContent = cartaoSelecionado?.diaVencimento
+    ? `Vence dia ${cartaoSelecionado.diaVencimento}`
+    : 'Vencimento não informado';
+  aplicarCorCartaoPagamento(cartaoSelecionado?.cor || '#0f766e');
+
+  const transacoesCartao = obterTransacoesAbertasCartao(cartaoId);
+  const total = obterSaldoAbertoCartao(cartaoId);
+
+  if (transacoesCartao.length === 0 || total <= 0) {
+    resumoPagamento.style.display = 'block';
+    totalPagarEl.textContent = 'R$ 0,00';
+    quantidadeTransacoesEl.textContent = '0 transações';
+    statusPagamentoEl.textContent = 'Não há fatura em aberto neste cartão';
+    btnPagar.disabled = true;
+    if (btnAdiantado) btnAdiantado.disabled = true;
+    if (btnValorTotal) btnValorTotal.textContent = 'R$ 0,00';
+    if (valorPagamentoEl) valorPagamentoEl.value = '';
+    resumoPagamento.classList.remove('has-transactions');
+    return;
+  }
+
+  const quantidade = transacoesCartao.length;
+
+  resumoPagamento.style.display = 'block';
+  resumoPagamento.classList.add('has-transactions');
+  totalPagarEl.textContent = 'R$ ' + formatToBRL(total);
+  if (btnValorTotal) btnValorTotal.textContent = 'R$ ' + formatToBRL(total);
+  quantidadeTransacoesEl.textContent = quantidade === 1 ? '1 transação' : `${quantidade} transações`;
+  statusPagamentoEl.textContent = 'Fatura pronta para pagamento';
+  btnPagar.disabled = false;
+  if (btnAdiantado) btnAdiantado.disabled = false;
+  if (valorPagamentoEl) valorPagamentoEl.value = '';
+}
+
+function pagarCartao() {
+  const cartaoId = document.getElementById('selecionarCartao').value;
+
+  if (!cartaoId) {
+    showToast('Selecione um cartão para pagar.', 'warning');
+    return;
+  }
+
+  const transacoesParaPagar = obterTransacoesAbertasCartao(cartaoId);
+  const saldoAberto = obterSaldoAbertoCartao(cartaoId);
+
+  if (transacoesParaPagar.length === 0 || saldoAberto <= 0) {
+    showToast('Não há transações em aberto para este cartão.', 'warning');
+    return;
+  }
+
+  abrirConfirmacaoPagamentoCartao(cartaoId, transacoesParaPagar.length, saldoAberto, saldoAberto);
+}
+
+function abrirConfirmacaoPagamentoCartao(cartaoId, quantidadeTransacoes, valorPagamento, saldoAberto) {
+  cartaoPendentePagamento = cartaoId;
+  valorPendentePagamentoCartao = valorPagamento;
+
+  const modalConfirmacao = document.getElementById('confirmarPagamentoCartaoModal');
+  const textoConfirmacao = document.getElementById('confirmarPagamentoCartaoTexto');
+  const termoTransacoes = quantidadeTransacoes === 1 ? 'transacao' : 'transacoes';
+  const restante = Math.max(0, saldoAberto - valorPagamento);
+
+  textoConfirmacao.textContent = `Confirmar pagamento de R$ ${formatToBRL(valorPagamento)} em ${quantidadeTransacoes} ${termoTransacoes}? A fatura ficara em R$ ${formatToBRL(restante)}.`;
+  modalConfirmacao.style.display = 'flex';
+}
+
+function fecharConfirmacaoPagamentoCartao() {
+  const modalConfirmacao = document.getElementById('confirmarPagamentoCartaoModal');
+
+  cartaoPendentePagamento = null;
+  valorPendentePagamentoCartao = 0;
+  modalConfirmacao.style.display = 'none';
+}
+
+async function confirmarPagamentoCartao() {
+  const cartaoId = cartaoPendentePagamento;
+  const valorPagamento = valorPendentePagamentoCartao;
+
+  if (!cartaoId) {
+    fecharConfirmacaoPagamentoCartao();
+    return;
+  }
+
+  const transacoesParaPagar = obterTransacoesAbertasCartao(cartaoId);
+  const saldoAberto = obterSaldoAbertoCartao(cartaoId);
+
+  if (transacoesParaPagar.length === 0 || saldoAberto <= 0) {
+    fecharConfirmacaoPagamentoCartao();
+    showToast('Nao ha transacoes em aberto para este cartao.', 'warning');
+    return;
+  }
+
+  const valorFinal = Math.min(valorPagamento, saldoAberto);
+  await registrarPagamentoFaturaCartao(cartaoId, valorFinal);
+  loadLancamentos();
+  fecharConfirmacaoPagamentoCartao();
+  fecharModalPagarCartao();
+  showToast(`Pagamento de R$ ${formatToBRL(valorFinal)} registrado com sucesso!`);
 }
 
 function showToast(message, type) {
@@ -5193,7 +5825,7 @@ function renderDailyBalance(transactions) {
                 const cardIndex = parseInt(card.getAttribute('data-index'));
                 const isFaturaAgrupada = card.getAttribute('data-grouped-invoice') === 'true';
                 const isFaturaPaga = card.getAttribute('data-paid') === 'true';
-                if ((isFaturaAgrupada && !isFaturaPaga) || (cardIndex >= 0 && lancamentos[cardIndex] && !lancamentos[cardIndex].pago)) {
+                if ((isFaturaAgrupada && !isFaturaPaga) || (!isFaturaAgrupada && cardIndex >= 0 && lancamentos[cardIndex] && !isFaturaPaga)) {
                     firstCardOfDate = card;
                     break;
                 }
@@ -5247,7 +5879,7 @@ function renderDailyBalance(transactions) {
                 const cardIndex = parseInt(card.getAttribute('data-index'));
                 const isFaturaAgrupada = card.getAttribute('data-grouped-invoice') === 'true';
                 const isFaturaPaga = card.getAttribute('data-paid') === 'true';
-                if ((isFaturaAgrupada && !isFaturaPaga) || (cardIndex >= 0 && lancamentos[cardIndex] && !lancamentos[cardIndex].pago)) {
+                if ((isFaturaAgrupada && !isFaturaPaga) || (!isFaturaAgrupada && cardIndex >= 0 && lancamentos[cardIndex] && !isFaturaPaga)) {
                     lastCardOfDate = card;
                     break;
                 }
@@ -5301,9 +5933,10 @@ function getCardDate(card) {
 function renderFilteredTransactions(filteredLancamentos) {
     const transactionsContainer = document.getElementById('transactionsContainer');
     transactionsContainer.innerHTML = '';
+    filteredLancamentos = filteredLancamentos.filter(l => !isPagamentoFaturaCartao(l) || isPagamentoAdiantadoFatura(l, lancamentos));
 
     if (filteredLancamentos.length === 0) {
-      const isEmpty = lancamentos.length === 0;
+      const isEmpty = lancamentos.filter(l => !isPagamentoFaturaCartao(l) || isPagamentoAdiantadoFatura(l, lancamentos)).length === 0;
       transactionsContainer.innerHTML = `
         <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px 40px;gap:14px;opacity:0.45;">
           <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -5332,7 +5965,7 @@ function renderFilteredTransactions(filteredLancamentos) {
         ...l,
         _idx: i,
         // Encontrar o índice original no array completo
-        originalIndex: lancamentosMap.get(`${l.descricao}-${l.valor}-${l.dataVencimento}`)
+        originalIndex: lancamentos.indexOf(l) >= 0 ? lancamentos.indexOf(l) : lancamentosMap.get(`${l.descricao}-${l.valor}-${l.dataVencimento}`)
     }));
 
     // Aplica a mesma ordenação
@@ -5368,11 +6001,12 @@ function renderAgrupandoPorCartao(allTransactions, filteredLancamentos) {
 
     // Separar despesas de cartão de crédito das demais transações
     const despesasCartao = allTransactions.filter(l =>
-        l.tipo === 'despesa' && l.formaPagamento && l.formaPagamento !== 'debito_pix'
+        !isPagamentoFaturaCartao(l) && l.tipo === 'despesa' && l.formaPagamento && l.formaPagamento !== 'debito_pix'
     );
     const outrasTransacoes = allTransactions.filter(l =>
-        !(l.tipo === 'despesa' && l.formaPagamento && l.formaPagamento !== 'debito_pix')
+        !isPagamentoFaturaCartao(l) && !(l.tipo === 'despesa' && l.formaPagamento && l.formaPagamento !== 'debito_pix')
     );
+    const pagamentosAdiantados = allTransactions.filter(l => isPagamentoAdiantadoFatura(l, lancamentos));
 
     // Helper: busca dados do cartão pelo formaPagamento
     function buscarCartaoObj(formaPagamento) {
@@ -5384,15 +6018,24 @@ function renderAgrupandoPorCartao(allTransactions, filteredLancamentos) {
     // Agrupar despesas de cartão por formaPagamento + status pago
     const grupos = {};
     despesasCartao.forEach(l => {
-        const chave = l.formaPagamento + '_' + (l.pago ? 'pago' : 'pendente');
+        const chave = l.formaPagamento;
         if (!grupos[chave]) {
             grupos[chave] = {
                 formaPagamento: l.formaPagamento,
-                pago: !!l.pago,
+                pago: false,
+                pagamentosAdiantados: [],
                 itens: []
             };
         }
         grupos[chave].itens.push(l);
+    });
+
+    pagamentosAdiantados.forEach(pagamento => {
+        const cartaoIdPagamento = normalizarIdCartao(getCartaoIdPagamentoFatura(pagamento));
+        const chaveGrupo = Object.keys(grupos).find(chave => normalizarIdCartao(chave) === cartaoIdPagamento);
+        if (chaveGrupo) {
+            grupos[chaveGrupo].pagamentosAdiantados.push(pagamento);
+        }
     });
 
     // Calcular data de vencimento da fatura para ordenação
@@ -5414,11 +6057,16 @@ function renderAgrupandoPorCartao(allTransactions, filteredLancamentos) {
     }
 
     function renderGrupoCartao(grupo) {
-        const totalFatura = grupo.itens.reduce((sum, l) => sum + Math.abs(l.valor), 0);
+        const totalBrutoFatura = grupo.itens.reduce((sum, l) => sum + Math.abs(l.valor), 0);
+        const totalFatura = calcularSaldoRestanteFatura(totalBrutoFatura, grupo.formaPagamento, lancamentos);
+        const ultimoPagamentoFatura = getUltimoPagamentoFaturaCartao(grupo.formaPagamento, lancamentos);
+        const valorExibidoFatura = totalFatura <= 0 ? (ultimoPagamentoFatura || totalBrutoFatura) : totalFatura;
+        grupo.valorPago = Math.max(0, totalBrutoFatura - totalFatura);
         const cartaoObj = buscarCartaoObj(grupo.formaPagamento);
         const nomeCartao = (cartaoObj && cartaoObj.nome) ? cartaoObj.nome : grupo.formaPagamento;
         const diaVenc = cartaoObj && cartaoObj.diaVencimento ? `Vence dia ${cartaoObj.diaVencimento}` : '';
-        const isPago = grupo.pago;
+        const isPago = totalFatura <= 0;
+        grupo.pago = isPago;
         const titulo = isPago ? `Fatura paga · ${nomeCartao}` : `Fatura · ${nomeCartao}`;
         const statusText = isPago ? 'Pago' : 'A Pagar';
         const statusClass = isPago ? 'paid' : 'unpaid';
@@ -5440,7 +6088,7 @@ function renderAgrupandoPorCartao(allTransactions, filteredLancamentos) {
                     <div class="fatura-agrupada-icon"><i class="ri-bank-card-line"></i></div>
                     <span>${titulo}</span>
                 </div>
-                <div class="transaction-value valor-negativo">R$ ${formatToBRL(totalFatura)}</div>
+                <div class="transaction-value valor-negativo">R$ ${formatToBRL(valorExibidoFatura)}</div>
             </div>
             <div class="transaction-footer">
                 <div class="transaction-date fatura-qtd">${rodapeText}</div>
@@ -5459,9 +6107,12 @@ function renderAgrupandoPorCartao(allTransactions, filteredLancamentos) {
 
     // As faturas agrupadas entram na mesma sequencia de vencimento das transacoes.
     const faturasAgrupadas = Object.values(grupos).map(grupo => {
-        const totalFatura = grupo.itens.reduce((sum, l) => sum + Math.abs(l.valor), 0);
+        const totalBrutoFatura = grupo.itens.reduce((sum, l) => sum + Math.abs(l.valor), 0);
+        const totalFatura = calcularSaldoRestanteFatura(totalBrutoFatura, grupo.formaPagamento, lancamentos);
         return {
             ...grupo,
+            pago: totalFatura <= 0,
+            valorPago: Math.max(0, totalBrutoFatura - totalFatura),
             dataVencimento: getDataVencimentoFaturaString(grupo),
             valor: -totalFatura,
             ultimaModificacao: Math.max(...grupo.itens.map(item => item.ultimaModificacao || item._idx || 0))
@@ -5509,8 +6160,12 @@ function abrirModalFaturaAgrupada(grupo, nomeCartao, cartaoObj) {
     const anterior = document.getElementById('_fatura-modal-overlay');
     if (anterior) anterior.remove();
 
-    const isPago = grupo.pago;
-    const totalFatura = grupo.itens.reduce((sum, l) => sum + Math.abs(l.valor), 0);
+    const totalBrutoFatura = grupo.itens.reduce((sum, l) => sum + Math.abs(l.valor), 0);
+    const totalFatura = calcularSaldoRestanteFatura(totalBrutoFatura, grupo.formaPagamento, lancamentos);
+    const totalPagoFatura = Math.max(0, totalBrutoFatura - totalFatura);
+    const isPago = totalFatura <= 0;
+    const ultimoPagamentoFatura = getUltimoPagamentoFaturaCartao(grupo.formaPagamento, lancamentos);
+    const valorExibidoFatura = isPago ? (ultimoPagamentoFatura || totalBrutoFatura) : totalFatura;
     const diaVenc = cartaoObj && cartaoObj.diaVencimento ? cartaoObj.diaVencimento : null;
     const cor = (cartaoObj && cartaoObj.cor) ? cartaoObj.cor : '#7c4dff';
     const textoBotaoPagamento = isPago ? 'Marcar fatura como não paga' : 'Pagar fatura';
@@ -5556,6 +6211,19 @@ function abrirModalFaturaAgrupada(grupo, nomeCartao, cartaoObj) {
         `;
     }).join('');
 
+    const pagamentosAdiantadosHTML = (grupo.pagamentosAdiantados || []).map(pagamento => {
+        const idxPagamento = typeof pagamento.originalIndex === 'number' ? pagamento.originalIndex : lancamentos.findIndex(l => isMesmoPagamentoFatura(l, pagamento));
+        return `
+            <div class="fatura-modal-item fatura-modal-pagamento" data-payment-idx="${idxPagamento}" style="cursor:pointer;">
+                <div class="fatura-modal-item-info">
+                    <div class="fatura-modal-item-desc">Pagamento adiantado</div>
+                    <div class="fatura-modal-item-meta">Pagamento parcial da fatura</div>
+                </div>
+                <div class="fatura-modal-item-valor pagamento">+ R$ ${formatToBRL(Math.abs(pagamento.valor || 0))}</div>
+            </div>
+        `;
+    }).join('');
+
     const overlay = document.createElement('div');
     overlay.id = '_fatura-modal-overlay';
     overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.45);z-index:3000;display:flex;align-items:flex-end;justify-content:center;';
@@ -5582,6 +6250,7 @@ function abrirModalFaturaAgrupada(grupo, nomeCartao, cartaoObj) {
                 .fatura-modal-item-desc{font-size:14px;font-weight:500;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
                 .fatura-modal-item-meta{font-size:12px;color:#999;margin-top:2px;}
                 .fatura-modal-item-valor{font-size:14px;font-weight:600;color:#e53935;margin-left:12px;flex-shrink:0;}
+                .fatura-modal-item-valor.pagamento{color:#16a34a;}
                 .fatura-modal-footer{padding:14px 20px 18px;border-top:1px solid #f0f0f0;background:#fff;flex-shrink:0;}
                 .fatura-modal-pay-btn{width:100%;border:none;border-radius:12px;padding:14px 16px;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;}
                 .fatura-modal-pay-btn.primary{background:#21c45d;color:#fff;}
@@ -5598,7 +6267,8 @@ function abrirModalFaturaAgrupada(grupo, nomeCartao, cartaoObj) {
                     </div>
                     <button onclick="document.getElementById('_fatura-modal-overlay').remove()" style="background:rgba(255,255,255,0.2);border:none;border-radius:50%;width:30px;height:30px;color:#fff;font-size:1.2em;cursor:pointer;display:flex;align-items:center;justify-content:center;">&times;</button>
                 </div>
-                <div style="font-size:1.5em;font-weight:700;">R$ ${formatToBRL(totalFatura)}</div>
+                <div style="font-size:1.5em;font-weight:700;">R$ ${formatToBRL(valorExibidoFatura)}</div>
+                ${totalPagoFatura > 0 ? `<div style="font-size:0.82em;opacity:0.88;margin-top:3px;">Pago: R$ ${formatToBRL(totalPagoFatura)} de R$ ${formatToBRL(totalBrutoFatura)}</div>` : ''}
                 <div style="font-size:0.82em;opacity:0.85;margin-top:4px;">
                     ${isPago ? '✓ Fatura paga' : (diaVenc ? `Vence dia ${diaVenc}` : 'Fatura em aberto')}
                     &nbsp;·&nbsp; ${grupo.itens.length} ${grupo.itens.length === 1 ? 'despesa' : 'despesas'}
@@ -5607,6 +6277,7 @@ function abrirModalFaturaAgrupada(grupo, nomeCartao, cartaoObj) {
 
             <!-- Lista de itens rolável -->
             <div style="overflow-y:auto;flex:1;padding:0 20px 20px;">
+                ${pagamentosAdiantadosHTML ? `<div style="font-size:11px;font-weight:700;color:#aaa;letter-spacing:0.08em;text-transform:uppercase;padding:14px 0 6px;">Pagamentos adiantados</div>${pagamentosAdiantadosHTML}` : ''}
                 <div style="font-size:11px;font-weight:700;color:#aaa;letter-spacing:0.08em;text-transform:uppercase;padding:14px 0 6px;">Despesas</div>
                 ${itensHTML}
             </div>
@@ -5631,6 +6302,13 @@ function abrirModalFaturaAgrupada(grupo, nomeCartao, cartaoObj) {
     overlay.querySelectorAll('.fatura-modal-item').forEach(item => {
         item.addEventListener('click', function(e) {
             e.stopPropagation();
+            if (this.dataset.paymentIdx !== undefined) {
+                const idxPagamento = parseInt(this.dataset.paymentIdx, 10);
+                if (!isNaN(idxPagamento)) {
+                    abrirConfirmacaoExcluirPagamentoFatura(idxPagamento);
+                }
+                return;
+            }
             const idx = parseInt(this.dataset.idx, 10);
             if (!isNaN(idx)) {
                 overlay.remove();
@@ -5643,12 +6321,68 @@ function abrirModalFaturaAgrupada(grupo, nomeCartao, cartaoObj) {
     if (botaoPagamento) {
         botaoPagamento.addEventListener('click', function(e) {
             e.stopPropagation();
-            abrirConfirmacaoFaturaAgrupada(grupo, !isPago);
+            if (!isPago) {
+                overlay.remove();
+                abrirModalPagarCartaoComCartao(grupo.formaPagamento);
+            } else {
+                abrirConfirmacaoFaturaAgrupada(grupo, !isPago);
+            }
         });
     }
 }
 
 // Função para atualizar o label do topo baseado no tipo
+function abrirConfirmacaoExcluirPagamentoFatura(indexPagamento) {
+    if (typeof indexPagamento !== 'number' || indexPagamento < 0 || !lancamentos[indexPagamento] || !isPagamentoFaturaCartao(lancamentos[indexPagamento])) {
+        showToast('Nao foi possivel localizar este pagamento.', 'error');
+        return;
+    }
+
+    const pagamento = lancamentos[indexPagamento];
+    const confirmacaoAnterior = document.getElementById('_pagamento-fatura-excluir-overlay');
+    if (confirmacaoAnterior) confirmacaoAnterior.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = '_pagamento-fatura-excluir-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.48);z-index:3200;display:flex;align-items:center;justify-content:center;padding:20px;';
+
+    overlay.innerHTML = `
+        <div style="width:100%;max-width:340px;background:#fff;border-radius:16px;padding:20px;box-shadow:0 12px 32px rgba(0,0,0,0.24);">
+            <div style="width:44px;height:44px;border-radius:14px;background:#fee2e2;color:#dc2626;display:flex;align-items:center;justify-content:center;margin-bottom:14px;">
+                <i class="ri-delete-bin-line" style="font-size:24px;"></i>
+            </div>
+            <h3 style="margin:0 0 8px;font-size:18px;color:#1f2937;">Excluir pagamento?</h3>
+            <p style="margin:0 0 18px;font-size:14px;line-height:1.4;color:#6b7280;">Deseja excluir o pagamento adiantado de R$ ${formatToBRL(Math.abs(pagamento.valor || 0))}?</p>
+            <div style="display:flex;gap:10px;">
+                <button type="button" id="_pagamento-fatura-cancelar" style="flex:1;border:1px solid #e5e7eb;background:#fff;color:#374151;border-radius:10px;padding:12px;font-weight:700;">Nao</button>
+                <button type="button" id="_pagamento-fatura-confirmar" style="flex:1;border:0;border-radius:10px;padding:12px;font-weight:700;color:#fff;background:#dc2626;">Excluir</button>
+            </div>
+        </div>
+    `;
+
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) overlay.remove();
+    });
+
+    document.body.appendChild(overlay);
+
+    document.getElementById('_pagamento-fatura-cancelar').addEventListener('click', function() {
+        overlay.remove();
+    });
+
+    document.getElementById('_pagamento-fatura-confirmar').addEventListener('click', async function() {
+        lancamentos.splice(indexPagamento, 1);
+        overlay.remove();
+
+        const modalFatura = document.getElementById('_fatura-modal-overlay');
+        if (modalFatura) modalFatura.remove();
+
+        await salvarLocal(currentDate);
+        loadLancamentos();
+        showToast('Pagamento adiantado excluido com sucesso!', 'success');
+    });
+}
+
 function abrirConfirmacaoFaturaAgrupada(grupo, novoStatusPago) {
     const confirmacaoAnterior = document.getElementById('_fatura-confirmacao-overlay');
     if (confirmacaoAnterior) confirmacaoAnterior.remove();
@@ -5698,6 +6432,38 @@ function abrirConfirmacaoFaturaAgrupada(grupo, novoStatusPago) {
 // Atualiza todas as transacoes da fatura agrupada de uma vez.
 async function marcarPagamentoFaturaAgrupada(grupo, novoStatusPago) {
     if (!grupo || !Array.isArray(grupo.itens) || grupo.itens.length === 0) return;
+
+    const totalBrutoFatura = grupo.itens.reduce((sum, l) => sum + Math.abs(l.valor), 0);
+    const saldoAberto = calcularSaldoRestanteFatura(totalBrutoFatura, grupo.formaPagamento, lancamentos);
+
+    if (novoStatusPago) {
+        if (saldoAberto <= 0) {
+            showToast('Esta fatura ja esta paga.', 'success');
+            return;
+        }
+
+        await registrarPagamentoFaturaCartao(grupo.formaPagamento, saldoAberto);
+        loadLancamentos();
+
+        const overlayPagamentoFatura = document.getElementById('_fatura-modal-overlay');
+        if (overlayPagamentoFatura) overlayPagamentoFatura.remove();
+
+        showToast(`Pagamento de R$ ${formatToBRL(saldoAberto)} registrado com sucesso!`, 'success');
+        return;
+    }
+
+    lancamentos = lancamentos.filter(l =>
+        !(isPagamentoFaturaCartao(l) &&
+          normalizarIdCartao(getCartaoIdPagamentoFatura(l)) === normalizarIdCartao(grupo.formaPagamento))
+    );
+    await salvarLocal(currentDate);
+    loadLancamentos();
+
+    const overlayAberturaFatura = document.getElementById('_fatura-modal-overlay');
+    if (overlayAberturaFatura) overlayAberturaFatura.remove();
+
+    showToast('Pagamentos desta fatura foram removidos.', 'success');
+    return;
 
     let totalAlteradas = 0;
     grupo.itens.forEach(item => {
@@ -6243,6 +7009,627 @@ function abrirGerenciarCartoes() {
 
 }
 
+// ===================================================================
+// ========= MODAL DESPESA CARTÃO DE CRÉDITO =========================
+// ===================================================================
+
+let ccEditIndex = null;
+let ccSelectedEntryType = 'unico';
+let ccPendingTransactionData = null;
+let ccPendingDeleteIndex = null;
+
+// Nomes dos meses em português
+const ccMonthNames = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+
+function openModalCartaoCredito(originalIndex) {
+  originalIndex = originalIndex !== undefined ? originalIndex : null;
+  if (originalIndex !== null) {
+    const lanc = lancamentos[originalIndex];
+    if (isLancamentoCartaoCredito(lanc) && isFaturaCartaoQuitadaParaVisualizacao(lanc, lancamentos)) {
+      showToast('Reabra a fatura antes de editar esta despesa.', 'warning');
+      return;
+    }
+  }
+
+  fabOptions.classList.remove('active');
+  const modalCC = document.getElementById('modalCC');
+  modalCC.style.display = 'flex';
+  mainFab.style.display = 'none';
+  updateStatusBarColor('despesa');
+
+  if (originalIndex !== null) {
+    // Modo edição
+    ccEditIndex = originalIndex;
+    const lanc = lancamentos[ccEditIndex];
+    document.getElementById('modalCCTitle').textContent = 'Editar Despesa no Cartão';
+    document.getElementById('ccDescricao').value = lanc.descricao;
+    document.getElementById('ccValor').value = formatToBRL(Math.abs(lanc.valor));
+    document.getElementById('ccDataVencimento').value = lanc.dataVencimento || '';
+    document.getElementById('ccCartao').value = lanc.formaPagamento || '';
+
+    // Atualizar texto do cartão
+    const cartoes = JSON.parse(localStorage.getItem('cartoes_credito') || '[]');
+    const fp = lanc.formaPagamento || '';
+    let idBusca = fp.startsWith('cartao_cartao_') ? fp.replace('cartao_cartao_','cartao_') : fp;
+    const cartaoObj = cartoes.find(c => c.id === idBusca || 'cartao_' + c.id === idBusca);
+    document.getElementById('ccCartaoTexto').textContent = cartaoObj ? cartaoObj.nome : 'Selecionar cartão';
+
+    // Atualizar texto da fatura
+    if (lanc.dataVencimento && cartaoObj) {
+      const dv = lanc.dataVencimento;
+      const partes = dv.split('-');
+      const mes = parseInt(partes[1]) - 1;
+      const ano = parseInt(partes[0]);
+      document.getElementById('ccFaturaTexto').textContent =
+        `Fatura de ${ccMonthNames[mes]}/${ano} (dia ${cartaoObj.diaVencimento || partes[2]})`;
+      document.getElementById('ccFaturaTrigger').style.display = 'flex';
+    }
+
+    const pagoToggle = document.getElementById('ccPagoToggle');
+    pagoToggle.checked = !!lanc.pago;
+    pagoToggle.disabled = true;
+    atualizarCCTextoPago();
+
+    document.getElementById('ccAddEntryOptions').style.display = 'none';
+    document.getElementById('ccParcelamentoFields').style.display = 'none';
+    document.getElementById('ccLancamentoFixoFields').style.display = 'none';
+    document.getElementById('ccDeleteBtn').style.display = 'inline-block';
+
+    carregarCCCategorias(lanc.categoria || '');
+
+    modalCC.classList.add('edit-mode');
+    // Abrir calculadora com o valor existente
+  } else {
+    // Modo novo
+    ccEditIndex = null;
+    document.getElementById('modalCCTitle').textContent = 'Nova Despesa no Cartão';
+    document.getElementById('ccDescricao').value = '';
+    document.getElementById('ccValor').value = '';
+    document.getElementById('ccCartao').value = '';
+    document.getElementById('ccCartaoTexto').textContent = 'Selecionar cartão';
+    document.getElementById('ccDataVencimento').value = '';
+    document.getElementById('ccFaturaTexto').textContent = 'Selecionar fatura';
+    document.getElementById('ccFaturaTrigger').style.display = 'none';
+    document.getElementById('ccPagoToggle').checked = false;
+    document.getElementById('ccPagoToggle').disabled = true;
+    atualizarCCTextoPago();
+
+    ccSelectedEntryType = 'unico';
+    ccAtualizarEstadoToggle();
+
+    document.getElementById('ccAddEntryOptions').style.display = 'flex';
+    document.getElementById('ccParcelamentoFields').style.display = 'none';
+    document.getElementById('ccLancamentoFixoFields').style.display = 'none';
+    document.getElementById('ccDeleteBtn').style.display = 'none';
+
+    carregarCCCategorias('');
+
+    modalCC.classList.remove('edit-mode');
+
+    // Abrir calculadora
+    setTimeout(() => {
+      ccAbrirCalculadora();
+    }, 100);
+  }
+}
+
+function closeModalCC() {
+  const modalCC = document.getElementById('modalCC');
+  modalCC.style.display = 'none';
+  modalCC.classList.remove('edit-mode');
+  mainFab.style.display = 'flex';
+  ccEditIndex = null;
+  ccPendingTransactionData = null;
+  restoreStatusBarColor();
+}
+
+function ccSelectEntryType(tipo) {
+  ccSelectedEntryType = tipo;
+  ccAtualizarEstadoToggle();
+}
+
+function ccAtualizarEstadoToggle() {
+  const btnUnico = document.getElementById('ccBtnUnico');
+  const btnParcelado = document.getElementById('ccBtnParcelado');
+  const btnFixo = document.getElementById('ccBtnFixo');
+  const parcelamentoFields = document.getElementById('ccParcelamentoFields');
+  const fixoFields = document.getElementById('ccLancamentoFixoFields');
+
+  [btnUnico, btnParcelado, btnFixo].forEach(b => b && b.classList.remove('active'));
+
+  if (ccSelectedEntryType === 'unico') {
+    if (btnUnico) btnUnico.classList.add('active');
+    parcelamentoFields.style.display = 'none';
+    fixoFields.style.display = 'none';
+  } else if (ccSelectedEntryType === 'parcelado') {
+    if (btnParcelado) btnParcelado.classList.add('active');
+    parcelamentoFields.style.display = 'block';
+    fixoFields.style.display = 'none';
+  } else if (ccSelectedEntryType === 'fixo') {
+    if (btnFixo) btnFixo.classList.add('active');
+    parcelamentoFields.style.display = 'none';
+    fixoFields.style.display = 'block';
+  }
+}
+
+function atualizarCCTextoPago() {
+  const pagoToggle = document.getElementById('ccPagoToggle');
+  const pagoText = document.getElementById('ccPagoToggleText');
+  if (!pagoToggle || !pagoText) return;
+  pagoText.textContent = pagoToggle.checked ? 'Fatura paga' : 'Na fatura';
+}
+
+// ── Seletor de Cartão CC ──
+function abrirCCSeletorCartao() {
+  const modal = document.getElementById('ccSeletorCartaoModal');
+  const container = document.getElementById('ccCartaoOptions');
+  container.innerHTML = '';
+
+  const cartoes = JSON.parse(localStorage.getItem('cartoes_credito') || '[]');
+  const valorAtual = document.getElementById('ccCartao').value;
+
+  if (cartoes.length === 0) {
+    container.innerHTML = '<div style="padding:16px 20px;color:var(--text-muted,#999);font-size:0.9em;">Nenhum cartão cadastrado.</div>';
+  } else {
+    cartoes.forEach(cartao => {
+      const div = document.createElement('div');
+      const valorOpcao = 'cartao_' + cartao.id;
+      div.className = 'bottom-sheet-option' + (valorOpcao === valorAtual ? ' active' : '');
+      div.innerHTML = `<i class="ri-bank-card-2-line" style="color:${cartao.cor || '#0f766e'}"></i><span>${cartao.nome}</span>`;
+      div.onclick = () => {
+        document.getElementById('ccCartao').value = valorOpcao;
+        document.getElementById('ccCartaoTexto').textContent = cartao.nome;
+        document.querySelectorAll('#ccCartaoOptions .bottom-sheet-option').forEach(el => el.classList.remove('active'));
+        div.classList.add('active');
+        fecharCCSeletorCartao();
+        // Mostrar seletor de fatura e limpar seleção anterior
+        document.getElementById('ccFaturaTrigger').style.display = 'flex';
+        document.getElementById('ccFaturaTexto').textContent = 'Selecionar fatura';
+        document.getElementById('ccDataVencimento').value = '';
+        // Auto-abrir seletor de fatura
+        setTimeout(() => abrirCCSeletorFatura(), 200);
+      };
+      container.appendChild(div);
+    });
+  }
+
+  modal.classList.add('active');
+}
+
+function fecharCCSeletorCartao() {
+  document.getElementById('ccSeletorCartaoModal').classList.remove('active');
+}
+
+// ── Seletor de Fatura CC ──
+function abrirCCSeletorFatura() {
+  const cartaoValor = document.getElementById('ccCartao').value;
+  if (!cartaoValor) {
+    showToast('Selecione um cartão primeiro.', 'warning');
+    return;
+  }
+
+  const cartoes = JSON.parse(localStorage.getItem('cartoes_credito') || '[]');
+  let idBusca = cartaoValor.startsWith('cartao_cartao_') ? cartaoValor.replace('cartao_cartao_','cartao_') : cartaoValor;
+  const cartaoObj = cartoes.find(c => c.id === idBusca || 'cartao_' + c.id === idBusca);
+
+  if (!cartaoObj || !cartaoObj.diaVencimento) {
+    showToast('Cartão sem dia de vencimento cadastrado.', 'warning');
+    return;
+  }
+
+  const diaVencimento = parseInt(cartaoObj.diaVencimento);
+  const hoje = new Date();
+  const container = document.getElementById('ccFaturaOptions');
+  container.innerHTML = '';
+
+  const valorAtualData = document.getElementById('ccDataVencimento').value;
+
+  // Gerar 3 opções: mês atual + 2 próximos
+  for (let i = 0; i < 3; i++) {
+    const refDate = new Date(hoje.getFullYear(), hoje.getMonth() + i, 1);
+    const ano = refDate.getFullYear();
+    const mes = refDate.getMonth();
+    // Ajustar dia se não existe no mês (ex: dia 31 em fevereiro)
+    const ultimoDia = new Date(ano, mes + 1, 0).getDate();
+    const diaReal = Math.min(diaVencimento, ultimoDia);
+    const dataStr = `${ano}-${String(mes + 1).padStart(2, '0')}-${String(diaReal).padStart(2, '0')}`;
+
+    const div = document.createElement('div');
+    div.className = 'bottom-sheet-option' + (dataStr === valorAtualData ? ' active' : '');
+
+    const nomeMes = ccMonthNames[mes];
+    const mesCapital = nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1);
+    div.innerHTML = `
+      <i class="ri-calendar-check-line"></i>
+      <div style="display:flex;flex-direction:column;gap:2px;">
+        <span style="font-weight:600;">Fatura de ${mesCapital}/${ano}</span>
+        <span style="font-size:0.8em;color:var(--text-muted,#888);">Vence dia ${diaReal}/${String(mes+1).padStart(2,'0')}/${ano}</span>
+      </div>
+    `;
+    div.onclick = () => {
+      document.getElementById('ccDataVencimento').value = dataStr;
+      document.getElementById('ccFaturaTexto').textContent =
+        `Fatura de ${mesCapital}/${ano} (dia ${diaReal})`;
+      document.querySelectorAll('#ccFaturaOptions .bottom-sheet-option').forEach(el => el.classList.remove('active'));
+      div.classList.add('active');
+      fecharCCSeletorFatura();
+    };
+    container.appendChild(div);
+  }
+
+  document.getElementById('ccSeletorFaturaModal').classList.add('active');
+}
+
+function fecharCCSeletorFatura() {
+  document.getElementById('ccSeletorFaturaModal').classList.remove('active');
+}
+
+// Fechar bottom sheets CC ao clicar fora
+document.getElementById('ccSeletorCartaoModal').addEventListener('click', function(e) {
+  if (e.target === this) fecharCCSeletorCartao();
+});
+document.getElementById('ccSeletorFaturaModal').addEventListener('click', function(e) {
+  if (e.target === this) fecharCCSeletorFatura();
+});
+
+// ── Categorias CC ──
+function carregarCCCategorias(valorAtual) {
+  var hidden = document.getElementById('ccCategoriaLancamento');
+  var list = document.getElementById('ccCategoriaOptionsList');
+  var triggerText = document.getElementById('ccCategoriaTriggerText');
+  if (!list) return;
+  list.innerHTML = '';
+
+  var semCat = document.createElement('div');
+  semCat.className = 'custom-select-option' + (!valorAtual ? ' selected' : '');
+  semCat.setAttribute('data-value', '');
+  semCat.innerHTML = '<i class="ri-close-circle-line"></i><span class="option-text">— Sem categoria —</span>';
+  semCat.onclick = function() { selecionarCCCategoria('', '— Sem categoria —'); };
+  list.appendChild(semCat);
+
+  try {
+    var dados = JSON.parse(localStorage.getItem('categorias_config') || '{"despesa":[],"receita":[]}');
+    var lista = dados['despesa'] || [];
+    lista.forEach(function(cat) {
+      var opt = document.createElement('div');
+      opt.className = 'custom-select-option' + (cat.id == valorAtual ? ' selected' : '');
+      opt.setAttribute('data-value', cat.id);
+      var iconeHtml = (cat.icone || '').startsWith('ri-')
+        ? '<i class="' + cat.icone + '" style="font-size:1.1em;width:24px;text-align:center"></i>'
+        : '<span style="font-size:1.1em;width:24px;text-align:center">' + (cat.icone || '📌') + '</span>';
+      opt.innerHTML = iconeHtml + '<span class="option-text">' + cat.nome + '</span>';
+      opt.onclick = (function(id, icone, nome) {
+        return function() {
+          var ic = icone || '';
+          var icHtml = ic.startsWith('ri-') ? '<i class="' + ic + '" style="font-size:1em;vertical-align:-1px;margin-right:4px"></i>' : (ic ? ic + ' ' : '');
+          selecionarCCCategoria(id, icHtml + nome);
+        };
+      })(cat.id, cat.icone || '', cat.nome);
+      list.appendChild(opt);
+    });
+  } catch(e) {}
+
+  if (valorAtual) {
+    hidden.value = valorAtual;
+    var allOpts = list.querySelectorAll('[data-value]');
+    var found = false;
+    allOpts.forEach(function(o) {
+      if (o.getAttribute('data-value') == valorAtual) {
+        var icEl = o.querySelector('i');
+        var icHtml = icEl ? icEl.outerHTML + ' ' : '';
+        triggerText.innerHTML = icHtml + o.querySelector('.option-text').textContent;
+        found = true;
+      }
+    });
+    if (!found) { hidden.value = ''; triggerText.textContent = '— Sem categoria —'; }
+  } else {
+    hidden.value = '';
+    triggerText.textContent = '— Sem categoria —';
+  }
+}
+
+function selecionarCCCategoria(id, labelHtml) {
+  document.getElementById('ccCategoriaLancamento').value = id;
+  document.getElementById('ccCategoriaTriggerText').innerHTML = labelHtml;
+  document.querySelectorAll('#ccCategoriaOptionsList .custom-select-option').forEach(function(o) {
+    o.classList.toggle('selected', o.getAttribute('data-value') == id);
+  });
+  fecharCCCategoriaDropdown();
+}
+
+function toggleCCCategoriaDropdown() {
+  var overlay = document.getElementById('ccCategoriaPopupOverlay');
+  var popup = document.getElementById('ccCategoriaPopup');
+  overlay.style.display = 'block';
+  popup.style.display = 'flex';
+  popup.style.transform = 'translateY(100%)';
+  popup.style.transition = 'transform 0.3s ease';
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() { popup.style.transform = 'translateY(0)'; });
+  });
+}
+
+function fecharCCCategoriaDropdown() {
+  var overlay = document.getElementById('ccCategoriaPopupOverlay');
+  var popup = document.getElementById('ccCategoriaPopup');
+  if (!popup) return;
+  popup.style.transform = 'translateY(100%)';
+  setTimeout(function() {
+    overlay.style.display = 'none';
+    popup.style.display = 'none';
+  }, 280);
+}
+
+// ── Calculadora CC ──
+let ccCalcState = { display: '0', expression: '', operand: null, operator: null, waitingNext: false };
+
+function ccAbrirCalculadora() {
+  // Reutiliza a calculadora existente mas direciona para o campo CC
+  ccCalcState = { display: '0', expression: '', operand: null, operator: null, waitingNext: false };
+  // Temporariamente redirecionar calcConcluir para campo CC
+  window._ccCalcMode = true;
+  calcState = { display: '0', expression: '', operand: null, operator: null, waitingNext: false };
+  atualizarCalculadora();
+  document.getElementById('calcModal').style.display = 'flex';
+}
+
+// Patch calcConcluir to support CC mode
+const _originalCalcConcluir = calcConcluir;
+window.calcConcluir = function() {
+  if (calcState.operator !== null) calcInput('=');
+  const valor = calcState.display.replace(',', '.');
+  const numero = parseFloat(valor);
+  if (window._ccCalcMode) {
+    if (!isNaN(numero) && numero > 0) {
+      document.getElementById('ccValor').value = formatToBRL(numero);
+    }
+    window._ccCalcMode = false;
+    fecharCalculadora();
+  } else {
+    if (!isNaN(numero) && numero > 0) {
+      document.getElementById('valor').value = formatToBRL(numero);
+    }
+    fecharCalculadora();
+  }
+};
+
+document.getElementById('ccValor').addEventListener('click', function(e) {
+  e.preventDefault();
+  this.blur();
+  window._ccCalcMode = true;
+  const campoValor = this.value;
+  const valorAtual = campoValor ? campoValor.replace(/\./g, '').replace(',', '.') : '0';
+  const numero = parseFloat(valorAtual);
+  calcState = {
+    display: (!isNaN(numero) && numero > 0) ? campoValor.replace(/\./g, '') : '0',
+    expression: '', operand: null, operator: null, waitingNext: false
+  };
+  atualizarCalculadora();
+  document.getElementById('calcModal').style.display = 'flex';
+});
+
+// ── Salvar Lançamento CC ──
+async function salvarLancamentoCC() {
+  const descricaoBase = document.getElementById('ccDescricao').value.trim();
+  const valor = parseBRL(document.getElementById('ccValor').value);
+  const dataVencimento = document.getElementById('ccDataVencimento').value;
+  const formaPagamento = document.getElementById('ccCartao').value;
+  const pago = ccEditIndex !== null ? !!lancamentos[ccEditIndex]?.pago : false;
+  const categoriaId = document.getElementById('ccCategoriaLancamento').value || null;
+
+  if (!descricaoBase) { showToast('Preencha a descrição.', 'error'); return; }
+  if (isNaN(valor) || valor <= 0) { showToast('Informe um valor válido maior que zero.', 'error'); return; }
+  if (!formaPagamento) { showToast('Selecione um cartão.', 'error'); return; }
+  if (!dataVencimento) { showToast('Selecione a fatura.', 'error'); return; }
+
+  const valorFinal = -Math.abs(valor);
+
+  // Verificar categoria
+  const isEditing = (ccEditIndex !== null);
+  if (!categoriaId && !isEditing) {
+    ccPendingTransactionData = { descricaoBase, valor, dataVencimento, formaPagamento, pago, categoriaId, valorFinal };
+    const categoriaModal = document.getElementById('categoriaModal');
+    if (categoriaModal) categoriaModal.style.display = 'flex';
+    return;
+  }
+
+  await executarSalvarLancamentoCC();
+}
+
+async function executarSalvarLancamentoCC() {
+  let descricaoBase, valor, dataVencimento, formaPagamento, pago, categoriaId, valorFinal;
+  const isEditing = (ccEditIndex !== null);
+
+  if (ccPendingTransactionData) {
+    ({ descricaoBase, valor, dataVencimento, formaPagamento, pago, categoriaId, valorFinal } = ccPendingTransactionData);
+    ccPendingTransactionData = null;
+  } else {
+    descricaoBase = document.getElementById('ccDescricao').value.trim();
+    valor = parseBRL(document.getElementById('ccValor').value);
+    dataVencimento = document.getElementById('ccDataVencimento').value;
+    formaPagamento = document.getElementById('ccCartao').value;
+    pago = ccEditIndex !== null ? !!lancamentos[ccEditIndex]?.pago : false;
+    categoriaId = document.getElementById('ccCategoriaLancamento').value || null;
+    valorFinal = -Math.abs(valor);
+  }
+
+  const dataVenc = new Date(dataVencimento + 'T12:00:00');
+  const mesVencimento = new Date(dataVenc.getFullYear(), dataVenc.getMonth(), 1);
+
+  if (isEditing) {
+    if (lancamentos[ccEditIndex] && lancamentos[ccEditIndex].parcelamento) {
+      editIndex = ccEditIndex;
+      _edicaoPendente = {
+        descricaoBase,
+        tipo: 'despesa',
+        valorFinal,
+        dataVencimento,
+        pago,
+        formaPagamento,
+        categoriaId
+      };
+
+      const isFixo = lancamentos[ccEditIndex].parcelamento.isFixo;
+      const titleEl = document.getElementById('editParceladoModalTitle');
+      const descEl  = document.getElementById('editParceladoModalDesc');
+      titleEl.textContent = isFixo ? 'Editar Lançamento Fixo' : 'Editar Lançamento Parcelado';
+      descEl.textContent  = isFixo
+        ? 'Este é um lançamento fixo. Qual alteração você deseja fazer?'
+        : 'Este é um lançamento parcelado. Qual alteração você deseja fazer?';
+
+      document.getElementById('modalCC').style.display = 'none';
+      mainFab.style.display = 'flex';
+      editParceladoModal.style.display = 'flex';
+      ccEditIndex = null;
+      return;
+    }
+    lancamentos[ccEditIndex] = {
+      ...lancamentos[ccEditIndex],
+      descricao: descricaoBase,
+      tipo: 'despesa',
+      valor: valorFinal,
+      dataVencimento: dataVencimento,
+      pago: pago,
+      formaPagamento: formaPagamento,
+      categoria: categoriaId,
+      ultimaModificacao: pago ? Date.now() : lancamentos[ccEditIndex].ultimaModificacao
+    };
+    salvarLocal(currentDate);
+  } else {
+    if (ccSelectedEntryType === 'parcelado') {
+      const totalParcelas = parseInt(document.getElementById('ccTotalParcelas').value);
+      const parcelaAtual = parseInt(document.getElementById('ccParcelaAtual').value);
+      if (isNaN(totalParcelas) || totalParcelas <= 0 || isNaN(parcelaAtual) || parcelaAtual <= 0 || parcelaAtual > totalParcelas) {
+        showToast('Preencha um número de parcelas válido.', 'error'); return;
+      }
+      const groupId = Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      // Para parcelado CC: avançar as faturas pelos próximos meses
+      for (let i = parcelaAtual; i <= totalParcelas; i++) {
+        const mesesAdicionais = i - parcelaAtual;
+        const dataVencimentoParcelada = calcularDataVencimentoProximoMes(dataVencimento, mesesAdicionais);
+        const mesDestino = new Date(dataVencimentoParcelada + 'T12:00:00');
+        const monthKey = getMonthKey(mesDestino);
+        const statusPago = false;
+        let futureLancamentos = JSON.parse(localStorage.getItem('lancamentos_' + monthKey)) || [];
+        futureLancamentos.push({
+          descricao: `${descricaoBase} (${i}/${totalParcelas})`,
+          tipo: 'despesa', valor: valorFinal, pago: statusPago,
+          dataVencimento: dataVencimentoParcelada, formaPagamento: formaPagamento,
+          categoria: categoriaId,
+          parcelamento: { total: totalParcelas, atual: i, baseDescription: descricaoBase, valorOriginal: valorFinal, isFixo: false, groupId }
+        });
+        localStorage.setItem('lancamentos_' + monthKey, JSON.stringify(futureLancamentos));
+        syncLancamentosToSupabase(monthKey);
+      }
+    } else if (ccSelectedEntryType === 'fixo') {
+      const mesesFixo = parseInt(document.getElementById('ccMesesFixo').value);
+      if (isNaN(mesesFixo) || mesesFixo <= 0) { showToast('Preencha um número de meses válido.', 'error'); return; }
+      const groupId = Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      for (let i = 1; i <= mesesFixo; i++) {
+        const dataVencimentoFixa = calcularDataVencimentoProximoMes(dataVencimento, i - 1);
+        const mesDestino = new Date(dataVencimentoFixa + 'T12:00:00');
+        const monthKey = getMonthKey(mesDestino);
+        const statusPago = false;
+        let futureLancamentos = JSON.parse(localStorage.getItem('lancamentos_' + monthKey)) || [];
+        futureLancamentos.push({
+          descricao: descricaoBase, tipo: 'despesa', valor: valorFinal, pago: statusPago,
+          dataVencimento: dataVencimentoFixa, formaPagamento: formaPagamento,
+          categoria: categoriaId,
+          parcelamento: { total: mesesFixo, atual: i, baseDescription: descricaoBase, valorOriginal: valorFinal, isFixo: true, groupId }
+        });
+        localStorage.setItem('lancamentos_' + monthKey, JSON.stringify(futureLancamentos));
+        syncLancamentosToSupabase(monthKey);
+      }
+    } else {
+      const monthKeyVencimento = getMonthKey(mesVencimento);
+      let lancamentosMesVencimento = JSON.parse(localStorage.getItem('lancamentos_' + monthKeyVencimento)) || [];
+      lancamentosMesVencimento.push({
+        descricao: descricaoBase, tipo: 'despesa', valor: valorFinal,
+        pago: pago, dataVencimento: dataVencimento, formaPagamento: formaPagamento,
+        categoria: categoriaId, ultimaModificacao: pago ? Date.now() : undefined
+      });
+      localStorage.setItem('lancamentos_' + monthKeyVencimento, JSON.stringify(lancamentosMesVencimento));
+      syncLancamentosToSupabase(monthKeyVencimento);
+    }
+  }
+
+  loadLancamentos();
+  closeModalCC();
+}
+
+// Patch confirmarSemCategoria to also support CC pending data
+const _originalConfirmarSemCategoria = confirmarSemCategoria;
+window.confirmarSemCategoria = function() {
+  fecharModalCategoria();
+  if (ccPendingTransactionData) {
+    executarSalvarLancamentoCC();
+  } else {
+    executarSalvarLancamento();
+  }
+};
+
+function handleCCDeleteClick() {
+  if (ccEditIndex === null) return;
+  const lanc = lancamentos[ccEditIndex];
+  if (lanc.parcelamento) {
+    // Reutilizar modal de exclusão parcelado (mas ccEditIndex em vez de editIndex)
+    editIndex = ccEditIndex; // temporário para modal parcelado
+    const modalCC = document.getElementById('modalCC');
+    modalCC.style.display = 'none';
+    mainFab.style.display = 'flex';
+    deleteParceladoModal.style.display = 'flex';
+  } else {
+    ccPendingDeleteIndex = ccEditIndex;
+    const deleteModal = document.getElementById('deleteUniqueModal');
+    if (deleteModal) deleteModal.style.display = 'flex';
+    document.getElementById('modalCC').style.display = 'none';
+    mainFab.style.display = 'flex';
+  }
+}
+
+// Patch fecharModalDeleteUnique to also re-open CC modal if needed
+const _origFecharModalDeleteUnique = fecharModalDeleteUnique;
+window.fecharModalDeleteUnique = function() {
+  const deleteModal = document.getElementById('deleteUniqueModal');
+  if (deleteModal) { deleteModal.style.display = 'none'; }
+  if (ccPendingDeleteIndex !== null) {
+    ccPendingDeleteIndex = null;
+    document.getElementById('modalCC').style.display = 'flex';
+    mainFab.style.display = 'none';
+    return;
+  }
+  pendingDeleteIndex = null;
+  modal.style.display = 'flex';
+  mainFab.style.display = 'none';
+};
+
+// Patch confirmarExclusaoUnica to support CC context
+const _origConfirmarExclusaoUnica = confirmarExclusaoUnica;
+window.confirmarExclusaoUnica = async function() {
+  const indexToDelete = ccPendingDeleteIndex !== null ? ccPendingDeleteIndex : pendingDeleteIndex;
+  if (indexToDelete !== null) {
+    lancamentos.splice(indexToDelete, 1);
+    await salvarLocal(currentDate);
+    loadLancamentos();
+    fecharModalDeleteUnique();
+    if (ccPendingDeleteIndex !== null) { ccPendingDeleteIndex = null; closeModalCC(); }
+    else { pendingDeleteIndex = null; closeModal(); }
+    showToast('🗑️ Transação excluída com sucesso!');
+  } else {
+    fecharModalDeleteUnique();
+  }
+};
+
+// Fechar modalCC ao clicar fora
+window.addEventListener('click', function(e) {
+  const modalCC = document.getElementById('modalCC');
+  if (e.target === modalCC) closeModalCC();
+});
+
+// ===================================================================
+// ===== FIM MODAL DESPESA CARTÃO DE CRÉDITO =========================
+// ===================================================================
+
 // Inicialização
 currentFilter = 'transacoes'; // Garante que comece com o filtro padrão
 updateMonthDisplay();
@@ -6458,6 +7845,7 @@ function sairDoApp() {
   to   { opacity: 1; transform: translateX(-50%) translateY(-50%) scale(1); }
 }
 </style>
+
 
 <!-- Popup de Categorias (Bottom Sheet) -->
 <div id="categoriaPopupOverlay" onclick="fecharCategoriaDropdown()" style="

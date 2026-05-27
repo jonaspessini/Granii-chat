@@ -312,6 +312,60 @@ function navigateTo(pagina) {
             return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         }
 
+        function isPagamentoFaturaCartao(lancamento) {
+            return !!lancamento && (
+                lancamento.tipoSistema === 'pagamento_fatura_cartao' ||
+                (lancamento.parcelamento && lancamento.parcelamento.tipoSistema === 'pagamento_fatura_cartao')
+            );
+        }
+
+        function getLancamentosSemPagamentosFatura(lista) {
+            return (Array.isArray(lista) ? lista : []).filter(l => !isPagamentoFaturaCartao(l));
+        }
+
+        function normalizarIdCartao(valor) {
+            if (!valor) return '';
+            let id = String(valor);
+            while (id.startsWith('cartao_')) {
+                id = id.replace('cartao_', '');
+            }
+            return id;
+        }
+
+        function isLancamentoCartaoCredito(lancamento) {
+            return !!lancamento &&
+                (lancamento.tipo === 'despesa' || (!lancamento.tipo && lancamento.valor < 0)) &&
+                lancamento.formaPagamento &&
+                lancamento.formaPagamento !== 'debito_pix' &&
+                !isPagamentoFaturaCartao(lancamento);
+        }
+
+        function getCartaoIdPagamentoFatura(lancamento) {
+            return lancamento?.cartaoId ||
+                lancamento?.parcelamento?.cartaoId ||
+                lancamento?.formaPagamento?.replace('pagamento_fatura_cartao_', '') ||
+                '';
+        }
+
+        function getTotalPagamentosFaturaCartao(cartaoId, lista) {
+            return (Array.isArray(lista) ? lista : [])
+                .filter(l => isPagamentoFaturaCartao(l) && normalizarIdCartao(getCartaoIdPagamentoFatura(l)) === normalizarIdCartao(cartaoId))
+                .reduce((sum, l) => sum + Math.abs(l.valor || 0), 0);
+        }
+
+        function isFaturaCartaoQuitadaParaVisualizacao(lancamento, lista) {
+            if (!isLancamentoCartaoCredito(lancamento)) return false;
+
+            const lancs = getLancamentosSemPagamentosFatura(lista);
+            const totalBrutoFatura = lancs
+                .filter(l => isLancamentoCartaoCredito(l) && normalizarIdCartao(l.formaPagamento) === normalizarIdCartao(lancamento.formaPagamento))
+                .reduce((sum, l) => sum + Math.abs(l.valor || 0), 0);
+
+            if (totalBrutoFatura <= 0) return false;
+
+            return Math.max(0, totalBrutoFatura - getTotalPagamentosFaturaCartao(lancamento.formaPagamento, lista)) <= 0;
+        }
+
         // ========== SALDO ACUMULADO GLOBAL ==========
         function getSaldoAcumulado() {
             let totalReceitasPagas = 0;
@@ -323,7 +377,7 @@ function navigateTo(pagina) {
                     const lancamentos = data ? JSON.parse(data) : [];
                     lancamentos.forEach(lanc => {
                         const pago = lanc.hasOwnProperty('pago') ? lanc.pago : false;
-                        if (pago) {
+                        if (pago || isPagamentoFaturaCartao(lanc)) {
                             if (lanc.valor > 0) totalReceitasPagas += lanc.valor;
                             else totalDespesasPagas += lanc.valor;
                         }
@@ -354,7 +408,7 @@ function navigateTo(pagina) {
 
                 // ========== RENDERIZAR GASTOS POR CATEGORIA ==========
         function renderizarCategorias() {
-            const lancamentos = loadCurrentMonthTransactions();
+            const lancamentos = getLancamentosSemPagamentosFatura(loadCurrentMonthTransactions());
             const categoriasContainer = document.getElementById('categoriasContainer');
             const categoriasList = document.getElementById('categoriasList');
             
@@ -518,7 +572,7 @@ function navigateTo(pagina) {
 
         // ========== CALCULAR TOTAIS ==========
         function calcularTotais() {
-            const lancamentos = loadCurrentMonthTransactions();
+            const lancamentos = getLancamentosSemPagamentosFatura(loadCurrentMonthTransactions());
 
             let totalReceitas = 0, totalDespesas = 0;
             lancamentos.forEach(lanc => {
@@ -541,7 +595,7 @@ function navigateTo(pagina) {
 
         // ========== RENDERIZAR RESUMO DO MÊS ==========
         function renderizarResumoMes() {
-            const lancamentos = loadCurrentMonthTransactions();
+            const lancamentos = getLancamentosSemPagamentosFatura(loadCurrentMonthTransactions());
             let totalReceitas = 0, totalDespesas = 0;
             lancamentos.forEach(lanc => {
                 if (lanc.valor > 0) totalReceitas += lanc.valor;
@@ -598,6 +652,7 @@ function navigateTo(pagina) {
             
             const pendencias = lancamentos.filter(lanc => {
                 if (lanc.pago) return false;
+                if (isFaturaCartaoQuitadaParaVisualizacao(lanc, lancamentos)) return false;
                 if (!lanc.dataVencimento) return false;
                 const dataVenc = new Date(lanc.dataVencimento + 'T00:00:00');
                 dataVenc.setHours(0, 0, 0, 0);
@@ -656,7 +711,7 @@ function navigateTo(pagina) {
                 const dataMes = new Date(currentDate);
                 dataMes.setMonth(currentDate.getMonth() - i);
                 const key = 'lancamentos_' + getMonthKey(dataMes);
-                const lancamentos = localStorage.getItem(key) ? JSON.parse(localStorage.getItem(key)) : [];
+                const lancamentos = getLancamentosSemPagamentosFatura(localStorage.getItem(key) ? JSON.parse(localStorage.getItem(key)) : []);
                 
                 let receitas = 0, despesas = 0;
                 lancamentos.forEach(lanc => {
@@ -704,7 +759,7 @@ function navigateTo(pagina) {
 
         // ========== RENDERIZAR CARTÕES ==========
         function renderizarCartoes() {
-            const lancamentos = loadCurrentMonthTransactions();
+            const lancamentos = getLancamentosSemPagamentosFatura(loadCurrentMonthTransactions());
             const cartoesCadastrados = JSON.parse(localStorage.getItem('cartoes_credito') || '[]');
             
             if (!cartoesContainer) return;
@@ -784,7 +839,7 @@ function navigateTo(pagina) {
 
         // ========== MODAL DE DETALHES DO CARTÃO ==========
         function openCartaoDetails(cartaoId) {
-            const lancamentos = loadCurrentMonthTransactions();
+            const lancamentos = getLancamentosSemPagamentosFatura(loadCurrentMonthTransactions());
             const transacoesCartao = lancamentos.filter(lanc => {
                 const isDespesa = lanc.tipo === 'despesa' || (!lanc.tipo && lanc.valor < 0);
                 if (!isDespesa || !lanc.formaPagamento) return false;

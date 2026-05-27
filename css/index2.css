@@ -5145,3 +5145,543 @@ font-size: 1.5em;
   transform: scale(0.985);
   transition: transform 0.1s ease;
 }
+/* =======================================================
+   MODAL DESPESA CARTÃO DE CRÉDITO (#modalCC)
+   ======================================================= */
+
+/* ── FAB botão Cartão ── */
+.fab-option-btn.cartao-credito {
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-direction: column;
+  font-size: 0.65em;
+}
+
+.fab-option-btn.cartao-credito i {
+  font-size: 1.4em;
+}
+
+/* Com 3 botões o gap precisa ser menor */
+.fab-options {
+  gap: 30px;
+}
+
+/* ── Overlay ── */
+#modalCC {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+/* ── Corpo do modal ── */
+#modalCC .modal-content {
+  background: #f2f3f5;
+  padding: 24px 20px;
+  padding-bottom: 120px;
+  border-radius: 0;
+  overflow-y: auto;
+  height: 100%;
+  max-height: 100%;
+}
+
+/* ── Topo colorido roxo/índigo ── */
+#modalCC .modal-top-header {
+  margin: -24px -20px 20px -20px;
+  padding: 25px 20px 20px 20px;
+  text-align: left;
+  border-radius: 0;
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+}
+
+#modalCC .modal-type-label {
+  font-size: 0.85em;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 15px;
+  opacity: 0.9;
+  color: rgba(255, 255, 255, 0.9);
+  text-align: left;
+}
+
+#modalCC .modal-amount-container {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+#modalCC .currency-symbol {
+  font-size: 1.5em;
+  font-weight: 500;
+  color: white;
+}
+
+#modalCC .modal-top-header #ccValor {
+  font-size: 2.5em;
+  font-weight: 700;
+  text-align: left;
+  border: none !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 5px 0 !important;
+  width: auto;
+  min-width: 150px;
+  color: white !important;
+  margin: 0;
+}
+
+#modalCC .modal-top-header #ccValor::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* ── Título oculto ── */
+#modalCC .modal-content > h2 {
+  display: none;
+}
+
+/* ── Labels ── */
+#modalCC .modal-content label,
+#modalCC .modal-content .parcelamento-fields label {
+  font-size: 1em;
+  font-weight: 400;
+  color: #4b5563;
+  text-transform: none;
+  letter-spacing: 0;
+  margin-bottom: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+#modalCC .modal-content .parcelamento-fields label {
+  font-size: 0.9em;
+}
+
+/* ── Inputs ── */
+#modalCC .modal-content input[type="text"],
+#modalCC .modal-content input[type="number"],
+#modalCC .modal-content input[type="date"],
+#modalCC .modal-content select {
+  background: #ffffff;
+  border: 1px solid #e4e6ea;
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-size: 0.95em;
+  color: #2d3142;
+  box-shadow: none;
+  transition: border-color 0.2s ease;
+}
+
+#modalCC .modal-content input[type="text"]:focus,
+#modalCC .modal-content input[type="number"]:focus {
+  border-color: #7c3aed;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+/* ── Custom select trigger ── */
+#modalCC .custom-select-trigger {
+  background: #ffffff;
+  border: 1px solid #e4e6ea;
+  border-radius: 10px;
+  padding: 8px 14px;
+  box-shadow: none;
+  color: #2d3142;
+  font-size: 0.95em;
+}
+
+#modalCC .custom-select-trigger:hover {
+  border-color: #c8cad0;
+}
+
+/* ── Botões Único / Parcelado / Fixo ── */
+#modalCC .modal-content .add-entry-options .btn {
+  background: #ffffff;
+  border: 1px solid #e4e6ea;
+  border-radius: 10px;
+  color: #6b7280;
+  font-weight: 500;
+  font-size: 0.88em;
+  padding: 10px 12px;
+  box-shadow: none;
+  transition: all 0.18s ease;
+}
+
+#modalCC .modal-content .add-entry-options .btn:hover {
+  background: #f9f9f9;
+  border-color: #c8cad0;
+}
+
+#modalCC .modal-content .add-entry-options .btn.active {
+  background: #7c3aed;
+  border-color: #7c3aed;
+  color: #ffffff;
+}
+
+/* ── Botões de ação fixos no rodapé ── */
+#modalCC .btn-group {
+  position: fixed;
+  bottom: 90px;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: 30px;
+  justify-content: center;
+  padding: 0 35px;
+  z-index: 999;
+}
+
+#modalCC .btn-group .btn {
+  flex: 1;
+  padding: 14px 20px;
+  font-size: 1em;
+  font-weight: 600;
+  text-align: center;
+  border-radius: 10px;
+}
+
+#modalCC .btn-group .btn-primary {
+  background: #7c3aed;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95em;
+  box-shadow: none;
+}
+
+#modalCC .btn-group .btn-primary:active {
+  background: #6d28d9;
+}
+
+#modalCC .btn-group .btn-secondary {
+  background: #ffffff;
+  color: #6b7280;
+  border: 1px solid #e4e6ea;
+  border-radius: 12px;
+  font-weight: 500;
+  font-size: 0.95em;
+  box-shadow: none;
+}
+
+#modalCC .btn-group .btn-secondary:hover {
+  background: #f5f5f5;
+  border-color: #c8cad0;
+}
+
+#modalCC .btn-group .btn-danger {
+  background: #fff8e1;
+  color: #f59e0b;
+  border: 1px solid #fde68a;
+  border-radius: 12px;
+  font-weight: 500;
+  font-size: 0.95em;
+  box-shadow: none;
+}
+
+/* ── Pago toggle ── */
+#modalCC .pago-toggle-label,
+#modalCC .pago-toggle-label span,
+#modalCC #ccPagoToggleText {
+  letter-spacing: 0.5px;
+}
+/* ══════════════════════════════════════════════
+   BOTTOM SHEET — PAGAR CARTÃO
+   ══════════════════════════════════════════════ */
+
+/* Container do conteúdo do bottom sheet */
+.pagar-cartao-bs-content {
+  max-height: 92vh;
+  overflow-y: hidden;
+  padding: 14px 20px 24px;
+  background: var(--card-background, #fff);
+}
+
+.pagar-cartao-bs-content.adiantado-aberto {
+  overflow-y: auto;
+}
+
+/* Cabeçalho */
+.pagar-cartao-bs-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.pagar-cartao-bs-title {
+  font-size: 1.15em;
+  font-weight: 700;
+  color: var(--text-color, #212121);
+}
+
+.pagar-cartao-bs-close {
+  background: #f0f0f0;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15em;
+  color: #666;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+.pagar-cartao-bs-close:active { background: #e0e0e0; }
+
+/* Label */
+.pagar-cartao-bs-select-label {
+  font-size: 0.78em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #999;
+  margin-bottom: 10px;
+}
+
+/* Chips de cartão */
+.pagar-cartao-bs-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.pagar-cartao-chip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  border-radius: 40px;
+  border: 2px solid #e8e8e8;
+  background: #fafafa;
+  font-size: 0.9em;
+  font-weight: 500;
+  color: var(--text-color, #212121);
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.pagar-cartao-chip i {
+  font-size: 1em;
+  color: #aaa;
+  transition: color 0.18s;
+}
+.pagar-cartao-chip:active { transform: scale(0.97); }
+.pagar-cartao-chip.active {
+  border-color: var(--chip-color, var(--cor-principal));
+  background: color-mix(in srgb, var(--chip-color, var(--cor-principal)) 10%, transparent);
+  color: var(--chip-color, var(--cor-principal));
+}
+.pagar-cartao-chip.active i {
+  color: var(--chip-color, var(--cor-principal));
+}
+
+/* Resumo da fatura */
+.pagar-cartao-bs-resumo {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Botão pagar total */
+.pagar-cartao-bs-btn-total {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  border: none;
+  background: var(--cor-principal, #21c45d);
+  color: #fff;
+  font-size: 0.95em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+  text-align: left;
+}
+.pagar-cartao-bs-btn-total i {
+  font-size: 1.25em;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.pagar-cartao-bs-btn-total span:first-of-type {
+  flex: 1;
+}
+.pagar-cartao-bs-btn-valor {
+  font-size: 0.9em;
+  opacity: 0.88;
+  font-weight: 700;
+  background: rgba(255,255,255,0.2);
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+.pagar-cartao-bs-btn-total:active:not(:disabled) {
+  transform: scale(0.98);
+  filter: brightness(0.93);
+}
+.pagar-cartao-bs-btn-total:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* Botão pagar adiantado */
+.pagar-cartao-bs-btn-adiantado {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 18px;
+  border-radius: 16px;
+  border: 2px solid #e8e8e8;
+  background: #fafafa;
+  color: var(--text-color, #212121);
+  font-size: 0.95em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+  text-align: left;
+}
+.pagar-cartao-bs-btn-adiantado i:first-child {
+  font-size: 1.2em;
+  color: #f59e0b;
+  flex-shrink: 0;
+}
+.pagar-cartao-bs-btn-adiantado span {
+  flex: 1;
+}
+.pagar-cartao-bs-arrow {
+  font-size: 1.2em;
+  color: #aaa;
+  transition: transform 0.25s ease;
+  flex-shrink: 0;
+}
+.pagar-cartao-bs-btn-adiantado:active:not(:disabled) {
+  transform: scale(0.98);
+}
+.pagar-cartao-bs-btn-adiantado:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Painel expansível do adiantado */
+.pagar-cartao-bs-adiantado-panel {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.3s ease, opacity 0.25s ease, padding 0.25s ease;
+  opacity: 0;
+  padding: 0 2px;
+}
+.pagar-cartao-bs-adiantado-panel.open {
+  max-height: 300px;
+  opacity: 1;
+  padding: 4px 2px 0;
+}
+
+.pagar-cartao-bs-adiantado-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: #fff8e1;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  font-size: 0.82em;
+  color: #92400e;
+  line-height: 1.45;
+}
+.pagar-cartao-bs-adiantado-info i {
+  font-size: 1.1em;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* Input de valor */
+.pagar-cartao-bs-adiantado-input-wrap {
+  display: flex;
+  align-items: center;
+  border: 2px solid #e8e8e8;
+  border-radius: 14px;
+  padding: 0 16px;
+  margin-bottom: 10px;
+  background: #fafafa;
+  transition: border-color 0.18s;
+}
+.pagar-cartao-bs-adiantado-input-wrap:focus-within {
+  border-color: #f59e0b;
+  background: #fffef5;
+}
+.pagar-cartao-bs-currency {
+  font-size: 0.95em;
+  color: #999;
+  font-weight: 600;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+.pagar-cartao-bs-valor-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 1.25em;
+  font-weight: 600;
+  color: var(--text-color, #212121);
+  padding: 15px 0;
+  outline: none;
+  font-family: inherit;
+  user-select: text !important;
+  -webkit-user-select: text !important;
+}
+.pagar-cartao-bs-valor-input::placeholder { color: #ccc; }
+
+/* Botão confirmar adiantado */
+.pagar-cartao-bs-btn-confirmar-adiantado {
+  width: 100%;
+  padding: 15px;
+  border-radius: 14px;
+  border: none;
+  background: #f59e0b;
+  color: #fff;
+  font-size: 0.95em;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s;
+  margin-bottom: 4px;
+}
+.pagar-cartao-bs-btn-confirmar-adiantado:active:not(:disabled) {
+  transform: scale(0.98);
+  filter: brightness(0.93);
+}
+.pagar-cartao-bs-btn-confirmar-adiantado:disabled {
+  background: #fde68a;
+  color: #a16207;
+  cursor: not-allowed;
+}
+
+/* aplicarCorCartaoPagamento continua funcionando via --fatura-card-color no visual do cartão */
+
+/* Separador entre botões pagar total / adiantado */
+.pagar-cartao-bs-divisor {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 6px 0;
+  color: #ccc;
+  font-size: 0.75em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.pagar-cartao-bs-divisor::before,
+.pagar-cartao-bs-divisor::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e8e8e8;
+}
+.pagar-cartao-bs-btn-total  { margin-top: 8px; }
+.pagar-cartao-bs-btn-adiantado { margin-bottom: 4px; }
