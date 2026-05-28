@@ -2842,6 +2842,139 @@ function toggleStatus(index) {
     }
 }
 
+let selecaoTransacoesAtiva = false;
+const transacoesSelecionadas = new Map();
+
+function obterBarraSelecaoTransacoes() {
+    let barra = document.getElementById('transactionSelectionBar');
+    if (barra) return barra;
+
+    barra = document.createElement('div');
+    barra.id = 'transactionSelectionBar';
+    barra.className = 'transaction-selection-bar';
+    barra.innerHTML = `
+        <button type="button" class="selection-clear-btn" onclick="limparSelecaoTransacoes()">
+            <i class="ri-close-line"></i>
+        </button>
+        <div class="selection-summary">
+            <span id="selectionCountText">0 selecionadas</span>
+            <strong id="selectionTotalText">R$ 0,00</strong>
+        </div>
+    `;
+    document.body.appendChild(barra);
+    return barra;
+}
+
+function atualizarBarraSelecaoTransacoes() {
+    const barra = obterBarraSelecaoTransacoes();
+    const quantidade = transacoesSelecionadas.size;
+    const total = Array.from(transacoesSelecionadas.values())
+        .reduce((sum, item) => sum + Math.abs(item.valor || 0), 0);
+
+    document.body.classList.toggle('transaction-selection-mode', quantidade > 0);
+    barra.classList.toggle('active', quantidade > 0);
+    barra.querySelector('#selectionCountText').textContent =
+        `${quantidade} ${quantidade === 1 ? 'selecionada' : 'selecionadas'}`;
+    barra.querySelector('#selectionTotalText').textContent = `R$ ${formatToBRL(total)}`;
+}
+
+function limparSelecaoTransacoes() {
+    transacoesSelecionadas.clear();
+    selecaoTransacoesAtiva = false;
+    document.querySelectorAll('.transaction-card.selection-selected')
+        .forEach(card => card.classList.remove('selection-selected'));
+    atualizarBarraSelecaoTransacoes();
+}
+
+function alternarSelecaoTransacao(card) {
+    const id = card.dataset.selectionId;
+    if (!id) return;
+
+    selecaoTransacoesAtiva = true;
+    if (transacoesSelecionadas.has(id)) {
+        transacoesSelecionadas.delete(id);
+        card.classList.remove('selection-selected');
+    } else {
+        transacoesSelecionadas.set(id, {
+            valor: parseFloat(card.dataset.selectionValue || '0'),
+            label: card.dataset.selectionLabel || ''
+        });
+        card.classList.add('selection-selected');
+    }
+
+    if (transacoesSelecionadas.size === 0) selecaoTransacoesAtiva = false;
+    atualizarBarraSelecaoTransacoes();
+}
+
+function prepararSelecaoTransacao(card, dados) {
+    card.dataset.selectionId = dados.id;
+    card.dataset.selectionValue = String(dados.valor || 0);
+    card.dataset.selectionLabel = dados.label || '';
+
+    let pressTimer = null;
+    let longPressAtivado = false;
+    let startX = 0;
+    let startY = 0;
+
+    function iniciarPress(e) {
+        if (e.type === 'mousedown' && e.button !== 0) return;
+        const ponto = e.touches ? e.touches[0] : e;
+        startX = ponto.clientX;
+        startY = ponto.clientY;
+        longPressAtivado = false;
+        clearTimeout(pressTimer);
+        pressTimer = setTimeout(() => {
+            longPressAtivado = true;
+            card.dataset.longPressHandled = 'true';
+            alternarSelecaoTransacao(card);
+            if (navigator.vibrate) navigator.vibrate(35);
+        }, 550);
+    }
+
+    function moverPress(e) {
+        if (!pressTimer) return;
+        const ponto = e.touches ? e.touches[0] : e;
+        if (Math.abs(ponto.clientX - startX) > 12 || Math.abs(ponto.clientY - startY) > 12) {
+            cancelarPress();
+        }
+    }
+
+    function cancelarPress() {
+        clearTimeout(pressTimer);
+        pressTimer = null;
+    }
+
+    function finalizarPress() {
+        cancelarPress();
+        if (longPressAtivado) {
+            setTimeout(() => {
+                card.dataset.longPressHandled = 'false';
+                longPressAtivado = false;
+            }, 800);
+        }
+    }
+
+    card.addEventListener('touchstart', iniciarPress, { passive: true });
+    card.addEventListener('touchmove', moverPress, { passive: true });
+    card.addEventListener('touchend', finalizarPress);
+    card.addEventListener('touchcancel', finalizarPress);
+    card.addEventListener('mousedown', iniciarPress);
+    card.addEventListener('mousemove', moverPress);
+    card.addEventListener('mouseup', finalizarPress);
+    card.addEventListener('mouseleave', finalizarPress);
+    card.addEventListener('contextmenu', (e) => {
+        if (selecaoTransacoesAtiva) e.preventDefault();
+    });
+    card.addEventListener('click', (e) => {
+        if (!selecaoTransacoesAtiva && card.dataset.longPressHandled !== 'true') return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        if (card.dataset.longPressHandled !== 'true') {
+            alternarSelecaoTransacao(card);
+        }
+    }, true);
+}
+
 function addRowToTable(lanc, originalIndex) {
     const transactionsContainer = document.getElementById('transactionsContainer');
 
@@ -2858,6 +2991,11 @@ function addRowToTable(lanc, originalIndex) {
 
     // Garantir que estamos usando o índice correto
     const correctIndex = originalIndex !== undefined ? originalIndex : lanc._idx;
+    prepararSelecaoTransacao(card, {
+        id: `lancamento-${correctIndex}`,
+        valor: lanc.valor,
+        label: lanc.descricao || 'Transacao'
+    });
     card.addEventListener('click', () => {
         if (isPagamentoAdiantado) {
             abrirConfirmacaoExcluirPagamentoFatura(correctIndex);
@@ -2951,6 +3089,7 @@ function addRowToTable(lanc, originalIndex) {
     transactionsContainer.appendChild(card);
 }
 function renderTabela() {
+  limparSelecaoTransacoes();
   const transactionsContainer = document.getElementById('transactionsContainer');
   transactionsContainer.innerHTML = '';
 
@@ -3761,6 +3900,7 @@ document.querySelectorAll('.dropdown-item').forEach(item => {
 });
 
 function renderFilteredTransactions(filteredLancamentos) {
+  limparSelecaoTransacoes();
   const transactionsContainer = document.getElementById('transactionsContainer');
   transactionsContainer.innerHTML = '';
 
@@ -6018,6 +6158,7 @@ function renderFilteredTransactions(filteredLancamentos) {
 
 // ── RENDERIZAR AGRUPADO POR CARTÃO ──
 function renderAgrupandoPorCartao(allTransactions, filteredLancamentos) {
+    limparSelecaoTransacoes();
     const transactionsContainer = document.getElementById('transactionsContainer');
     const cartoesSalvos = JSON.parse(localStorage.getItem('cartoes_credito') || '[]');
 
@@ -6105,6 +6246,11 @@ function renderAgrupandoPorCartao(allTransactions, filteredLancamentos) {
         card.setAttribute('data-index', '-1');
         card.setAttribute('data-grouped-invoice', 'true');
         card.setAttribute('data-paid', isPago ? 'true' : 'false');
+        prepararSelecaoTransacao(card, {
+            id: `fatura-${grupo.formaPagamento}-${grupo.dataVencimento}-${isPago ? 'paga' : 'aberta'}`,
+            valor: valorExibidoFatura,
+            label: titulo
+        });
 
         const qtdText = `${grupo.itens.length} ${grupo.itens.length === 1 ? 'despesa' : 'despesas'}`;
         card.innerHTML = `
