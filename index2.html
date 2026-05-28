@@ -852,11 +852,29 @@ index2
       </svg>
     </button>
 
-    <!-- Bolinhas de Opção (Receita/Despesa/Cartão) -->
+    <!-- Painel de acoes do botao + -->
     <div class="fab-options" id="fabOptions">
-      <button class="fab-option-btn receita" onclick="openModal('receita')">Receita</button>
-      <button class="fab-option-btn despesa" onclick="openModal('despesa')">Despesa</button>
-      <button class="fab-option-btn cartao-credito" onclick="openModalCartaoCredito()"><i class="ri-bank-card-line"></i> Cartão</button>
+      <button class="fab-option-btn receita" onclick="openModal('receita')">
+        <span class="fab-option-icon"><i class="ri-arrow-down-circle-line"></i></span>
+        <span class="fab-option-text">
+          <strong>Receita</strong>
+          <small>Entrada</small>
+        </span>
+      </button>
+      <button class="fab-option-btn despesa" onclick="openModal('despesa')">
+        <span class="fab-option-icon"><i class="ri-arrow-up-circle-line"></i></span>
+        <span class="fab-option-text">
+          <strong>Despesa</strong>
+          <small>Saída</small>
+        </span>
+      </button>
+      <button class="fab-option-btn cartao-credito" onclick="openModalCartaoCredito()">
+        <span class="fab-option-icon"><i class="ri-bank-card-line"></i></span>
+        <span class="fab-option-text">
+          <strong>Despesa no Cartão</strong>
+          <small>Crédito</small>
+        </span>
+      </button>
     </div>
   </div>
 
@@ -1855,6 +1873,7 @@ function openTransactionDetails(index) {
 
 function openModal(typeToPreselect = null, originalIndex = null) {
     fabOptions.classList.remove('active');
+    mainFab.classList.remove('active');
     modal.style.display = 'flex';
     mainFab.style.display = 'none'; // Esconder botão de + ao abrir modal
 
@@ -3387,6 +3406,7 @@ function loadLancamentos() {
     // Funções FAB
     function toggleFabOptions() {
       fabOptions.classList.toggle('active');
+      mainFab.classList.toggle('active', fabOptions.classList.contains('active'));
     }
 
     // Adicionar evento de clique no overlay para fechar ambos os modais
@@ -3683,6 +3703,7 @@ window.onclick = (e) => {
   }
   if (!e.target.closest('.fab-options') && !e.target.closest('.fab-button')) {
     fabOptions.classList.remove('active');
+    mainFab.classList.remove('active');
   }
 };
 
@@ -4368,9 +4389,47 @@ function togglePagamentoAdiantado() {
     if (content) content.classList.add('adiantado-aberto');
     setTimeout(() => {
       const input = document.getElementById('valorPagamentoCartao');
-      if (input) input.focus();
+      if (input) {
+        input.focus();
+        ajustarCampoPagamentoAdiantadoVisivel();
+        setTimeout(ajustarCampoPagamentoAdiantadoVisivel, 350);
+        setTimeout(ajustarCampoPagamentoAdiantadoVisivel, 700);
+      }
     }, 250);
   }
+}
+
+function ajustarCampoPagamentoAdiantadoVisivel() {
+  const modal = document.getElementById('pagarCartaoModal');
+  const content = document.querySelector('.pagar-cartao-bs-content');
+  const inputWrap = document.querySelector('.pagar-cartao-bs-adiantado-input-wrap');
+  if (!modal?.classList.contains('active') || !content || !inputWrap) return;
+
+  const viewport = window.visualViewport;
+  const visibleBottom = viewport ? viewport.offsetTop + viewport.height : window.innerHeight;
+  const rect = inputWrap.getBoundingClientRect();
+  const safeGap = 22;
+  const overflowBottom = rect.bottom - (visibleBottom - safeGap);
+
+  if (overflowBottom > 0) {
+    content.scrollBy({ top: overflowBottom, behavior: 'smooth' });
+    return;
+  }
+
+  const contentTop = content.getBoundingClientRect().top + safeGap;
+  const overflowTop = contentTop - rect.top;
+  if (overflowTop > 0) {
+    content.scrollBy({ top: -overflowTop, behavior: 'smooth' });
+  }
+}
+
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', () => {
+    const input = document.getElementById('valorPagamentoCartao');
+    if (document.activeElement === input) {
+      setTimeout(ajustarCampoPagamentoAdiantadoVisivel, 80);
+    }
+  });
 }
 
 function atualizarBotaoAdiantado() {
@@ -7225,6 +7284,7 @@ function openModalCartaoCredito(originalIndex) {
   }
 
   fabOptions.classList.remove('active');
+  mainFab.classList.remove('active');
   const modalCC = document.getElementById('modalCC');
   modalCC.style.display = 'flex';
   mainFab.style.display = 'none';
