@@ -508,7 +508,7 @@ index2
     <div class="custom-select-trigger" id="categoriaTrigger" onclick="toggleCategoriaDropdown()" style="margin-bottom:0">
       <span class="trigger-text">
         <i class="ri-price-tag-3-line"></i>
-        <span id="categoriaTriggerText">— Sem categoria —</span>
+        <span id="categoriaTriggerText">Sem categoria</span>
       </span>
       <span class="trigger-arrow"><i class="ri-arrow-down-s-line"></i></span>
     </div>
@@ -614,7 +614,7 @@ index2
     <div class="custom-select-trigger" id="ccCategoriaTrigger" onclick="toggleCCCategoriaDropdown()" style="margin-bottom:0">
       <span class="trigger-text">
         <i class="ri-price-tag-3-line"></i>
-        <span id="ccCategoriaTriggerText">— Sem categoria —</span>
+        <span id="ccCategoriaTriggerText">Sem categoria</span>
       </span>
       <span class="trigger-arrow"><i class="ri-arrow-down-s-line"></i></span>
     </div>
@@ -851,6 +851,8 @@ index2
         <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
       </svg>
     </button>
+
+    <div class="fab-backdrop" id="fabBackdrop" onclick="closeFabOptions()"></div>
 
     <!-- Painel de acoes do botao + -->
     <div class="fab-options" id="fabOptions">
@@ -1370,10 +1372,10 @@ function applyCombinedFilters() {
 
     switch(activeStatusFilter) {
       case 'pending':
-        filteredLancamentos = filteredLancamentos.filter(l => !l.pago);
+        filteredLancamentos = filteredLancamentos.filter(l => !isLancamentoPagoParaOrdenacao(l, lancamentos));
         break;
       case 'completed':
-        filteredLancamentos = filteredLancamentos.filter(l => l.pago);
+        filteredLancamentos = filteredLancamentos.filter(l => isLancamentoPagoParaOrdenacao(l, lancamentos));
         break;
     }
 
@@ -1872,8 +1874,7 @@ function openTransactionDetails(index) {
     }
 
 function openModal(typeToPreselect = null, originalIndex = null) {
-    fabOptions.classList.remove('active');
-    mainFab.classList.remove('active');
+    closeFabOptions();
     modal.style.display = 'flex';
     mainFab.style.display = 'none'; // Esconder botão de + ao abrir modal
 
@@ -3407,6 +3408,14 @@ function loadLancamentos() {
     function toggleFabOptions() {
       fabOptions.classList.toggle('active');
       mainFab.classList.toggle('active', fabOptions.classList.contains('active'));
+      document.getElementById('fabBackdrop')?.classList.toggle('active', fabOptions.classList.contains('active'));
+    }
+
+    function closeFabOptions() {
+      fabOptions.classList.remove('active');
+      mainFab.classList.remove('active');
+      mainFab.blur();
+      document.getElementById('fabBackdrop')?.classList.remove('active');
     }
 
     // Adicionar evento de clique no overlay para fechar ambos os modais
@@ -3702,8 +3711,7 @@ window.onclick = (e) => {
     fecharModalPagarCartao();
   }
   if (!e.target.closest('.fab-options') && !e.target.closest('.fab-button')) {
-    fabOptions.classList.remove('active');
-    mainFab.classList.remove('active');
+    closeFabOptions();
   }
 };
 
@@ -3762,8 +3770,8 @@ function carregarCategoriasNoModal(tipoSelecionado, valorAtual) {
     var semCat = document.createElement('div');
     semCat.className = 'custom-select-option' + (!valorAtual ? ' selected' : '');
     semCat.setAttribute('data-value', '');
-    semCat.innerHTML = '<i class="ri-close-circle-line"></i><span class="option-text">— Sem categoria —</span>';
-    semCat.onclick = function() { selecionarCategoria('', '— Sem categoria —'); };
+    semCat.innerHTML = '<i class="ri-close-circle-line"></i><span class="option-text">Sem categoria</span>';
+    semCat.onclick = function() { selecionarCategoria('', 'Sem categoria'); };
     list.appendChild(semCat);
 
     try {
@@ -3817,10 +3825,10 @@ function carregarCategoriasNoModal(tipoSelecionado, valorAtual) {
                 found = true;
             }
         });
-        if (!found) { hidden.value = ''; triggerText.textContent = '— Sem categoria —'; }
+        if (!found) { hidden.value = ''; triggerText.textContent = 'Sem categoria'; }
     } else {
         hidden.value = '';
-        triggerText.textContent = '— Sem categoria —';
+        triggerText.textContent = 'Sem categoria';
     }
 }
 
@@ -4525,8 +4533,16 @@ function obterTransacoesAbertasCartao(cartaoId) {
   );
 }
 
+function obterTransacoesCartao(cartaoId) {
+  return lancamentos.filter(lanc =>
+    lanc.tipo === 'despesa' &&
+    !isPagamentoFaturaCartao(lanc) &&
+    lancamentoPertenceAoCartao(lanc, cartaoId)
+  );
+}
+
 function obterSaldoAbertoCartao(cartaoId) {
-  const transacoesCartao = obterTransacoesAbertasCartao(cartaoId);
+  const transacoesCartao = obterTransacoesCartao(cartaoId);
   const totalBruto = Math.abs(transacoesCartao.reduce((sum, trans) => sum + trans.valor, 0));
   return calcularSaldoRestanteFatura(totalBruto, cartaoId, lancamentos);
 }
@@ -4706,10 +4722,13 @@ function calcularTotalPagar(cartaoId) {
   const btnAdiantado = document.getElementById('btnAdiantadoToggle');
   const btnValorTotal = document.getElementById('btnPagarValorTotal');
   const valorPagamentoEl = document.getElementById('valorPagamentoCartao');
+  const btnPagarIcon = btnPagar?.querySelector('i');
+  const btnPagarLabel = btnPagar?.querySelector('span:first-of-type');
 
   if (!cartaoId) {
     resumoPagamento.style.display = 'none';
     btnPagar.disabled = true;
+    btnPagar?.classList.remove('reabrir-fatura');
     if (btnAdiantado) btnAdiantado.disabled = true;
     if (valorPagamentoEl) valorPagamentoEl.value = '';
     return;
@@ -4721,9 +4740,34 @@ function calcularTotalPagar(cartaoId) {
     ? `Vence dia ${cartaoSelecionado.diaVencimento}`
     : 'Vencimento não informado';
   aplicarCorCartaoPagamento(cartaoSelecionado?.cor || '#0f766e');
+  btnPagar?.classList.remove('reabrir-fatura');
+  if (btnPagarIcon) btnPagarIcon.className = 'ri-check-line';
+  if (btnPagarLabel) btnPagarLabel.textContent = 'Pagar fatura completa';
 
-  const transacoesCartao = obterTransacoesAbertasCartao(cartaoId);
+  const transacoesCartao = obterTransacoesCartao(cartaoId);
   const total = obterSaldoAbertoCartao(cartaoId);
+  const totalBruto = Math.abs(transacoesCartao.reduce((sum, trans) => sum + trans.valor, 0));
+  const faturaPaga = transacoesCartao.length > 0 && total <= 0;
+
+  btnPagar?.classList.toggle('reabrir-fatura', faturaPaga);
+  if (btnPagarIcon) btnPagarIcon.className = faturaPaga ? 'ri-arrow-go-back-line' : 'ri-check-line';
+  if (btnPagarLabel) btnPagarLabel.textContent = faturaPaga ? 'Reabrir fatura' : 'Pagar fatura completa';
+
+  if (faturaPaga) {
+    const ultimoPagamentoFatura = getUltimoPagamentoFaturaCartao(cartaoId, lancamentos);
+    const valorExibido = ultimoPagamentoFatura || totalBruto;
+
+    resumoPagamento.style.display = 'block';
+    resumoPagamento.classList.add('has-transactions');
+    totalPagarEl.textContent = 'R$ ' + formatToBRL(valorExibido);
+    quantidadeTransacoesEl.textContent = transacoesCartao.length === 1 ? '1 transação' : `${transacoesCartao.length} transações`;
+    statusPagamentoEl.textContent = 'Fatura paga';
+    btnPagar.disabled = false;
+    if (btnAdiantado) btnAdiantado.disabled = true;
+    if (btnValorTotal) btnValorTotal.textContent = 'Reabrir';
+    if (valorPagamentoEl) valorPagamentoEl.value = '';
+    return;
+  }
 
   if (transacoesCartao.length === 0 || total <= 0) {
     resumoPagamento.style.display = 'block';
@@ -4731,6 +4775,7 @@ function calcularTotalPagar(cartaoId) {
     quantidadeTransacoesEl.textContent = '0 transações';
     statusPagamentoEl.textContent = 'Não há fatura em aberto neste cartão';
     btnPagar.disabled = true;
+    btnPagar?.classList.remove('reabrir-fatura');
     if (btnAdiantado) btnAdiantado.disabled = true;
     if (btnValorTotal) btnValorTotal.textContent = 'R$ 0,00';
     if (valorPagamentoEl) valorPagamentoEl.value = '';
@@ -4759,8 +4804,15 @@ function pagarCartao() {
     return;
   }
 
-  const transacoesParaPagar = obterTransacoesAbertasCartao(cartaoId);
+  const todasTransacoesCartao = obterTransacoesCartao(cartaoId);
   const saldoAberto = obterSaldoAbertoCartao(cartaoId);
+
+  if (todasTransacoesCartao.length > 0 && saldoAberto <= 0) {
+    abrirConfirmacaoReabrirFaturaCartao(cartaoId, todasTransacoesCartao.length);
+    return;
+  }
+
+  const transacoesParaPagar = obterTransacoesAbertasCartao(cartaoId);
 
   if (transacoesParaPagar.length === 0 || saldoAberto <= 0) {
     showToast('Não há transações em aberto para este cartão.', 'warning');
@@ -4768,6 +4820,65 @@ function pagarCartao() {
   }
 
   abrirConfirmacaoPagamentoCartao(cartaoId, transacoesParaPagar.length, saldoAberto, saldoAberto);
+}
+
+function abrirConfirmacaoReabrirFaturaCartao(cartaoId, quantidadeTransacoes) {
+  const confirmacaoAnterior = document.getElementById('_reabrir-fatura-cartao-overlay');
+  if (confirmacaoAnterior) confirmacaoAnterior.remove();
+
+  const termo = quantidadeTransacoes === 1 ? 'despesa' : 'despesas';
+  const overlay = document.createElement('div');
+  overlay.id = '_reabrir-fatura-cartao-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.48);z-index:3100;display:flex;align-items:center;justify-content:center;padding:20px;';
+
+  overlay.innerHTML = `
+    <div style="width:100%;max-width:340px;background:#fff;border-radius:16px;padding:20px;box-shadow:0 12px 32px rgba(0,0,0,0.24);">
+      <div style="width:44px;height:44px;border-radius:14px;background:#fff7ed;color:#c2410c;display:flex;align-items:center;justify-content:center;margin-bottom:14px;">
+        <i class="ri-arrow-go-back-line" style="font-size:24px;"></i>
+      </div>
+      <h3 style="margin:0 0 8px;font-size:18px;color:#1f2937;">Reabrir fatura?</h3>
+      <p style="margin:0 0 18px;font-size:14px;line-height:1.4;color:#6b7280;">Deseja remover os pagamentos registrados e reabrir esta fatura com ${quantidadeTransacoes} ${termo}?</p>
+      <div style="display:flex;gap:10px;">
+        <button type="button" id="_reabrir-fatura-cancelar" style="flex:1;border:1px solid #e5e7eb;background:#fff;color:#374151;border-radius:10px;padding:12px;font-weight:700;">Cancelar</button>
+        <button type="button" id="_reabrir-fatura-confirmar" style="flex:1;border:0;border-radius:10px;padding:12px;font-weight:700;color:#fff;background:#f97316;">Reabrir</button>
+      </div>
+    </div>
+  `;
+
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) overlay.remove();
+  });
+
+  document.body.appendChild(overlay);
+
+  document.getElementById('_reabrir-fatura-cancelar').addEventListener('click', function() {
+    overlay.remove();
+  });
+
+  document.getElementById('_reabrir-fatura-confirmar').addEventListener('click', async function() {
+    overlay.remove();
+    await reabrirFaturaCartao(cartaoId);
+  });
+}
+
+async function reabrirFaturaCartao(cartaoId) {
+  const cartaoNormalizado = normalizarIdCartao(cartaoId);
+  const antes = lancamentos.length;
+
+  lancamentos = lancamentos.filter(l =>
+    !(isPagamentoFaturaCartao(l) &&
+      normalizarIdCartao(getCartaoIdPagamentoFatura(l)) === cartaoNormalizado)
+  );
+
+  if (lancamentos.length === antes) {
+    showToast('Nao ha pagamentos para remover nesta fatura.', 'warning');
+    return;
+  }
+
+  await salvarLocal(currentDate);
+  loadLancamentos();
+  fecharModalPagarCartao();
+  showToast('Fatura reaberta com sucesso!', 'success');
 }
 
 function abrirConfirmacaoPagamentoCartao(cartaoId, quantidadeTransacoes, valorPagamento, saldoAberto) {
@@ -7283,8 +7394,7 @@ function openModalCartaoCredito(originalIndex) {
     }
   }
 
-  fabOptions.classList.remove('active');
-  mainFab.classList.remove('active');
+  closeFabOptions();
   const modalCC = document.getElementById('modalCC');
   modalCC.style.display = 'flex';
   mainFab.style.display = 'none';
@@ -7536,8 +7646,8 @@ function carregarCCCategorias(valorAtual) {
   var semCat = document.createElement('div');
   semCat.className = 'custom-select-option' + (!valorAtual ? ' selected' : '');
   semCat.setAttribute('data-value', '');
-  semCat.innerHTML = '<i class="ri-close-circle-line"></i><span class="option-text">— Sem categoria —</span>';
-  semCat.onclick = function() { selecionarCCCategoria('', '— Sem categoria —'); };
+  semCat.innerHTML = '<i class="ri-close-circle-line"></i><span class="option-text">Sem categoria</span>';
+  semCat.onclick = function() { selecionarCCCategoria('', 'Sem categoria'); };
   list.appendChild(semCat);
 
   try {
@@ -7574,10 +7684,10 @@ function carregarCCCategorias(valorAtual) {
         found = true;
       }
     });
-    if (!found) { hidden.value = ''; triggerText.textContent = '— Sem categoria —'; }
+    if (!found) { hidden.value = ''; triggerText.textContent = 'Sem categoria'; }
   } else {
     hidden.value = '';
-    triggerText.textContent = '— Sem categoria —';
+    triggerText.textContent = 'Sem categoria';
   }
 }
 

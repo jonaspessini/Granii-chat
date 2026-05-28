@@ -790,13 +790,21 @@ input[type="date"]:invalid {
   border: none;
 }
 
-.fab-button:hover {
-  background-color: #236127;
-  transform: translateX(-50%) scale(1.05);
+@media (hover: hover) and (pointer: fine) {
+  .fab-button:hover {
+    background-color: #236127;
+    transform: translateX(-50%) scale(1.05);
+  }
 }
 
 .fab-button:active {
   transform: translateX(-50%) scale(0.95);
+}
+
+.fab-button.active,
+.fab-button:focus {
+  background-color: #03b444;
+  color: white;
 }
 
 .fab-button svg {
@@ -808,6 +816,23 @@ input[type="date"]:invalid {
 
 .fab-button.active svg {
   transform: rotate(45deg);
+}
+
+.fab-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.28);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  z-index: 999;
+}
+
+.fab-backdrop.active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 .fab-options {
@@ -5692,6 +5717,14 @@ font-size: 1.5em;
 .pagar-cartao-bs-btn-total:disabled {
   background: #ccc;
   cursor: not-allowed;
+}
+
+.pagar-cartao-bs-btn-total.reabrir-fatura {
+  background: #f97316;
+}
+
+.pagar-cartao-bs-btn-total.reabrir-fatura .pagar-cartao-bs-btn-valor {
+  background: rgba(255,255,255,0.22);
 }
 
 /* Botão pagar adiantado */
