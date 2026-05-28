@@ -6526,7 +6526,12 @@ function atualizarLabelTopo() {
 
 // Função para alterar a cor da status bar baseado no tipo de lançamento
 function updateStatusBarColor(tipo) {
-    const cor = tipo === 'despesa' ? '#f44336' : '#21c45d';
+    const coresStatusBar = {
+        despesa: '#f44336',
+        receita: '#21c45d',
+        cartao: '#7c3aed'
+    };
+    const cor = coresStatusBar[tipo] || coresStatusBar.receita;
 
     // Atualiza a meta theme-color (barra do navegador no celular)
     let metaTheme = document.querySelector('meta[name="theme-color"]');
@@ -7035,7 +7040,7 @@ function openModalCartaoCredito(originalIndex) {
   const modalCC = document.getElementById('modalCC');
   modalCC.style.display = 'flex';
   mainFab.style.display = 'none';
-  updateStatusBarColor('despesa');
+  updateStatusBarColor('cartao');
 
   if (originalIndex !== null) {
     // Modo edição
