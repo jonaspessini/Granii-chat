@@ -1438,6 +1438,28 @@ function calcularDiasAteVencimento(dataVencimento) {
   return diffDays;
 }
 
+function formatarVencimentoPorDias(dataVencimento) {
+  const diasAteVencimento = calcularDiasAteVencimento(dataVencimento);
+
+  if (diasAteVencimento === null) {
+    return { texto: 'Sem data', classe: 'sem-data' };
+  }
+  if (diasAteVencimento < 0) {
+    return { texto: 'Vencido', classe: 'vencido' };
+  }
+  if (diasAteVencimento === 0) {
+    return { texto: 'Vence hoje', classe: 'vence-hoje' };
+  }
+  if (diasAteVencimento <= 3) {
+    return {
+      texto: `Vence em ${diasAteVencimento} ${diasAteVencimento === 1 ? 'dia' : 'dias'}`,
+      classe: 'proximo-vencimento'
+    };
+  }
+
+  return { texto: `Vence em ${diasAteVencimento} dias`, classe: 'normal' };
+}
+
     function parseBRL(value) {
       if (typeof value !== 'string') return value;
       let cleanValue = value.replace(/\./g, '').replace(',', '.');
@@ -6064,12 +6086,17 @@ function renderAgrupandoPorCartao(allTransactions, filteredLancamentos) {
         grupo.valorPago = Math.max(0, totalBrutoFatura - totalFatura);
         const cartaoObj = buscarCartaoObj(grupo.formaPagamento);
         const nomeCartao = (cartaoObj && cartaoObj.nome) ? cartaoObj.nome : grupo.formaPagamento;
-        const diaVenc = cartaoObj && cartaoObj.diaVencimento ? `Vence dia ${cartaoObj.diaVencimento}` : '';
         const isPago = totalFatura <= 0;
         grupo.pago = isPago;
         const titulo = isPago ? `Fatura paga · ${nomeCartao}` : `Fatura · ${nomeCartao}`;
         const statusText = isPago ? 'Pago' : 'A Pagar';
         const statusClass = isPago ? 'paid' : 'unpaid';
+        const vencimentoFatura = isPago
+            ? { texto: 'Fatura paga', classe: 'pago' }
+            : (cartaoObj && cartaoObj.diaVencimento
+                ? formatarVencimentoPorDias(grupo.dataVencimento)
+                : { texto: 'Fatura em aberto', classe: 'sem-data' });
+        const diaVenc = vencimentoFatura.texto;
 
         const card = document.createElement('div');
         card.className = 'transaction-card fatura-agrupada-card' + (isPago ? ' fatura-paga' : '');
@@ -6080,8 +6107,6 @@ function renderAgrupandoPorCartao(allTransactions, filteredLancamentos) {
         card.setAttribute('data-paid', isPago ? 'true' : 'false');
 
         const qtdText = `${grupo.itens.length} ${grupo.itens.length === 1 ? 'despesa' : 'despesas'}`;
-        const rodapeText = diaVenc ? `${diaVenc} · ${qtdText}` : qtdText;
-
         card.innerHTML = `
             <div class="transaction-header">
                 <div class="transaction-desc fatura-desc">
@@ -6091,7 +6116,11 @@ function renderAgrupandoPorCartao(allTransactions, filteredLancamentos) {
                 <div class="transaction-value valor-negativo">R$ ${formatToBRL(valorExibidoFatura)}</div>
             </div>
             <div class="transaction-footer">
-                <div class="transaction-date fatura-qtd">${rodapeText}</div>
+                <div class="transaction-date fatura-qtd">
+                    <span class="${vencimentoFatura.classe}">${diaVenc}</span>
+                    <span class="fatura-qtd-separador">|</span>
+                    <span>${qtdText}</span>
+                </div>
                 <div class="transaction-actions">
                     <div class="fatura-expand-hint"><i class="ri-arrow-right-s-line"></i></div>
                     <div class="status-btn ${statusClass}">${statusText}</div>

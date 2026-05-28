@@ -5133,6 +5133,31 @@ font-size: 1.5em;
 }
 
 /* ── HINT DE EXPANSÃO NA FATURA AGRUPADA ── */
+.fatura-qtd .pago {
+  color: #8f8f8f;
+}
+
+.fatura-qtd .vencido {
+  color: var(--negative-color);
+  font-weight: 600;
+}
+
+.fatura-qtd .vence-hoje,
+.fatura-qtd .proximo-vencimento {
+  color: #ff9800;
+  font-weight: 600;
+}
+
+.fatura-qtd .normal,
+.fatura-qtd .sem-data,
+.fatura-qtd-separador {
+  color: #888;
+}
+
+.fatura-qtd-separador {
+  margin: 0 5px;
+}
+
 .fatura-expand-hint {
   display: flex;
   align-items: center;
