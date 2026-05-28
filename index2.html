@@ -2473,6 +2473,10 @@ function isFaturaCartaoQuitadaParaVisualizacao(lancamento, lista) {
   return calcularSaldoRestanteFatura(totalBrutoFatura, lancamento.formaPagamento, lista) <= 0;
 }
 
+function isLancamentoPagoParaOrdenacao(lancamento, lista) {
+  return !!(lancamento?.pago || isFaturaCartaoQuitadaParaVisualizacao(lancamento, lista));
+}
+
 function getStatusPagoPermitido(tipo, formaPagamento, statusSolicitado, statusAtual) {
   if (tipo === 'despesa' && isFormaPagamentoCartaoCredito(formaPagamento)) {
     return typeof statusAtual === 'boolean' ? statusAtual : false;
@@ -3120,15 +3124,18 @@ function renderTabela() {
   // 2. Para transações A Pagar: ordenar por data de vencimento (mais próxima primeiro)
   // 3. Para transações Pagas: ordenar por data de pagamento (mais recente primeiro)
   allTransactions.sort((a, b) => {
+    const pagoA = isLancamentoPagoParaOrdenacao(a, lancamentos);
+    const pagoB = isLancamentoPagoParaOrdenacao(b, lancamentos);
+
     // Ordenar por status: A Pagar (false) primeiro, Pago (true) depois
-    if (!a.pago && b.pago) return -1;
-    if (a.pago && !b.pago) return 1;
+    if (!pagoA && pagoB) return -1;
+    if (pagoA && !pagoB) return 1;
 
     // Se ambos têm o mesmo status
     const dataA = a.dataVencimento ? new Date(a.dataVencimento + 'T00:00:00') : new Date('9999-12-31');
     const dataB = b.dataVencimento ? new Date(b.dataVencimento + 'T00:00:00') : new Date('9999-12-31');
 
-    if (!a.pago && !b.pago) {
+    if (!pagoA && !pagoB) {
       // Ambos A Pagar: ordenar da menor para a maior data (mais próxima primeiro)
       return dataA - dataB;
     } else {
@@ -3920,13 +3927,16 @@ function renderFilteredTransactions(filteredLancamentos) {
 
   // Aplica a mesma ordenação
   allTransactions.sort((a, b) => {
-    if (!a.pago && b.pago) return -1;
-    if (a.pago && !b.pago) return 1;
+    const pagoA = isLancamentoPagoParaOrdenacao(a, lancamentos);
+    const pagoB = isLancamentoPagoParaOrdenacao(b, lancamentos);
+
+    if (!pagoA && pagoB) return -1;
+    if (pagoA && !pagoB) return 1;
 
     const dataA = a.dataVencimento ? new Date(a.dataVencimento + 'T00:00:00') : new Date('9999-12-31');
     const dataB = b.dataVencimento ? new Date(b.dataVencimento + 'T00:00:00') : new Date('9999-12-31');
 
-    if (!a.pago && !b.pago) {
+    if (!pagoA && !pagoB) {
       return dataA - dataB;
     } else {
       const timestampA = a.ultimaModificacao || a._idx;
@@ -6132,13 +6142,16 @@ function renderFilteredTransactions(filteredLancamentos) {
 
     // Aplica a mesma ordenação
     allTransactions.sort((a, b) => {
-        if (!a.pago && b.pago) return -1;
-        if (a.pago && !b.pago) return 1;
+        const pagoA = isLancamentoPagoParaOrdenacao(a, lancamentos);
+        const pagoB = isLancamentoPagoParaOrdenacao(b, lancamentos);
+
+        if (!pagoA && pagoB) return -1;
+        if (pagoA && !pagoB) return 1;
 
         const dataA = a.dataVencimento ? new Date(a.dataVencimento + 'T00:00:00') : new Date('9999-12-31');
         const dataB = b.dataVencimento ? new Date(b.dataVencimento + 'T00:00:00') : new Date('9999-12-31');
 
-        if (!a.pago && !b.pago) {
+        if (!pagoA && !pagoB) {
             return dataA - dataB;
         } else {
             const timestampA = a.ultimaModificacao || a._idx;
@@ -7786,14 +7799,23 @@ window.fecharModalDeleteUnique = function() {
 // Patch confirmarExclusaoUnica to support CC context
 const _origConfirmarExclusaoUnica = confirmarExclusaoUnica;
 window.confirmarExclusaoUnica = async function() {
-  const indexToDelete = ccPendingDeleteIndex !== null ? ccPendingDeleteIndex : pendingDeleteIndex;
+  const isCCDelete = ccPendingDeleteIndex !== null;
+  const indexToDelete = isCCDelete ? ccPendingDeleteIndex : pendingDeleteIndex;
   if (indexToDelete !== null) {
     lancamentos.splice(indexToDelete, 1);
     await salvarLocal(currentDate);
     loadLancamentos();
-    fecharModalDeleteUnique();
-    if (ccPendingDeleteIndex !== null) { ccPendingDeleteIndex = null; closeModalCC(); }
-    else { pendingDeleteIndex = null; closeModal(); }
+
+    const deleteModal = document.getElementById('deleteUniqueModal');
+    if (deleteModal) deleteModal.style.display = 'none';
+
+    if (isCCDelete) {
+      ccPendingDeleteIndex = null;
+      closeModalCC();
+    } else {
+      pendingDeleteIndex = null;
+      closeModal();
+    }
     showToast('🗑️ Transação excluída com sucesso!');
   } else {
     fecharModalDeleteUnique();
