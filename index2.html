@@ -6652,7 +6652,7 @@ function abrirModalFaturaAgrupada(grupo, nomeCartao, cartaoObj) {
         const metaText = [dataText, catNome].filter(Boolean).join(' · ');
 
         return `
-            <div class="fatura-modal-item" data-idx="${lanc._idx}" style="cursor:pointer;">
+            <div class="fatura-modal-item" data-idx="${lanc.originalIndex ?? lanc._idx}" style="cursor:pointer;">
                 <div class="fatura-modal-item-info">
                     <div class="fatura-modal-item-desc">${desc}</div>
                     ${metaText ? `<div class="fatura-modal-item-meta">${metaText}</div>` : ''}
