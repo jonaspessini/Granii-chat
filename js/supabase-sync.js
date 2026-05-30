@@ -64,6 +64,7 @@ export async function loadUserTransactionsFromSupabase() {
             tipo: t.type === 'income' ? 'receita' : 'despesa',
             pago: t.is_paid,
             dataVencimento: t.due_date,
+            dataCompra: t.purchase_date || undefined,
             formaPagamento: t.payment_method,
             categoria: t.category || null,
             parcelamento: t.installment_info ? JSON.parse(t.installment_info) : undefined,
@@ -118,6 +119,7 @@ export async function saveMonthTransactionsToSupabase(monthKey) {
         type: t.valor > 0 ? 'income' : 'expense',
         is_paid: t.pago || false,
         due_date: t.dataVencimento,
+        purchase_date: t.dataCompra || null,
         payment_method: t.formaPagamento || null,
         category: t.categoria || null,
         installment_info: t.parcelamento ? JSON.stringify(t.parcelamento) : null,
@@ -125,9 +127,19 @@ export async function saveMonthTransactionsToSupabase(monthKey) {
     }));
 
     // Upsert: insere se não existe, atualiza se já existe (baseado em user_id + local_id)
-    const { error } = await supabase
+    const fallbackToUpsert = toUpsert.map(({ purchase_date, ...row }) => row);
+
+    let { error } = await supabase
         .from('transactions')
         .upsert(toUpsert, { onConflict: 'user_id,local_id', ignoreDuplicates: false });
+
+    if (error && String(error.message || '').includes('purchase_date')) {
+        console.warn('Coluna purchase_date nao encontrada; salvando transacoes sem sincronizar data da compra.');
+        const fallbackResult = await supabase
+            .from('transactions')
+            .upsert(fallbackToUpsert, { onConflict: 'user_id,local_id', ignoreDuplicates: false });
+        error = fallbackResult.error;
+    }
 
     if (error) {
         console.error(`Erro ao fazer upsert do mês ${monthKey}:`, error);
@@ -192,9 +204,6 @@ export async function loadUserCardsFromSupabase() {
     }
 
     if (data && data.length > 0) {
-        const localCards = JSON.parse(localStorage.getItem('cartoes_credito') || '[]');
-        const localCardsById = new Map(localCards.map(c => [c.id, c]));
-        const cardColors = JSON.parse(localStorage.getItem('cartoes_credito_cores') || '{}');
 
         const cards = data.map(c => ({
             id: c.card_id,
@@ -202,7 +211,8 @@ export async function loadUserCardsFromSupabase() {
             limite: c.limit_amount,
             limiteFormatado: c.limit_amount?.toFixed(2).replace('.', ',') || '0,00',
             diaVencimento: c.due_day,
-            cor: localCardsById.get(c.card_id)?.cor || cardColors[c.card_id] || '#0f766e'
+            diaFechamento: c.closing_day || c.due_day,
+            cor: c.color || '#0f766e'
         }));
         localStorage.setItem('cartoes_credito', JSON.stringify(cards));
     }
@@ -255,10 +265,12 @@ export async function saveUserCardsToSupabase() {
         card_id: c.id,
         name: c.nome,
         limit_amount: c.limite,
-        due_day: c.diaVencimento
+        due_day: c.diaVencimento,
+        closing_day: c.diaFechamento || c.diaVencimento,
+        color: c.cor || '#0f766e'
     }));
 
-    const { error } = await supabase
+    let { error } = await supabase
         .from('user_cards')
         .upsert(cardsToUpsert, { onConflict: 'user_id,card_id', ignoreDuplicates: false });
 

@@ -84,6 +84,12 @@
     </div>
 
     <div class="form-group">
+      <label for="diaFechamento">Dia de Fechamento da Fatura</label>
+      <input type="number" id="diaFechamento" placeholder="25"
+             min="1" max="31" class="input-field">
+    </div>
+
+    <div class="form-group">
       <label>Cor do Cartão</label>
       <input type="hidden" id="corCartao" value="#0f766e">
       <div class="cartao-color-options" id="cartaoColorOptions">
@@ -138,8 +144,10 @@
   function carregarCartoes() {
     cartoes = JSON.parse(localStorage.getItem('cartoes_credito') || '[]');
     const coresCartoes = carregarCoresCartoes();
+    const fechamentosCartoes = carregarFechamentosCartoes();
     cartoes = cartoes.map(cartao => ({
       ...cartao,
+      diaFechamento: cartao.diaFechamento || fechamentosCartoes[cartao.id] || '',
       cor: cartao.cor || coresCartoes[cartao.id] || '#0f766e'
     }));
     renderizarCartoes();
@@ -159,6 +167,22 @@
     const coresCartoes = carregarCoresCartoes();
     delete coresCartoes[cartaoId];
     localStorage.setItem('cartoes_credito_cores', JSON.stringify(coresCartoes));
+  }
+
+  function carregarFechamentosCartoes() {
+    return JSON.parse(localStorage.getItem('cartoes_credito_fechamentos') || '{}');
+  }
+
+  function salvarFechamentoCartaoLocal(cartaoId, diaFechamento) {
+    const fechamentosCartoes = carregarFechamentosCartoes();
+    fechamentosCartoes[cartaoId] = parseInt(diaFechamento);
+    localStorage.setItem('cartoes_credito_fechamentos', JSON.stringify(fechamentosCartoes));
+  }
+
+  function removerFechamentoCartaoLocal(cartaoId) {
+    const fechamentosCartoes = carregarFechamentosCartoes();
+    delete fechamentosCartoes[cartaoId];
+    localStorage.setItem('cartoes_credito_fechamentos', JSON.stringify(fechamentosCartoes));
   }
 
 // Renderizar lista de cartões
@@ -189,7 +213,9 @@ function renderizarCartoes() {
   // Mostrar o card de total quando há cartões
   document.querySelector('.total-limites-card').style.display = 'block';
   
+  const fechamentosCartoes = carregarFechamentosCartoes();
   cartoes.forEach((cartao, index) => {
+    const diaFechamentoCartao = cartao.diaFechamento || fechamentosCartoes[cartao.id] || '';
     const cartaoElement = document.createElement('div');
     cartaoElement.className = 'cartao-item';
     cartaoElement.style.setProperty('--cartao-item-color', cartao.cor || '#0f766e');
@@ -201,6 +227,7 @@ function renderizarCartoes() {
           <div class="cartao-vencimento">
             <i class="ri-calendar-line"></i>
             Vence no dia ${cartao.diaVencimento}
+            ${diaFechamentoCartao ? ` · Fecha no dia ${diaFechamentoCartao}` : ''}
           </div>
         </div>
         <div class="cartao-actions">
@@ -229,6 +256,7 @@ function renderizarCartoes() {
       document.getElementById('nomeCartao').value = cartao.nome;
       document.getElementById('limiteCartao').value = cartao.limiteFormatado; // CORRIGIDO
       document.getElementById('diaVencimento').value = cartao.diaVencimento; // CORRIGIDO
+      document.getElementById('diaFechamento').value = cartao.diaFechamento || carregarFechamentosCartoes()[cartao.id] || '';
       selecionarCorCartao(cartao.cor || '#0f766e');
     } else {
       cartaoEditando = null;
@@ -236,6 +264,7 @@ function renderizarCartoes() {
       document.getElementById('nomeCartao').value = '';
       document.getElementById('limiteCartao').value = ''; // CORRIGIDO
       document.getElementById('diaVencimento').value = ''; // CORRIGIDO
+      document.getElementById('diaFechamento').value = '';
       selecionarCorCartao('#0f766e');
     }
     
@@ -298,6 +327,7 @@ function salvarCartao() {
   const nome = document.getElementById('nomeCartao').value.trim();
   const limite = document.getElementById('limiteCartao').value;
   const diaVencimento = document.getElementById('diaVencimento').value;
+  const diaFechamento = document.getElementById('diaFechamento').value;
   const cor = document.getElementById('corCartao').value || '#0f766e';
   
   if (!nome) {
@@ -315,6 +345,11 @@ function salvarCartao() {
     return;
   }
   
+  if (!diaFechamento || diaFechamento < 1 || diaFechamento > 31) {
+    alert('Informe um dia de fechamento valido (1-31)');
+    return;
+  }
+  
   const id = cartaoEditando !== null ? cartoes[cartaoEditando].id : 'cartao_' + Date.now();
   const limiteNumerico = parseBRL(limite);
   
@@ -324,6 +359,7 @@ function salvarCartao() {
     limite: limiteNumerico,
     limiteFormatado: document.getElementById('limiteCartao').value,
     diaVencimento: parseInt(diaVencimento),
+    diaFechamento: parseInt(diaFechamento),
     cor: cor
   };
   
@@ -341,6 +377,7 @@ function salvarCartao() {
   
 localStorage.setItem('cartoes_credito', JSON.stringify(cartoes));
   salvarCorCartaoLocal(id, cor);
+  salvarFechamentoCartaoLocal(id, diaFechamento);
   renderizarCartoes();
   fecharModalCartao();
 
@@ -399,6 +436,7 @@ function excluirCartao(index) {
   if (confirmar) {
     cartoes.splice(index, 1);
     removerCorCartaoLocal(cartao.id);
+    removerFechamentoCartaoLocal(cartao.id);
     localStorage.setItem('cartoes_credito', JSON.stringify(cartoes));
     renderizarCartoes();
     mostrarToast('Cartão excluído com sucesso');
@@ -420,6 +458,7 @@ function excluirCartao(index) {
   if (confirmar) {
 cartoes.splice(index, 1);
     removerCorCartaoLocal(cartao.id);
+    removerFechamentoCartaoLocal(cartao.id);
     localStorage.setItem('cartoes_credito', JSON.stringify(cartoes));
     renderizarCartoes();
     mostrarToast('Cartão excluído com sucesso', 'info');

@@ -491,18 +491,20 @@ index2
     </div>
 
     <!-- O RESTO PERMANECE IGUAL -->
-    <input type="text" id="descricao" placeholder="Descrição" />
-    <select id="tipo">
-      <option value="despesa" selected>Despesa</option>
-      <option value="receita">Receita</option>
-    </select>
-    <input type="date" id="dataVencimento" />
+    <div class="date-choice-group" id="dataVencimentoQuick">
+      <button type="button" class="date-choice-btn" data-date-option="hoje" onclick="selecionarDataRapida('dataVencimento', 'hoje')">Hoje</button>
+      <button type="button" class="date-choice-btn" data-date-option="ontem" onclick="selecionarDataRapida('dataVencimento', 'ontem')">Ontem</button>
+      <button type="button" class="date-choice-btn" data-date-option="outros" onclick="abrirSeletorData('dataVencimento')">Outros...</button>
+      <button type="button" class="date-choice-selected" onclick="abrirSeletorData('dataVencimento')" style="display:none;"></button>
+    </div>
+    <input type="date" id="dataVencimento" class="date-native-hidden" onchange="atualizarDataRapidaAtiva('dataVencimento')" />
     <div
       id="dataVencimentoCartaoTexto"
       class="card-due-date-display"
       style="display:none;"
       onclick="avisarDataVencimentoCartao()"
     ></div>
+    <input type="text" id="descricao" placeholder="Descrição" />
 
     <!-- Categoria trigger -->
     <div class="custom-select-trigger" id="categoriaTrigger" onclick="toggleCategoriaDropdown()" style="margin-bottom:0">
@@ -513,6 +515,10 @@ index2
       <span class="trigger-arrow"><i class="ri-arrow-down-s-line"></i></span>
     </div>
     <input type="hidden" id="categoriaLancamento" value="">
+    <select id="tipo">
+      <option value="despesa" selected>Despesa</option>
+      <option value="receita">Receita</option>
+    </select>
 
 <!-- Trigger -->
 <div class="custom-select-trigger" onclick="abrirFormaPagamentoModal()">
@@ -588,7 +594,24 @@ index2
       <button class="btn" id="ccBtnFixo" onclick="ccSelectEntryType('fixo')">Fixo</button>
     </div>
 
+    <div class="date-choice-group" id="ccDataCompraQuick">
+      <button type="button" class="date-choice-btn" data-date-option="hoje" onclick="selecionarDataRapida('ccDataCompra', 'hoje')">Hoje</button>
+      <button type="button" class="date-choice-btn" data-date-option="ontem" onclick="selecionarDataRapida('ccDataCompra', 'ontem')">Ontem</button>
+      <button type="button" class="date-choice-btn" data-date-option="outros" onclick="abrirSeletorData('ccDataCompra')">Outros...</button>
+      <button type="button" class="date-choice-selected" onclick="abrirSeletorData('ccDataCompra')" style="display:none;"></button>
+    </div>
+    <input type="date" id="ccDataCompra" class="date-native-hidden" onchange="atualizarDataRapidaAtiva('ccDataCompra'); atualizarCCFaturaAutomatica()" />
     <input type="text" id="ccDescricao" placeholder="Descrição" />
+
+    <!-- Categoria -->
+    <div class="custom-select-trigger" id="ccCategoriaTrigger" onclick="toggleCCCategoriaDropdown()" style="margin-bottom:0">
+      <span class="trigger-text">
+        <i class="ri-price-tag-3-line"></i>
+        <span id="ccCategoriaTriggerText">Sem categoria</span>
+      </span>
+      <span class="trigger-arrow"><i class="ri-arrow-down-s-line"></i></span>
+    </div>
+    <input type="hidden" id="ccCategoriaLancamento" value="">
 
     <!-- Seletor de Cartão (forma de pagamento) -->
     <div class="custom-select-trigger" onclick="abrirCCSeletorCartao()">
@@ -609,16 +632,6 @@ index2
       <span class="trigger-arrow"><i class="ri-arrow-down-s-line"></i></span>
     </div>
     <input type="hidden" id="ccDataVencimento" value="">
-
-    <!-- Categoria -->
-    <div class="custom-select-trigger" id="ccCategoriaTrigger" onclick="toggleCCCategoriaDropdown()" style="margin-bottom:0">
-      <span class="trigger-text">
-        <i class="ri-price-tag-3-line"></i>
-        <span id="ccCategoriaTriggerText">Sem categoria</span>
-      </span>
-      <span class="trigger-arrow"><i class="ri-arrow-down-s-line"></i></span>
-    </div>
-    <input type="hidden" id="ccCategoriaLancamento" value="">
 
     <!-- Pago toggle -->
     <div class="pago-toggle-group" style="display:none;">
@@ -1171,6 +1184,78 @@ function getDataHoje() {
   const mes = String(hoje.getMonth() + 1).padStart(2, '0');
   const dia = String(hoje.getDate()).padStart(2, '0');
   return `${ano}-${mes}-${dia}`;
+}
+
+function getDataOntem() {
+  const ontem = getHojeZerado();
+  ontem.setDate(ontem.getDate() - 1);
+  const ano = ontem.getFullYear();
+  const mes = String(ontem.getMonth() + 1).padStart(2, '0');
+  const dia = String(ontem.getDate()).padStart(2, '0');
+  return `${ano}-${mes}-${dia}`;
+}
+
+function selecionarDataRapida(inputId, opcao) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+
+  input.value = opcao === 'ontem' ? getDataOntem() : getDataHoje();
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+function formatarDataCurta(dataStr) {
+  const partes = dataStr ? dataStr.split('-').map(Number) : [];
+  if (partes.length !== 3 || partes.some(isNaN)) return '';
+
+  const data = new Date(partes[0], partes[1] - 1, partes[2]);
+  const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+  const dia = String(data.getDate()).padStart(2, '0');
+  return `${dia} ${meses[data.getMonth()]} ${data.getFullYear()}`;
+}
+
+function abrirSeletorData(inputId) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+
+  if (typeof input.showPicker === 'function') {
+    input.showPicker();
+  } else {
+    input.click();
+  }
+}
+
+function atualizarDataRapidaAtiva(inputId) {
+  const input = document.getElementById(inputId);
+  const grupo = document.getElementById(inputId + 'Quick');
+  if (!input || !grupo) return;
+
+  const hoje = getDataHoje();
+  const ontem = getDataOntem();
+  const opcaoAtiva = input.value === hoje ? 'hoje' : input.value === ontem ? 'ontem' : 'outros';
+  let selectedButton = grupo.querySelector('.date-choice-selected');
+
+  if (!selectedButton) {
+    selectedButton = document.createElement('button');
+    selectedButton.type = 'button';
+    selectedButton.className = 'date-choice-selected';
+    selectedButton.onclick = () => abrirSeletorData(inputId);
+    grupo.appendChild(selectedButton);
+  }
+
+  grupo.querySelectorAll('.date-choice-btn').forEach(btn => {
+    const isCustomDate = opcaoAtiva === 'outros' && !!input.value;
+    btn.style.display = isCustomDate ? 'none' : '';
+    btn.classList.toggle('active', btn.dataset.dateOption === opcaoAtiva);
+  });
+
+  const isCustomDate = opcaoAtiva === 'outros' && !!input.value;
+  selectedButton.style.display = isCustomDate ? 'inline-flex' : 'none';
+  selectedButton.textContent = isCustomDate ? formatarDataCurta(input.value) : '';
+}
+
+function mostrarDataRapida(inputId, visivel) {
+  const grupo = document.getElementById(inputId + 'Quick');
+  if (grupo) grupo.style.display = visivel ? 'flex' : 'none';
 }
 
     // Elementos DOM
@@ -1908,6 +1993,7 @@ function openModal(typeToPreselect = null, originalIndex = null) {
         tipoInput.value = lanc.tipo === 'receita' ? 'receita' : 'despesa';
         valorInput.value = formatToBRL(Math.abs(lanc.valor));
         dataVencimentoInput.value = lanc.dataVencimento || '';
+        atualizarDataRapidaAtiva('dataVencimento');
 
         // Atualizar cor baseada no tipo do lançamento sendo editado
         if (lanc.tipo === 'despesa') {
@@ -1976,6 +2062,7 @@ function openModal(typeToPreselect = null, originalIndex = null) {
 
     } else {
         dataVencimentoInput.value = getDataHoje();
+        atualizarDataRapidaAtiva('dataVencimento');
         deleteBtn.style.display = 'none';
         editIndex = null;
 
@@ -2138,6 +2225,7 @@ async function confirmarEdicaoParcelado(opcao) {
       lancamentos[editIndex].descricao      = novaDesc;
       lancamentos[editIndex].tipo           = ed.tipo;
       lancamentos[editIndex].valor          = ed.valorFinal;
+      if (ed.dataCompra) lancamentos[editIndex].dataCompra = ed.dataCompra;
       lancamentos[editIndex].dataVencimento = ed.dataVencimento;
       lancamentos[editIndex].pago           = ed.pago;
       lancamentos[editIndex].formaPagamento = ed.formaPagamento;
@@ -2178,6 +2266,7 @@ async function confirmarEdicaoParcelado(opcao) {
                 descricao: novaDesc,
                 tipo: ed.tipo,
                 valor: ed.valorFinal,
+                dataCompra: ed.dataCompra || l.dataCompra,
                 dataVencimento: ed.dataVencimento,
                 pago: ed.pago,
                 formaPagamento: ed.formaPagamento,
@@ -2195,6 +2284,7 @@ async function confirmarEdicaoParcelado(opcao) {
                 descricao: novaDesc,
                 tipo: ed.tipo,
                 valor: ed.valorFinal,
+                dataCompra: ed.dataCompra || l.dataCompra,
                 formaPagamento: ed.formaPagamento,
                 categoria: ed.categoriaId,
                 parcelamento: {
@@ -2244,6 +2334,7 @@ async function confirmarEdicaoParcelado(opcao) {
               descricao: novaDesc,
               tipo: ed.tipo,
               valor: ed.valorFinal,
+              dataCompra: ed.dataCompra || l.dataCompra,
               formaPagamento: ed.formaPagamento,
               categoria: ed.categoriaId,
               parcelamento: {
@@ -3388,6 +3479,7 @@ function loadLancamentos() {
             tipo: lanc.tipo || 'despesa',
             pago: lanc.pago === true,
             dataVencimento: lanc.dataVencimento || new Date().toISOString().split('T')[0],
+            dataCompra: lanc.dataCompra || undefined,
             formaPagamento: lanc.formaPagamento || null,
             categoria: lanc.categoria || null,
             tipoSistema: lanc.tipoSistema || lanc.parcelamento?.tipoSistema || undefined,
@@ -7232,6 +7324,7 @@ function aplicarVencimentoCartao(formaPagamento) {
   if (!formaPagamento || formaPagamento === 'debito_pix') {
     // Débito/Pix: libera o campo
     dataInput.style.display = '';
+    mostrarDataRapida('dataVencimento', true);
     dataInput.removeAttribute('readonly');
     dataInput.style.opacity = '';
     dataInput.style.cursor = '';
@@ -7261,6 +7354,7 @@ function aplicarVencimentoCartao(formaPagamento) {
     const dia = String(diaVencimento).padStart(2, '0');
     const novaData = `${ano}-${mes}-${dia}`;
     dataInput.value = novaData;
+    atualizarDataRapidaAtiva('dataVencimento');
 
     if (dataCartaoTexto) {
       dataCartaoTexto.textContent = `Vence dia ${diaVencimento}`;
@@ -7272,6 +7366,7 @@ function aplicarVencimentoCartao(formaPagamento) {
   }
 
   // Bloqueia edição da data (pointer-events cobre mobile)
+  mostrarDataRapida('dataVencimento', false);
   dataInput.style.display = 'none';
   dataInput.setAttribute('readonly', true);
   dataInput.style.opacity = '0.5';
@@ -7408,6 +7503,8 @@ function openModalCartaoCredito(originalIndex) {
     document.getElementById('modalCCTitle').textContent = 'Editar Despesa no Cartão';
     document.getElementById('ccDescricao').value = lanc.descricao;
     document.getElementById('ccValor').value = formatToBRL(Math.abs(lanc.valor));
+    document.getElementById('ccDataCompra').value = lanc.dataCompra || lanc.dataVencimento || getDataHoje();
+    atualizarDataRapidaAtiva('ccDataCompra');
     document.getElementById('ccDataVencimento').value = lanc.dataVencimento || '';
     document.getElementById('ccCartao').value = lanc.formaPagamento || '';
 
@@ -7421,11 +7518,8 @@ function openModalCartaoCredito(originalIndex) {
     // Atualizar texto da fatura
     if (lanc.dataVencimento && cartaoObj) {
       const dv = lanc.dataVencimento;
-      const partes = dv.split('-');
-      const mes = parseInt(partes[1]) - 1;
-      const ano = parseInt(partes[0]);
-      document.getElementById('ccFaturaTexto').textContent =
-        `Fatura de ${ccMonthNames[mes]}/${ano} (dia ${cartaoObj.diaVencimento || partes[2]})`;
+      const dataFatura = criarDataLocalDeInput(dv);
+      document.getElementById('ccFaturaTexto').textContent = dataFatura ? formatarFaturaCC(dataFatura) : 'Selecionar fatura';
       document.getElementById('ccFaturaTrigger').style.display = 'flex';
     }
 
@@ -7449,11 +7543,16 @@ function openModalCartaoCredito(originalIndex) {
     document.getElementById('modalCCTitle').textContent = 'Nova Despesa no Cartão';
     document.getElementById('ccDescricao').value = '';
     document.getElementById('ccValor').value = '';
-    document.getElementById('ccCartao').value = '';
-    document.getElementById('ccCartaoTexto').textContent = 'Selecionar cartão';
+    document.getElementById('ccDataCompra').value = getDataHoje();
+    atualizarDataRapidaAtiva('ccDataCompra');
+    const cartoesSalvos = JSON.parse(localStorage.getItem('cartoes_credito') || '[]');
+    const primeiroCartao = cartoesSalvos[0] || null;
+    document.getElementById('ccCartao').value = primeiroCartao ? 'cartao_' + primeiroCartao.id : '';
+    document.getElementById('ccCartaoTexto').textContent = primeiroCartao ? primeiroCartao.nome : 'Selecionar cartão';
     document.getElementById('ccDataVencimento').value = '';
     document.getElementById('ccFaturaTexto').textContent = 'Selecionar fatura';
-    document.getElementById('ccFaturaTrigger').style.display = 'none';
+    document.getElementById('ccFaturaTrigger').style.display = primeiroCartao ? 'flex' : 'none';
+    if (primeiroCartao) atualizarCCFaturaAutomatica();
     document.getElementById('ccPagoToggle').checked = false;
     document.getElementById('ccPagoToggle').disabled = true;
     atualizarCCTextoPago();
@@ -7524,6 +7623,71 @@ function atualizarCCTextoPago() {
 }
 
 // ── Seletor de Cartão CC ──
+function criarDataLocalDeInput(dataStr) {
+  if (!dataStr) return null;
+  const partes = dataStr.split('-').map(Number);
+  if (partes.length !== 3 || partes.some(isNaN)) return null;
+  return new Date(partes[0], partes[1] - 1, partes[2]);
+}
+
+function formatarDataInputLocal(data) {
+  const ano = data.getFullYear();
+  const mes = String(data.getMonth() + 1).padStart(2, '0');
+  const dia = String(data.getDate()).padStart(2, '0');
+  return `${ano}-${mes}-${dia}`;
+}
+
+function buscarCartaoCCSelecionado() {
+  const cartaoValor = document.getElementById('ccCartao')?.value || '';
+  if (!cartaoValor) return null;
+  const cartoes = JSON.parse(localStorage.getItem('cartoes_credito') || '[]');
+  const idBusca = cartaoValor.startsWith('cartao_cartao_') ? cartaoValor.replace('cartao_cartao_', 'cartao_') : cartaoValor;
+  return cartoes.find(c => c.id === idBusca || 'cartao_' + c.id === idBusca) || null;
+}
+
+function calcularDataFaturaPorCompra(dataCompraStr, cartaoObj) {
+  const dataCompra = criarDataLocalDeInput(dataCompraStr);
+  if (!dataCompra || !cartaoObj || !cartaoObj.diaVencimento) return '';
+
+  const fechamentosCartoes = JSON.parse(localStorage.getItem('cartoes_credito_fechamentos') || '{}');
+  const diaFechamento = parseInt(cartaoObj.diaFechamento || fechamentosCartoes[cartaoObj.id] || cartaoObj.diaVencimento, 10);
+  const diaVencimento = parseInt(cartaoObj.diaVencimento, 10);
+  const mesFatura = dataCompra.getDate() >= diaFechamento ? dataCompra.getMonth() + 1 : dataCompra.getMonth();
+  const anoBase = dataCompra.getFullYear();
+  const ultimoDiaMes = new Date(anoBase, mesFatura + 1, 0).getDate();
+  const diaReal = Math.min(diaVencimento, ultimoDiaMes);
+  return formatarDataInputLocal(new Date(anoBase, mesFatura, diaReal));
+}
+
+function formatarFaturaCC(data) {
+  const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+  const dia = String(data.getDate()).padStart(2, '0');
+  return `Fatura: ${dia} ${meses[data.getMonth()]} ${data.getFullYear()}`;
+}
+
+function atualizarTextoFaturaCC(dataVencimento, cartaoObj) {
+  const texto = document.getElementById('ccFaturaTexto');
+  const trigger = document.getElementById('ccFaturaTrigger');
+  if (!texto || !trigger || !dataVencimento) return;
+
+  const dataFatura = criarDataLocalDeInput(dataVencimento);
+  if (!dataFatura) return;
+
+  texto.textContent = formatarFaturaCC(dataFatura);
+  trigger.style.display = 'flex';
+}
+
+function atualizarCCFaturaAutomatica() {
+  const dataCompra = document.getElementById('ccDataCompra')?.value || '';
+  const cartaoObj = buscarCartaoCCSelecionado();
+  const dataFatura = calcularDataFaturaPorCompra(dataCompra, cartaoObj);
+
+  if (!dataFatura) return;
+
+  document.getElementById('ccDataVencimento').value = dataFatura;
+  atualizarTextoFaturaCC(dataFatura, cartaoObj);
+}
+
 function abrirCCSeletorCartao() {
   const modal = document.getElementById('ccSeletorCartaoModal');
   const container = document.getElementById('ccCartaoOptions');
@@ -7548,10 +7712,7 @@ function abrirCCSeletorCartao() {
         fecharCCSeletorCartao();
         // Mostrar seletor de fatura e limpar seleção anterior
         document.getElementById('ccFaturaTrigger').style.display = 'flex';
-        document.getElementById('ccFaturaTexto').textContent = 'Selecionar fatura';
-        document.getElementById('ccDataVencimento').value = '';
-        // Auto-abrir seletor de fatura
-        setTimeout(() => abrirCCSeletorFatura(), 200);
+        atualizarCCFaturaAutomatica();
       };
       container.appendChild(div);
     });
@@ -7582,15 +7743,25 @@ function abrirCCSeletorFatura() {
   }
 
   const diaVencimento = parseInt(cartaoObj.diaVencimento);
-  const hoje = new Date();
+  const fechamentosCartoes = JSON.parse(localStorage.getItem('cartoes_credito_fechamentos') || '{}');
+  if (!cartaoObj.diaFechamento && !fechamentosCartoes[cartaoObj.id]) {
+    showToast('Informe o dia de fechamento no cadastro do cartao.', 'warning');
+  }
+  const dataCompra = document.getElementById('ccDataCompra')?.value || '';
+  const dataFaturaAutomatica = calcularDataFaturaPorCompra(dataCompra, cartaoObj);
+  if (!document.getElementById('ccDataVencimento').value && dataFaturaAutomatica) {
+    document.getElementById('ccDataVencimento').value = dataFaturaAutomatica;
+    atualizarTextoFaturaCC(dataFaturaAutomatica, cartaoObj);
+  }
+  const faturaAtual = criarDataLocalDeInput(dataFaturaAutomatica) || getHojeZerado();
   const container = document.getElementById('ccFaturaOptions');
   container.innerHTML = '';
 
   const valorAtualData = document.getElementById('ccDataVencimento').value;
 
   // Gerar 3 opções: mês atual + 2 próximos
-  for (let i = 0; i < 3; i++) {
-    const refDate = new Date(hoje.getFullYear(), hoje.getMonth() + i, 1);
+  for (let i = -1; i <= 2; i++) {
+    const refDate = new Date(faturaAtual.getFullYear(), faturaAtual.getMonth() + i, 1);
     const ano = refDate.getFullYear();
     const mes = refDate.getMonth();
     // Ajustar dia se não existe no mês (ex: dia 31 em fevereiro)
@@ -7601,19 +7772,16 @@ function abrirCCSeletorFatura() {
     const div = document.createElement('div');
     div.className = 'bottom-sheet-option' + (dataStr === valorAtualData ? ' active' : '');
 
-    const nomeMes = ccMonthNames[mes];
-    const mesCapital = nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1);
+    const textoFatura = formatarFaturaCC(criarDataLocalDeInput(dataStr));
     div.innerHTML = `
       <i class="ri-calendar-check-line"></i>
       <div style="display:flex;flex-direction:column;gap:2px;">
-        <span style="font-weight:600;">Fatura de ${mesCapital}/${ano}</span>
-        <span style="font-size:0.8em;color:var(--text-muted,#888);">Vence dia ${diaReal}/${String(mes+1).padStart(2,'0')}/${ano}</span>
+        <span style="font-weight:600;">${textoFatura}</span>
       </div>
     `;
     div.onclick = () => {
       document.getElementById('ccDataVencimento').value = dataStr;
-      document.getElementById('ccFaturaTexto').textContent =
-        `Fatura de ${mesCapital}/${ano} (dia ${diaReal})`;
+      document.getElementById('ccFaturaTexto').textContent = textoFatura;
       document.querySelectorAll('#ccFaturaOptions .bottom-sheet-option').forEach(el => el.classList.remove('active'));
       div.classList.add('active');
       fecharCCSeletorFatura();
@@ -7776,6 +7944,7 @@ document.getElementById('ccValor').addEventListener('click', function(e) {
 async function salvarLancamentoCC() {
   const descricaoBase = document.getElementById('ccDescricao').value.trim();
   const valor = parseBRL(document.getElementById('ccValor').value);
+  const dataCompra = document.getElementById('ccDataCompra').value;
   const dataVencimento = document.getElementById('ccDataVencimento').value;
   const formaPagamento = document.getElementById('ccCartao').value;
   const pago = ccEditIndex !== null ? !!lancamentos[ccEditIndex]?.pago : false;
@@ -7784,6 +7953,7 @@ async function salvarLancamentoCC() {
   if (!descricaoBase) { showToast('Preencha a descrição.', 'error'); return; }
   if (isNaN(valor) || valor <= 0) { showToast('Informe um valor válido maior que zero.', 'error'); return; }
   if (!formaPagamento) { showToast('Selecione um cartão.', 'error'); return; }
+  if (!dataCompra) { showToast('Informe a data da compra.', 'error'); return; }
   if (!dataVencimento) { showToast('Selecione a fatura.', 'error'); return; }
 
   const valorFinal = -Math.abs(valor);
@@ -7791,7 +7961,7 @@ async function salvarLancamentoCC() {
   // Verificar categoria
   const isEditing = (ccEditIndex !== null);
   if (!categoriaId && !isEditing) {
-    ccPendingTransactionData = { descricaoBase, valor, dataVencimento, formaPagamento, pago, categoriaId, valorFinal };
+    ccPendingTransactionData = { descricaoBase, valor, dataCompra, dataVencimento, formaPagamento, pago, categoriaId, valorFinal };
     const categoriaModal = document.getElementById('categoriaModal');
     if (categoriaModal) categoriaModal.style.display = 'flex';
     return;
@@ -7801,15 +7971,16 @@ async function salvarLancamentoCC() {
 }
 
 async function executarSalvarLancamentoCC() {
-  let descricaoBase, valor, dataVencimento, formaPagamento, pago, categoriaId, valorFinal;
+  let descricaoBase, valor, dataCompra, dataVencimento, formaPagamento, pago, categoriaId, valorFinal;
   const isEditing = (ccEditIndex !== null);
 
   if (ccPendingTransactionData) {
-    ({ descricaoBase, valor, dataVencimento, formaPagamento, pago, categoriaId, valorFinal } = ccPendingTransactionData);
+    ({ descricaoBase, valor, dataCompra, dataVencimento, formaPagamento, pago, categoriaId, valorFinal } = ccPendingTransactionData);
     ccPendingTransactionData = null;
   } else {
     descricaoBase = document.getElementById('ccDescricao').value.trim();
     valor = parseBRL(document.getElementById('ccValor').value);
+    dataCompra = document.getElementById('ccDataCompra').value;
     dataVencimento = document.getElementById('ccDataVencimento').value;
     formaPagamento = document.getElementById('ccCartao').value;
     pago = ccEditIndex !== null ? !!lancamentos[ccEditIndex]?.pago : false;
@@ -7827,6 +7998,7 @@ async function executarSalvarLancamentoCC() {
         descricaoBase,
         tipo: 'despesa',
         valorFinal,
+        dataCompra,
         dataVencimento,
         pago,
         formaPagamento,
@@ -7852,6 +8024,7 @@ async function executarSalvarLancamentoCC() {
       descricao: descricaoBase,
       tipo: 'despesa',
       valor: valorFinal,
+      dataCompra: dataCompra,
       dataVencimento: dataVencimento,
       pago: pago,
       formaPagamento: formaPagamento,
@@ -7878,6 +8051,7 @@ async function executarSalvarLancamentoCC() {
         futureLancamentos.push({
           descricao: `${descricaoBase} (${i}/${totalParcelas})`,
           tipo: 'despesa', valor: valorFinal, pago: statusPago,
+          dataCompra: dataCompra,
           dataVencimento: dataVencimentoParcelada, formaPagamento: formaPagamento,
           categoria: categoriaId,
           parcelamento: { total: totalParcelas, atual: i, baseDescription: descricaoBase, valorOriginal: valorFinal, isFixo: false, groupId }
@@ -7897,6 +8071,7 @@ async function executarSalvarLancamentoCC() {
         let futureLancamentos = JSON.parse(localStorage.getItem('lancamentos_' + monthKey)) || [];
         futureLancamentos.push({
           descricao: descricaoBase, tipo: 'despesa', valor: valorFinal, pago: statusPago,
+          dataCompra: dataCompra,
           dataVencimento: dataVencimentoFixa, formaPagamento: formaPagamento,
           categoria: categoriaId,
           parcelamento: { total: mesesFixo, atual: i, baseDescription: descricaoBase, valorOriginal: valorFinal, isFixo: true, groupId }
@@ -7909,7 +8084,7 @@ async function executarSalvarLancamentoCC() {
       let lancamentosMesVencimento = JSON.parse(localStorage.getItem('lancamentos_' + monthKeyVencimento)) || [];
       lancamentosMesVencimento.push({
         descricao: descricaoBase, tipo: 'despesa', valor: valorFinal,
-        pago: pago, dataVencimento: dataVencimento, formaPagamento: formaPagamento,
+        pago: pago, dataCompra: dataCompra, dataVencimento: dataVencimento, formaPagamento: formaPagamento,
         categoria: categoriaId, ultimaModificacao: pago ? Date.now() : undefined
       });
       localStorage.setItem('lancamentos_' + monthKeyVencimento, JSON.stringify(lancamentosMesVencimento));
