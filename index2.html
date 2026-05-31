@@ -1543,9 +1543,9 @@ function openFilterModal() {
   setActivePeriodButton(activePeriodFilter);
 
   filterModal.style.display = 'flex';
-  setTimeout(() => {
-    filterModal.classList.add('active');
-  }, 10);
+  // Forçar reflow antes de adicionar .active para garantir que a transição CSS dispare
+  filterModal.offsetHeight;
+  filterModal.classList.add('active');
   lockTransactionPageScroll();
 }
 
@@ -6583,9 +6583,16 @@ function renderDailyBalance(transactions) {
     // Agrupar TODAS as transações (pagas e não pagas) por data para o CÁLCULO do saldo
     const groupedByDateForCalculation = {};
 
+    // Só somamos transações NÃO PAGAS: as pagas já estão contabilizadas no saldo base (Saldo Atual).
+    // Para faturas agrupadas abertas, usamos -totalBrutoFatura (custo que ainda vai sair).
+    // Faturas agrupadas pagas são ignoradas (já estão no saldo base via pagamento de fatura).
     transactions.forEach(transaction => {
         const date = transaction.dataVencimento;
         if (!date) return;
+
+        // Pular transações já pagas (já estão no saldo base)
+        const isPago = isLancamentoPagoParaOrdenacao(transaction, lancamentos);
+        if (isPago) return;
 
         if (!groupedByDateForCalculation[date]) {
             groupedByDateForCalculation[date] = {
@@ -6623,16 +6630,33 @@ function renderDailyBalance(transactions) {
     // Remover todos os resumos diários e cabeçalhos existentes
     document.querySelectorAll('.daily-balance-row, .date-header').forEach(el => el.remove());
 
-    // Saldo acumulado inicia em zero — mostra apenas o saldo do mês atual
-    // (sem somar meses anteriores, pois o objetivo é mostrar o balanço mensal acumulado por dia)
-    let saldoAcumulado = 0;
+    // Saldo acumulado inicia com o Saldo Atual (dinheiro real já recebido/pago em todos os meses).
+    // O "Saldo do dia" mostra quanto ficará no Saldo Atual após todas as transações do dia serem efetivadas.
+    let totalReceitasPagasGlobal = 0;
+    let totalDespesasPagasGlobal = 0;
+    for (let _ki = 0; _ki < localStorage.length; _ki++) {
+        const _key = localStorage.key(_ki);
+        if (_key && _key.startsWith('lancamentos_')) {
+            try {
+                const _lancs = JSON.parse(localStorage.getItem(_key) || '[]');
+                _lancs.forEach(lanc => {
+                    const pago = lanc.hasOwnProperty('pago') ? lanc.pago : false;
+                    if (pago || isPagamentoFaturaCartao(lanc)) {
+                        if (lanc.valor > 0) totalReceitasPagasGlobal += lanc.valor;
+                        else totalDespesasPagasGlobal += lanc.valor;
+                    }
+                });
+            } catch(e) {}
+        }
+    }
+    let saldoAcumulado = totalReceitasPagasGlobal + totalDespesasPagasGlobal;
 
     // Para cada data, calcular o saldo acumulado e adicionar cabeçalho
     for (let i = 0; i < sortedDates.length; i++) {
         const date = sortedDates[i];
         const dailyData = groupedByDateForCalculation[date];
 
-        // Atualizar saldo acumulado com TODAS as transações deste dia (pagas e não pagas)
+        // Atualizar saldo acumulado com as transações PENDENTES do dia (pagas já estão no saldo base)
         saldoAcumulado += dailyData.total;
 
         // Verificar se existem transações NÃO PAGAS nesta data

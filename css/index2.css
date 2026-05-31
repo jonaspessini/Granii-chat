@@ -2204,33 +2204,6 @@ font-size: 1.5em;
 }
 
 /* Modal de Filtro */
-.filter-modal {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 1003;
-  justify-content: center;
-  align-items: center;
-}
-
-.filter-modal.active {
-  display: flex;
-}
-
-.filter-modal-content {
-  background: var(--card-background);
-  border-radius: 16px;
-  width: 90%;
-  max-width: 400px;
-  max-height: 80%;
-  overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-}
-
 .filter-modal-header {
   display: flex;
   justify-content: space-between;
@@ -2452,14 +2425,19 @@ font-size: 1.5em;
 /* Filtro redesenhado */
 .filter-modal {
   display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: none;
   align-items: flex-end;
+  justify-content: center;
   z-index: 1300;
 }
 
-.filter-modal.active .filter-modal-content {
-  transform: translateY(0);
+.filter-modal.active {
+  display: flex;
 }
 
 .filter-modal-content {
@@ -2474,7 +2452,11 @@ font-size: 1.5em;
   box-shadow: 0 -18px 55px rgba(15, 23, 42, 0.22);
   overflow: hidden;
   transform: translateY(100%);
-  transition: transform 0.3s ease-out;
+  transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.filter-modal.active .filter-modal-content {
+  transform: translateY(0);
 }
 
 .filter-modal-header {
