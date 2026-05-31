@@ -1303,6 +1303,35 @@ function mostrarDataRapida(inputId, visivel) {
     const headerBalanceCard = document.querySelector('.header-balance-card');
     const balanceChartModal = document.getElementById('balanceChartModal');
 
+function lockTransactionPageScroll() {
+    if (document.body.classList.contains('transaction-modal-scroll-locked')) return;
+
+    const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
+    document.body.dataset.lockedScrollY = String(scrollY);
+    document.body.classList.add('transaction-modal-scroll-locked');
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.left = '0';
+    document.body.style.right = '0';
+    document.body.style.width = '100%';
+    document.body.style.overflow = 'hidden';
+}
+
+function unlockTransactionPageScroll() {
+    if (!document.body.classList.contains('transaction-modal-scroll-locked')) return;
+
+    const scrollY = parseInt(document.body.dataset.lockedScrollY || '0', 10);
+    document.body.classList.remove('transaction-modal-scroll-locked');
+    delete document.body.dataset.lockedScrollY;
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.left = '';
+    document.body.style.right = '';
+    document.body.style.width = '';
+    document.body.style.overflow = '';
+    window.scrollTo(0, scrollY);
+}
+
 
 // Eventos
 document.getElementById('monthDisplayHeader').addEventListener('click', openMonthYearPickerModal);
@@ -1963,6 +1992,7 @@ function openTransactionDetails(index) {
 function openModal(typeToPreselect = null, originalIndex = null) {
     closeFabOptions();
     modal.style.display = 'flex';
+    lockTransactionPageScroll();
     mainFab.style.display = 'none'; // Esconder botão de + ao abrir modal
 
     // ALTERAR COR DA STATUS BAR BASEADO NO TIPO
@@ -2139,6 +2169,7 @@ setTimeout(() => abrirCalculadora(), 100);
 
 function closeModal() {
     modal.style.display = 'none';
+    unlockTransactionPageScroll();
     mainFab.style.display = 'flex';
     modal.classList.remove('edit-mode');
     preselectedType = null;
@@ -2723,6 +2754,7 @@ function executarSalvarLancamento() {
         ? 'Este é um lançamento fixo. Qual alteração você deseja fazer?'
         : 'Este é um lançamento parcelado. Qual alteração você deseja fazer?';
       modal.style.display = 'none';
+      unlockTransactionPageScroll();
       mainFab.style.display = 'flex';
       editParceladoModal.style.display = 'flex';
       return; // Aguarda a escolha no modal
@@ -2860,6 +2892,7 @@ async function handleDeleteClick() {
   // Se for parcelado/fixo, usar o modal existente
   if (lancamentoToDelete.parcelamento) {
     modal.style.display = 'none';
+    unlockTransactionPageScroll();
     mainFab.style.display = 'flex';
     deleteParceladoModal.style.display = 'flex';
   } else {
@@ -2870,6 +2903,7 @@ async function handleDeleteClick() {
       deleteModal.style.display = 'flex';
     }
     modal.style.display = 'none';
+    unlockTransactionPageScroll();
     mainFab.style.display = 'flex';
   }
 }
@@ -3518,6 +3552,24 @@ function loadLancamentos() {
       mainFab.blur();
       document.getElementById('fabBackdrop')?.classList.remove('active');
     }
+
+    function updateBottomActionsVisibility() {
+      const scrollTop = window.scrollY || document.documentElement.scrollTop;
+      const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+      const pageHeight = document.documentElement.scrollHeight;
+      const canScroll = pageHeight > viewportHeight + 8;
+      const isAtPageEnd = canScroll && scrollTop + viewportHeight >= pageHeight - 8;
+
+      document.body.classList.toggle('hide-bottom-actions', isAtPageEnd);
+
+      if (isAtPageEnd) {
+        closeFabOptions();
+      }
+    }
+
+    window.addEventListener('scroll', updateBottomActionsVisibility, { passive: true });
+    window.addEventListener('resize', updateBottomActionsVisibility);
+    window.addEventListener('load', updateBottomActionsVisibility);
 
     // Adicionar evento de clique no overlay para fechar ambos os modais
 document.getElementById('balanceDetailsOverlay').addEventListener('click', function(e) {
@@ -6203,7 +6255,7 @@ function renderDailyBalance(transactions) {
     });
 
     // Agrupar apenas transações NÃO PAGAS por data para POSICIONAR o saldo
-    const transactionsNaoPagas = transactions.filter(t => !t.pago);
+    const transactionsNaoPagas = transactions.filter(t => !isLancamentoPagoParaOrdenacao(t, lancamentos));
     const groupedByDateForPosition = {};
 
     transactionsNaoPagas.forEach(transaction => {
@@ -6265,10 +6317,9 @@ function renderDailyBalance(transactions) {
             const card = cardsList[j];
             const cardDate = card.getAttribute('data-date');
             if (cardDate === date) {
-                const cardIndex = parseInt(card.getAttribute('data-index'));
                 const isFaturaAgrupada = card.getAttribute('data-grouped-invoice') === 'true';
                 const isFaturaPaga = card.getAttribute('data-paid') === 'true';
-                if ((isFaturaAgrupada && !isFaturaPaga) || (!isFaturaAgrupada && cardIndex >= 0 && lancamentos[cardIndex] && !isFaturaPaga)) {
+                if ((isFaturaAgrupada && !isFaturaPaga) || (!isFaturaAgrupada && !isFaturaPaga)) {
                     firstCardOfDate = card;
                     break;
                 }
@@ -6276,6 +6327,10 @@ function renderDailyBalance(transactions) {
         }
 
         // Criar cabeçalho de data
+        if (!firstCardOfDate) {
+            continue;
+        }
+
         const dateHeader = document.createElement('div');
         dateHeader.className = 'date-header';
         dateHeader.setAttribute('data-header-date', date);
@@ -6285,11 +6340,7 @@ function renderDailyBalance(transactions) {
         `;
 
         // Inserir cabeçalho ANTES do primeiro card NÃO PAGO da data
-        if (firstCardOfDate) {
-            firstCardOfDate.insertAdjacentElement('beforebegin', dateHeader);
-        } else {
-            transactionsContainer.appendChild(dateHeader);
-        }
+        firstCardOfDate.insertAdjacentElement('beforebegin', dateHeader);
 
         // Criar elemento do resumo diário (saldo)
         const dailyRow = document.createElement('div');
@@ -6319,10 +6370,9 @@ function renderDailyBalance(transactions) {
             const card = cardsList[j];
             const cardDate = card.getAttribute('data-date');
             if (cardDate === date) {
-                const cardIndex = parseInt(card.getAttribute('data-index'));
                 const isFaturaAgrupada = card.getAttribute('data-grouped-invoice') === 'true';
                 const isFaturaPaga = card.getAttribute('data-paid') === 'true';
-                if ((isFaturaAgrupada && !isFaturaPaga) || (!isFaturaAgrupada && cardIndex >= 0 && lancamentos[cardIndex] && !isFaturaPaga)) {
+                if ((isFaturaAgrupada && !isFaturaPaga) || (!isFaturaAgrupada && !isFaturaPaga)) {
                     lastCardOfDate = card;
                     break;
                 }
@@ -6334,11 +6384,7 @@ function renderDailyBalance(transactions) {
             lastCardOfDate.insertAdjacentElement('afterend', dailyRow);
         } else {
             // Se não houver cards não pagos, inserir após o cabeçalho
-            if (dateHeader.nextSibling) {
-                dateHeader.insertAdjacentElement('afterend', dailyRow);
-            } else {
-                transactionsContainer.appendChild(dailyRow);
-            }
+            dateHeader.remove();
         }
     }
 }
@@ -6436,8 +6482,13 @@ function renderFilteredTransactions(filteredLancamentos) {
         renderAgrupandoPorCartao(allTransactions, filteredLancamentos);
     } else {
         allTransactions.forEach(lanc => addRowToTable(lanc, lanc.originalIndex));
-        renderDailyBalance(filteredLancamentos);
+
+        if (currentFilter === 'transacoes' && activeStatusFilter !== 'completed') {
+            renderDailyBalance(filteredLancamentos);
+        }
     }
+
+    requestAnimationFrame(updateBottomActionsVisibility);
 }
 
 // ── RENDERIZAR AGRUPADO POR CARTÃO ──
@@ -6613,7 +6664,9 @@ function renderAgrupandoPorCartao(allTransactions, filteredLancamentos) {
         }
     });
 
-    renderDailyBalance(outrasTransacoes.concat(faturasAgrupadas));
+    if (currentFilter === 'transacoes' && activeStatusFilter !== 'completed') {
+        renderDailyBalance(outrasTransacoes.concat(faturasAgrupadas));
+    }
 }
 
 // ── MODAL DE DETALHES DA FATURA AGRUPADA ──
@@ -7258,6 +7311,7 @@ function fecharModalDeleteUnique() {
   }
   // Reabrir o modal de edição se necessário
   modal.style.display = 'flex';
+  lockTransactionPageScroll();
   mainFab.style.display = 'none';
 }
 
@@ -7504,6 +7558,7 @@ function openModalCartaoCredito(originalIndex) {
   closeFabOptions();
   const modalCC = document.getElementById('modalCC');
   modalCC.style.display = 'flex';
+  lockTransactionPageScroll();
   mainFab.style.display = 'none';
   updateStatusBarColor('cartao');
 
@@ -7590,6 +7645,7 @@ function openModalCartaoCredito(originalIndex) {
 function closeModalCC() {
   const modalCC = document.getElementById('modalCC');
   modalCC.style.display = 'none';
+  unlockTransactionPageScroll();
   modalCC.classList.remove('edit-mode');
   mainFab.style.display = 'flex';
   ccEditIndex = null;
@@ -8046,6 +8102,7 @@ async function executarSalvarLancamentoCC() {
         : 'Este é um lançamento parcelado. Qual alteração você deseja fazer?';
 
       document.getElementById('modalCC').style.display = 'none';
+      unlockTransactionPageScroll();
       mainFab.style.display = 'flex';
       editParceladoModal.style.display = 'flex';
       ccEditIndex = null;
@@ -8147,6 +8204,7 @@ function handleCCDeleteClick() {
     editIndex = ccEditIndex; // temporário para modal parcelado
     const modalCC = document.getElementById('modalCC');
     modalCC.style.display = 'none';
+    unlockTransactionPageScroll();
     mainFab.style.display = 'flex';
     deleteParceladoModal.style.display = 'flex';
   } else {
@@ -8154,6 +8212,7 @@ function handleCCDeleteClick() {
     const deleteModal = document.getElementById('deleteUniqueModal');
     if (deleteModal) deleteModal.style.display = 'flex';
     document.getElementById('modalCC').style.display = 'none';
+    unlockTransactionPageScroll();
     mainFab.style.display = 'flex';
   }
 }
@@ -8166,11 +8225,13 @@ window.fecharModalDeleteUnique = function() {
   if (ccPendingDeleteIndex !== null) {
     ccPendingDeleteIndex = null;
     document.getElementById('modalCC').style.display = 'flex';
+    lockTransactionPageScroll();
     mainFab.style.display = 'none';
     return;
   }
   pendingDeleteIndex = null;
   modal.style.display = 'flex';
+  lockTransactionPageScroll();
   mainFab.style.display = 'none';
 };
 
