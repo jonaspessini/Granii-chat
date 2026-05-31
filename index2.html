@@ -1148,6 +1148,7 @@ index2
     let editIndex = null;
 let currentDate = (() => {
   const d = new Date();
+  d.setDate(1);
   d.setHours(0, 0, 0, 0);
   return d;
 })();
@@ -1595,7 +1596,7 @@ function updateMonthDisplay() {
 }
 
     function changeMonth(direction) {
-      currentDate.setMonth(currentDate.getMonth() + direction);
+      currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + direction, 1);
       updateMonthDisplay();
     }
 
