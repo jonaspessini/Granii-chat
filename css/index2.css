@@ -2452,8 +2452,8 @@ font-size: 1.5em;
 /* Filtro redesenhado */
 .filter-modal {
   display: none;
-  background: rgba(15, 23, 42, 0.42);
-  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: none;
   align-items: flex-end;
   z-index: 1300;
 }
