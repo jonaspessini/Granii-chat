@@ -6580,9 +6580,6 @@ function verificarBackupAtual() {
 function renderDailyBalance(transactions) {
     const transactionsContainer = document.getElementById('transactionsContainer');
 
-    // CALCULAR SALDO ACUMULADO DOS MESES ANTERIORES
-    let saldoAcumuladoAnterior = getSaldoAcumuladoMesesAnteriores();
-
     // Agrupar TODAS as transações (pagas e não pagas) por data para o CÁLCULO do saldo
     const groupedByDateForCalculation = {};
 
@@ -6626,8 +6623,9 @@ function renderDailyBalance(transactions) {
     // Remover todos os resumos diários e cabeçalhos existentes
     document.querySelectorAll('.daily-balance-row, .date-header').forEach(el => el.remove());
 
-    // Variável para controle do saldo acumulado (inicia com saldo dos meses anteriores)
-    let saldoAcumulado = saldoAcumuladoAnterior;
+    // Saldo acumulado inicia em zero — mostra apenas o saldo do mês atual
+    // (sem somar meses anteriores, pois o objetivo é mostrar o balanço mensal acumulado por dia)
+    let saldoAcumulado = 0;
 
     // Para cada data, calcular o saldo acumulado e adicionar cabeçalho
     for (let i = 0; i < sortedDates.length; i++) {
@@ -6974,7 +6972,10 @@ function renderAgrupandoPorCartao(allTransactions, filteredLancamentos) {
             pago: faturaPaga,
             valorPago: Math.max(0, totalBrutoFatura - totalFatura),
             dataVencimento: getDataVencimentoFaturaString(grupo),
-            valor: -totalFatura,
+            // Sempre usa o total bruto para o cálculo do saldo acumulado diário,
+            // independente de a fatura estar paga ou não. Se usar -totalFatura,
+            // faturas pagas (totalFatura = 0) somem do cálculo e o saldo fica errado.
+            valor: -totalBrutoFatura,
             ultimaModificacao: faturaPaga ? (ultimaModificacaoPagamento || ultimaModificacaoItens) : ultimaModificacaoItens
         };
     });
