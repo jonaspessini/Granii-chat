@@ -2456,12 +2456,6 @@ font-size: 1.5em;
   backdrop-filter: blur(8px);
   align-items: flex-end;
   z-index: 1300;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.filter-modal.active {
-  opacity: 1;
 }
 
 .filter-modal.active .filter-modal-content {
@@ -3417,15 +3411,6 @@ font-size: 1.5em;
   background: #f8f9fa;
   color: var(--text-color);
   border: 1px solid var(--border-color);
-}
-
-.filter-modal {
-  transition: opacity 0.3s ease;
-}
-
-.filter-modal:not(.active) {
-  opacity: 0;
-  pointer-events: none;
 }
 
 /* ////////////////////////////////BACKUP////////////////////////////////////////////// */
