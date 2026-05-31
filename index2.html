@@ -1537,7 +1537,10 @@ function openFilterModal() {
   filterValueMaxInput.value = activeValueMaxFilter;
   setActivePeriodButton(activePeriodFilter);
 
-  filterModal.classList.add('active');
+  filterModal.style.display = 'flex';
+  setTimeout(() => {
+    filterModal.classList.add('active');
+  }, 10);
   lockTransactionPageScroll();
 }
 
@@ -1562,6 +1565,9 @@ function carregarCartoesFiltro() {
 function closeFilterModal() {
   filterModal.classList.remove('active');
   unlockTransactionPageScroll();
+  setTimeout(() => {
+    filterModal.style.display = 'none';
+  }, 300);
   // Garantir que o overlay também seja removido se existir
   document.getElementById('balanceDetailsOverlay').classList.remove('active');
 }
