@@ -118,9 +118,9 @@ index2
     Categorias
   </div>
 
-  <div class="menu-item" onclick="exportarTransacoesMesSVG()">
+  <div class="menu-item" onclick="exportarTransacoesMesExcel()">
     <i class="ri-download-2-line"></i>
-    Exportar mês em SVG
+    Exportar CSV
   </div>
 
   <!-- <div class="menu-item" onclick="navigateToCartoes()">
@@ -5403,48 +5403,40 @@ function formatarDataHoraLocal(data = new Date()) {
   return `${ano}-${mes}-${dia}T${hora}-${minuto}-${segundo}`;
 }
 
-function escaparTextoSVG(valor) {
-  return String(valor ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+function escaparCampoCSV(valor) {
+  const texto = String(valor ?? '').replace(/\r?\n/g, ' ').trim();
+  return `"${texto.replace(/"/g, '""')}"`;
 }
 
-function quebrarTextoSVG(texto, maxChars) {
-  const palavras = String(texto || '').split(/\s+/).filter(Boolean);
-  const linhas = [];
-  let atual = '';
-
-  palavras.forEach(palavra => {
-    const tentativa = atual ? `${atual} ${palavra}` : palavra;
-    if (tentativa.length > maxChars && atual) {
-      linhas.push(atual);
-      atual = palavra;
-    } else {
-      atual = tentativa;
-    }
-  });
-
-  if (atual) linhas.push(atual);
-  return linhas.length ? linhas.slice(0, 2) : ['Sem descrição'];
+function formatarValorCSV(valor) {
+  return formatToBRL(Number(valor) || 0);
 }
 
-function formatarDataExportacao(dataStr) {
-  if (!dataStr) return 'Sem data';
-  const partes = dataStr.split('-').map(Number);
-  if (partes.length !== 3 || partes.some(isNaN)) return dataStr;
-  return `${String(partes[2]).padStart(2, '0')}/${String(partes[1]).padStart(2, '0')}/${partes[0]}`;
+function obterDescricaoExportacao(lanc) {
+  const descricao = lanc?.parcelamento?.baseDescription || lanc?.descricao || 'Sem descricao';
+  return String(descricao).replace(/\s*\(\d+\s*\/\s*\d+\)\s*$/, '').trim() || 'Sem descricao';
 }
 
-function exportarTransacoesMesSVG() {
+function obterParcelasExportacao(lanc) {
+  const atual = Number(lanc?.parcelamento?.atual);
+  const total = Number(lanc?.parcelamento?.total);
+
+  if (atual > 0 && total > 0) {
+    return `${atual}/${total}`;
+  }
+
+  const match = String(lanc?.descricao || '').match(/\((\d+)\s*\/\s*(\d+)\)\s*$/);
+  if (match) {
+    return `${match[1]}/${match[2]}`;
+  }
+
+  return '1/1';
+}
+
+function exportarTransacoesMesExcel() {
   menuDropdown.classList.remove('active');
 
-  const mes = currentDate.getMonth();
-  const ano = currentDate.getFullYear();
   const monthKey = getMonthKey(currentDate);
-  const nomeMes = `${monthNames[mes].charAt(0).toUpperCase()}${monthNames[mes].slice(1)} ${ano}`;
   const lista = Array.isArray(lancamentos) ? [...lancamentos] : [];
 
   const ordenadas = lista
@@ -5457,84 +5449,33 @@ function exportarTransacoesMesSVG() {
     });
 
   if (ordenadas.length === 0) {
-    showToast('Não há transações para exportar neste mês.', 'warning');
+    showToast('Nao ha transacoes para exportar neste mes.', 'warning');
     return;
   }
 
-  const totalReceitas = ordenadas.filter(l => l.valor > 0).reduce((sum, l) => sum + l.valor, 0);
-  const totalDespesas = Math.abs(ordenadas.filter(l => l.valor < 0).reduce((sum, l) => sum + l.valor, 0));
-  const saldo = totalReceitas - totalDespesas;
-  const largura = 1080;
-  const headerAltura = 250;
-  const linhaAlturaBase = 92;
-  const altura = Math.max(620, headerAltura + ordenadas.length * linhaAlturaBase + 110);
+  const linhas = [
+    ['Descricao', 'Parcelas', 'Valor'],
+    ...ordenadas.map(lanc => [
+      obterDescricaoExportacao(lanc),
+      obterParcelasExportacao(lanc),
+      formatarValorCSV(lanc.valor)
+    ])
+  ];
 
-  const linhas = ordenadas.map((lanc, index) => {
-    const y = headerAltura + index * linhaAlturaBase;
-    const valor = Math.abs(lanc.valor || 0);
-    const ehReceita = (lanc.valor || 0) >= 0;
-    const corValor = ehReceita ? '#16a34a' : '#dc2626';
-    const sinal = ehReceita ? '+' : '-';
-    const pagoVisual = isLancamentoPagoParaOrdenacao(lanc, lancamentos);
-    const statusTexto = pagoVisual ? 'Pago' : 'Aberto';
-    const statusBg = pagoVisual ? '#dcfce7' : '#fff7ed';
-    const statusCor = pagoVisual ? '#15803d' : '#c2410c';
-    const categoria = lanc.categoria ? (getNomeCategoriaById(lanc.categoria) || 'Categoria') : 'Sem categoria';
-    const forma = lanc.formaPagamento && lanc.formaPagamento !== 'debito_pix' ? 'Cartão' : 'Débito/Pix';
-    const descricaoLinhas = quebrarTextoSVG(lanc.descricao || 'Sem descrição', 42);
-    const descricaoTspans = descricaoLinhas.map((linha, i) =>
-      `<tspan x="96" dy="${i === 0 ? 0 : 22}">${escaparTextoSVG(linha)}</tspan>`
-    ).join('');
+  const csv = '\uFEFF' + linhas
+    .map(linha => linha.map(escaparCampoCSV).join(';'))
+    .join('\r\n');
 
-    return `
-      <g>
-        <rect x="48" y="${y}" width="984" height="76" rx="14" fill="#ffffff" stroke="#e5e7eb"/>
-        <circle cx="72" cy="${y + 38}" r="8" fill="${corValor}"/>
-        <text x="96" y="${y + 29}" font-size="22" font-weight="700" fill="#111827">${descricaoTspans}</text>
-        <text x="96" y="${y + 60}" font-size="15" fill="#64748b">${escaparTextoSVG(formatarDataExportacao(lanc.dataVencimento))} · ${escaparTextoSVG(categoria)} · ${escaparTextoSVG(forma)}</text>
-        <rect x="742" y="${y + 18}" width="88" height="30" rx="15" fill="${statusBg}"/>
-        <text x="786" y="${y + 39}" text-anchor="middle" font-size="14" font-weight="800" fill="${statusCor}">${statusTexto}</text>
-        <text x="1000" y="${y + 45}" text-anchor="end" font-size="24" font-weight="800" fill="${corValor}">${sinal} R$ ${escaparTextoSVG(formatToBRL(valor))}</text>
-      </g>
-    `;
-  }).join('');
-
-  const svg = `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="${largura}" height="${altura}" viewBox="0 0 ${largura} ${altura}">
-  <rect width="100%" height="100%" fill="#f1f5f9"/>
-  <rect x="0" y="0" width="${largura}" height="184" fill="#16a34a"/>
-  <text x="48" y="64" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="800" fill="#ffffff">Transações do mês</text>
-  <text x="48" y="104" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="600" fill="#dcfce7">${escaparTextoSVG(nomeMes)}</text>
-  <text x="1032" y="64" text-anchor="end" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700" fill="#dcfce7">${escaparTextoSVG(formatarDataExportacao(formatDateInputLocal(new Date())))}</text>
-
-  <g font-family="Inter, Arial, sans-serif">
-    <rect x="48" y="132" width="304" height="82" rx="16" fill="#ffffff"/>
-    <text x="72" y="164" font-size="16" font-weight="700" fill="#64748b">Receitas</text>
-    <text x="72" y="196" font-size="25" font-weight="800" fill="#16a34a">R$ ${escaparTextoSVG(formatToBRL(totalReceitas))}</text>
-
-    <rect x="388" y="132" width="304" height="82" rx="16" fill="#ffffff"/>
-    <text x="412" y="164" font-size="16" font-weight="700" fill="#64748b">Despesas</text>
-    <text x="412" y="196" font-size="25" font-weight="800" fill="#dc2626">R$ ${escaparTextoSVG(formatToBRL(totalDespesas))}</text>
-
-    <rect x="728" y="132" width="304" height="82" rx="16" fill="#ffffff"/>
-    <text x="752" y="164" font-size="16" font-weight="700" fill="#64748b">Saldo</text>
-    <text x="752" y="196" font-size="25" font-weight="800" fill="${saldo >= 0 ? '#16a34a' : '#dc2626'}">${saldo < 0 ? '- ' : ''}R$ ${escaparTextoSVG(formatToBRL(Math.abs(saldo)))}</text>
-
-    ${linhas}
-    <text x="540" y="${altura - 34}" text-anchor="middle" font-size="15" fill="#94a3b8">Exportado pelo Controle Financeiro Mensal · ${escaparTextoSVG(monthKey)}</text>
-  </g>
-</svg>`;
-
-  const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `transacoes-${monthKey}.svg`;
+  link.download = `transacoes-${monthKey}.csv`;
   document.body.appendChild(link);
   link.click();
   link.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
-  showToast('SVG do mês exportado com sucesso!', 'success');
+  showToast('Arquivo para Excel exportado com sucesso!', 'success');
 }
 
 let backupActionType = ''; // 'export' ou 'import'
