@@ -123,6 +123,11 @@ index2
     Exportar CSV
   </div>
 
+  <div class="menu-item" onclick="reajustarSaldo()">
+    <i class="ri-scales-3-line"></i>
+    Reajustar saldo
+  </div>
+
   <!-- <div class="menu-item" onclick="navigateToCartoes()">
     <i class="ri-bank-card-line"></i>
     Gerenciar Cartões
@@ -576,10 +581,10 @@ index2
     </select>
 
 <!-- Trigger -->
-<div class="custom-select-trigger" onclick="abrirFormaPagamentoModal()">
+<div class="custom-select-trigger" onclick="abrirFormaPagamentoModal()" style="display:none;">
   <span class="trigger-text">
     <i class="ri-wallet-line"></i>
-    <span id="formaPagamentoTexto">Débito/Pix</span>
+    <span id="formaPagamentoTexto">Selecionar conta</span>
   </span>
 
   <span class="trigger-arrow">
@@ -587,7 +592,7 @@ index2
   </span>
 </div>
 
-<input type="hidden" id="formaPagamento" value="debito_pix">
+<input type="hidden" id="formaPagamento" value="">
 
     <div class="pago-toggle-group">
       <label for="pagoToggle" class="pago-toggle-label">
@@ -1001,6 +1006,48 @@ index2
   </div>
 </div>
 
+<!-- Modal Reajustar Saldo -->
+<div id="reajustarSaldoModal" class="modal reajustar-saldo-modal">
+  <div class="modal-content">
+    <div class="reajustar-saldo-header">
+      <div class="reajustar-saldo-icon"><i class="ri-scales-3-line"></i></div>
+      <div>
+        <h2>Reajustar saldo</h2>
+        <p>Informe o saldo correto para criar o ajuste automaticamente.</p>
+      </div>
+    </div>
+
+    <div class="reajustar-saldo-current">
+      <span>Saldo atual</span>
+      <strong id="reajustarSaldoAtual">R$ 0,00</strong>
+    </div>
+
+    <label class="reajustar-saldo-field" for="reajustarSaldoInput">
+      <span>Novo saldo</span>
+      <div class="reajustar-saldo-input-wrap">
+        <span>R$</span>
+        <input
+          type="text"
+          id="reajustarSaldoInput"
+          inputmode="decimal"
+          placeholder="0,00"
+          oninput="atualizarPreviaReajusteSaldo()"
+          onkeydown="handleReajusteSaldoKeydown(event)"
+        />
+      </div>
+    </label>
+
+    <div class="reajustar-saldo-preview" id="reajustarSaldoPreview">
+      Digite o novo saldo para calcular o reajuste.
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-secondary" onclick="fecharModalReajusteSaldo()">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmarReajusteSaldo()">Confirmar reajuste</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal Forma de Pagamento -->
 <div class="bottom-sheet-modal" id="formaPagamentoModal">
 
@@ -1016,7 +1063,7 @@ index2
     <div class="bottom-sheet-options" id="formaPagamentoOptions"></div>
 
     <!-- botão gerenciar -->
-    <button class="gerenciar-btn" onclick="abrirGerenciarCartoes()">
+    <button class="gerenciar-btn" onclick="abrirGerenciarContas()">
 
       <i class="ri-settings-3-line"></i>
       Gerenciar formas de pagamento
@@ -1223,6 +1270,7 @@ const today = (() => {
     let pendingTransactionData = null;
     // Variável para armazenar o índice da exclusão pendente
     let pendingDeleteIndex = null;
+    let pendingDeleteShouldReturnToModal = true;
 
     const monthNames = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
     const monthNamesShort = ['JAN.','FEV.','MAR.','ABR.','MAI.','JUN.','JUL.','AGO.','SET.','OUT.','NOV.','DEZ.'];
@@ -2072,7 +2120,7 @@ function openTransactionDetails(index) {
   modal.classList.add(transaction.tipo);
 
   // VERIFICAR SE É CARTÃO DE CRÉDITO
-  const isCartaoCredito = transaction.formaPagamento && transaction.formaPagamento !== 'debito_pix';
+  const isCartaoCredito = isFormaPagamentoCartaoCredito(transaction.formaPagamento);
   const cartaoIcon = isCartaoCredito ? '<div class="cartao-credito-icon"><i class="ri-bank-card-line"></i></div>' : '';
 
   // Preenche os detalhes da transação
@@ -2106,12 +2154,8 @@ function openTransactionDetails(index) {
       console.log('ID corrigido:', idParaBuscar);
     }
 
-    // Verifica se é Débito/Pix
-    if (idParaBuscar === 'debito_pix') {
-      formaPagamentoText = 'Débito/Pix';
-    }
     // Verifica se é cartão de crédito
-    else if (idParaBuscar.startsWith('cartao_')) {
+    if (idParaBuscar.startsWith('cartao_')) {
       const cartoesCadastrados = JSON.parse(localStorage.getItem('cartoes_credito') || '[]');
       const cartaoEncontrado = cartoesCadastrados.find(cartao => cartao.id === idParaBuscar);
 
@@ -2124,7 +2168,7 @@ function openTransactionDetails(index) {
       }
     }
     else {
-      formaPagamentoText = transaction.formaPagamento;
+      formaPagamentoText = getNomeFormaPagamento(transaction.formaPagamento);
     }
 
     formaPagamentoValue.textContent = formaPagamentoText;
@@ -2194,7 +2238,7 @@ function openTransactionDetails(index) {
         }
         closeTransactionDetails();
         // Se for despesa no cartão, abrir modal CC
-        if (lanc && lanc.tipo === 'despesa' && lanc.formaPagamento && lanc.formaPagamento !== 'debito_pix') {
+        if (lanc && isLancamentoCartaoCredito(lanc)) {
           openModalCartaoCredito(currentTransactionIndex);
         } else {
           openModal(null, currentTransactionIndex);
@@ -2254,20 +2298,11 @@ function openModal(typeToPreselect = null, originalIndex = null) {
         carregarFormasPagamento();
 
         // Restaura a forma de pagamento salva (valor hidden + texto visível)
-        const fpSalvo = lanc.formaPagamento || 'debito_pix';
+        const fpSalvo = lanc.formaPagamento || getFormaPagamentoPadrao();
         document.getElementById('formaPagamento').value = fpSalvo;
 
         // Atualiza o texto visível do botão
-        if (fpSalvo === 'debito_pix') {
-            document.getElementById('formaPagamentoTexto').textContent = 'Débito/Pix';
-        } else {
-            const cartoesSalvos = JSON.parse(localStorage.getItem('cartoes_credito') || '[]');
-            const cartaoEncontrado = cartoesSalvos.find(c =>
-                `cartao_${c.id}` === fpSalvo || c.id === fpSalvo
-            );
-            document.getElementById('formaPagamentoTexto').textContent =
-                cartaoEncontrado ? cartaoEncontrado.nome : 'Cartão de Crédito';
-        }
+        document.getElementById('formaPagamentoTexto').textContent = getNomeFormaPagamento(fpSalvo);
 
         carregarCategoriasNoModal(lanc.tipo, lanc.categoria || '');
 
@@ -2339,11 +2374,11 @@ function openModal(typeToPreselect = null, originalIndex = null) {
 
         toggleEntryTypeFields();
 
-        // Sempre resetar forma de pagamento para Débito/Pix em novos lançamentos
-        document.getElementById('formaPagamento').value = 'debito_pix';
-        document.getElementById('formaPagamentoTexto').textContent = 'Débito/Pix';
+        // Forma de pagamento fica oculta por enquanto; manter sem valor em novos lançamentos.
+        document.getElementById('formaPagamento').value = '';
+        document.getElementById('formaPagamentoTexto').textContent = 'Selecionar conta';
         // Garante que o campo de data está desbloqueado
-        aplicarVencimentoCartao('debito_pix');
+        aplicarVencimentoCartao('');
 
 // ABRE A CALCULADORA PARA NOVO LANÇAMENTO
 setTimeout(() => abrirCalculadora(), 100);
@@ -2351,23 +2386,14 @@ setTimeout(() => abrirCalculadora(), 100);
 
     // Controla a visibilidade da forma de pagamento
     toggleFormaPagamento();
-    carregarFormasPagamento(); // Carrega os cartões atualizados
+    carregarFormasPagamento(); // Carrega as contas atualizadas
     if (originalIndex !== null) {
         const lanc = lancamentos[editIndex];
-        const fpSalvo2 = lanc.formaPagamento || 'debito_pix';
+        const fpSalvo2 = lanc.formaPagamento || getFormaPagamentoPadrao();
         document.getElementById('formaPagamento').value = fpSalvo2;
 
         // Atualiza o texto visível do botão
-        if (fpSalvo2 === 'debito_pix') {
-            document.getElementById('formaPagamentoTexto').textContent = 'Débito/Pix';
-        } else {
-            const cartoesSalvos2 = JSON.parse(localStorage.getItem('cartoes_credito') || '[]');
-            const cartaoEncontrado2 = cartoesSalvos2.find(c =>
-                `cartao_${c.id}` === fpSalvo2 || c.id === fpSalvo2
-            );
-            document.getElementById('formaPagamentoTexto').textContent =
-                cartaoEncontrado2 ? cartaoEncontrado2.nome : 'Cartão de Crédito';
-        }
+        document.getElementById('formaPagamentoTexto').textContent = getNomeFormaPagamento(fpSalvo2);
 
         document.getElementById('pagoToggle').checked = !!lanc.pago;
         atualizarTextoPago();
@@ -2418,7 +2444,7 @@ function closeModal() {
     parcelaAtualInput.value = 1;
     mesesFixoInput.value = 1;
 
-    document.getElementById('formaPagamento').value = 'debito_pix';
+    document.getElementById('formaPagamento').value = '';
     document.getElementById('formaPagamento').style.display = 'none';
 
     const pagoToggle = document.getElementById('pagoToggle');
@@ -2723,7 +2749,7 @@ function calcularDataVencimentoProximoMes(dataAtual, mesesAdicionais) {
 
 // Funções de lançamentos
 function isFormaPagamentoCartaoCredito(formaPagamento) {
-  return !!formaPagamento && formaPagamento !== 'debito_pix';
+  return typeof formaPagamento === 'string' && formaPagamento.startsWith('cartao_');
 }
 
 function isLancamentoCartaoCredito(lancamento) {
@@ -2737,6 +2763,10 @@ function isPagamentoFaturaCartao(lancamento) {
     lancamento.tipoSistema === 'pagamento_fatura_cartao' ||
     (lancamento.parcelamento && lancamento.parcelamento.tipoSistema === 'pagamento_fatura_cartao')
   );
+}
+
+function isReajusteSaldo(lancamento) {
+  return lancamento?.tipoSistema === 'reajuste_saldo';
 }
 
 function getLancamentosSemPagamentosFatura(lista) {
@@ -3101,6 +3131,7 @@ function executarSalvarLancamento() {
 async function handleDeleteClick() {
   if (editIndex === null) return;
   const lancamentoToDelete = lancamentos[editIndex];
+  pendingDeleteShouldReturnToModal = true;
 
   // Se for parcelado/fixo, usar o modal existente
   if (lancamentoToDelete.parcelamento) {
@@ -3111,6 +3142,7 @@ async function handleDeleteClick() {
   } else {
     // Para transação única, mostrar o novo modal de confirmação
     pendingDeleteIndex = editIndex;
+    pendingDeleteShouldReturnToModal = true;
     const deleteModal = document.getElementById('deleteUniqueModal');
     if (deleteModal) {
       deleteModal.style.display = 'flex';
@@ -3352,6 +3384,7 @@ function addRowToTable(lanc, originalIndex) {
     const card = document.createElement('div');
     card.className = 'transaction-card';
     const isPagamentoAdiantado = isPagamentoAdiantadoFatura(lanc, lancamentos);
+    const isReajuste = isReajusteSaldo(lanc);
 
     // ADICIONAR ATRIBUTOS IMPORTANTES
     if (lanc.dataVencimento) {
@@ -3370,6 +3403,8 @@ function addRowToTable(lanc, originalIndex) {
     card.addEventListener('click', () => {
         if (isPagamentoAdiantado) {
             abrirConfirmacaoExcluirPagamentoFatura(correctIndex);
+        } else if (isReajuste) {
+            abrirConfirmacaoExcluirReajusteSaldo(correctIndex);
         } else {
             openTransactionDetails(correctIndex);
         }
@@ -3419,7 +3454,7 @@ function addRowToTable(lanc, originalIndex) {
     }
 
     // VERIFICAR SE É CARTÃO DE CRÉDITO E ADICIONAR ÍCONE SEPARADO
-    const isCartaoCredito = lanc.formaPagamento && lanc.formaPagamento !== 'debito_pix';
+    const isCartaoCredito = isLancamentoCartaoCredito(lanc);
     const cartaoIcon = isCartaoCredito ? '<div class="cartao-credito-icon"><i class="ri-bank-card-line"></i></div>' : '';
 
     // Categoria discreta ao lado do vencimento
@@ -4040,21 +4075,11 @@ function aplicarEstadoVisibilidade() {
 
 function toggleFormaPagamento() {
     const formaPagamentoSelect = document.getElementById('formaPagamento');
-    const tipo = document.getElementById('tipo').value;
     const triggerElement = document.querySelector('.custom-select-trigger[onclick="abrirFormaPagamentoModal()"]');
 
-    // Mostra forma de pagamento apenas para despesas
-    if (tipo === 'despesa') {
-        if (formaPagamentoSelect) formaPagamentoSelect.style.display = 'block';
-        if (triggerElement) triggerElement.style.display = 'flex';
-        carregarFormasPagamento();
-    } else {
-        // RECEITA - esconde completamente
-        if (formaPagamentoSelect) formaPagamentoSelect.style.display = 'none';
-        if (triggerElement) triggerElement.style.display = 'none';
-        // Limpa o valor também
-        document.getElementById('formaPagamento').value = null;
-    }
+    // Forma de pagamento fica oculta por enquanto, mas a estrutura permanece para uso futuro.
+    if (formaPagamentoSelect) formaPagamentoSelect.style.display = 'none';
+    if (triggerElement) triggerElement.style.display = 'none';
 }
 
 // Atualize a função toggleValoresVisiveis para ser mais simples
@@ -4068,6 +4093,7 @@ window.onclick = (e) => {
   if (e.target == modal) closeModal();
   if (e.target == deleteParceladoModal) closeDeleteParceladoModal();
   if (e.target == editParceladoModal) closeEditParceladoModal();
+  if (e.target == document.getElementById('reajustarSaldoModal')) fecharModalReajusteSaldo();
   if (e.target == monthYearPickerModal) {
     pickerCurrentYear = currentDate.getFullYear();
     pickerSelectedMonth = currentDate.getMonth();
@@ -4102,21 +4128,69 @@ function navigateToCartoes() {
     window.location.href = 'index3.html';
 }
 
-// Função para carregar os cartões cadastrados
+function getContasFormaPagamento() {
+  try {
+    const contas = JSON.parse(localStorage.getItem('bankAccounts') || '[]');
+    return Array.isArray(contas) ? contas : [];
+  } catch (error) {
+    console.warn('Nao foi possivel carregar as contas:', error);
+    return [];
+  }
+}
+
+function getValorContaFormaPagamento(conta) {
+  return conta && conta.id !== undefined ? `conta_${conta.id}` : '';
+}
+
+function getContaByFormaPagamento(formaPagamento) {
+  if (!formaPagamento) return null;
+  const idConta = String(formaPagamento).replace(/^conta_/, '');
+  return getContasFormaPagamento().find(conta => String(conta.id) === idConta) || null;
+}
+
+function getFormaPagamentoPadrao() {
+  const contas = getContasFormaPagamento();
+  return contas.length > 0 ? getValorContaFormaPagamento(contas[0]) : '';
+}
+
+function getNomeFormaPagamento(formaPagamento) {
+  if (!formaPagamento) return 'Selecionar conta';
+
+  if (isFormaPagamentoCartaoCredito(formaPagamento)) {
+    let idBusca = formaPagamento;
+    if (idBusca.startsWith('cartao_cartao_')) idBusca = idBusca.replace('cartao_cartao_', 'cartao_');
+    const cartoes = JSON.parse(localStorage.getItem('cartoes_credito') || '[]');
+    const cartao = cartoes.find(c => c.id === idBusca || `cartao_${c.id}` === idBusca);
+    return cartao?.nome || 'Cartão de Crédito';
+  }
+
+  const conta = getContaByFormaPagamento(formaPagamento);
+  if (conta) return conta.description || conta.nome || 'Conta';
+
+  return formaPagamento === 'debito_pix' ? 'Débito/Pix' : 'Selecionar conta';
+}
+
+// Função para carregar as contas cadastradas
 function carregarFormasPagamento() {
 
   const container = document.getElementById('formaPagamentoOptions');
 
   container.innerHTML = '';
 
-  // Débito/Pix fixo no topo — ÚNICO para despesas normais (cartão de crédito usa modal separado)
-  adicionarOpcaoFormaPagamento({
-    nome: 'Débito/Pix',
-    valor: 'debito_pix',
-    icone: 'ri-bank-line'
-  });
+  const contas = getContasFormaPagamento();
 
-  // Cartões de crédito NÃO aparecem mais aqui — use "Despesa no Cartão" no FAB
+  if (contas.length === 0) {
+    container.innerHTML = '<div style="padding:16px 20px;color:var(--text-muted,#999);font-size:0.9em;">Nenhuma conta cadastrada.</div>';
+    return;
+  }
+
+  contas.forEach(conta => {
+    adicionarOpcaoFormaPagamento({
+      nome: conta.description || conta.nome || 'Conta',
+      valor: getValorContaFormaPagamento(conta),
+      icone: 'ri-wallet-3-line'
+    });
+  });
 
 }
 
@@ -4390,6 +4464,236 @@ function exportarDados() {
   menuDropdown.classList.remove('active');
 }
 
+function abrirConfirmacaoExcluirReajusteSaldo(index) {
+  if (typeof index !== 'number' || index < 0 || !lancamentos[index] || !isReajusteSaldo(lancamentos[index])) {
+    showToast('Nao foi possivel localizar este reajuste.', 'error');
+    return;
+  }
+
+  const reajuste = lancamentos[index];
+  const confirmacaoAnterior = document.getElementById('_reajuste-saldo-excluir-overlay');
+  if (confirmacaoAnterior) confirmacaoAnterior.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = '_reajuste-saldo-excluir-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.48);z-index:3200;display:flex;align-items:center;justify-content:center;padding:20px;';
+
+  overlay.innerHTML = `
+    <div style="width:100%;max-width:340px;background:#fff;border-radius:16px;padding:20px;box-shadow:0 12px 32px rgba(0,0,0,0.24);">
+      <div style="width:44px;height:44px;border-radius:14px;background:#fee2e2;color:#dc2626;display:flex;align-items:center;justify-content:center;margin-bottom:14px;">
+        <i class="ri-delete-bin-line" style="font-size:24px;"></i>
+      </div>
+      <h3 style="margin:0 0 8px;font-size:18px;color:#1f2937;">Excluir reajuste?</h3>
+      <p style="margin:0 0 18px;font-size:14px;line-height:1.4;color:#6b7280;">Deseja excluir o reajuste de saldo de R$ ${formatToBRL(Math.abs(reajuste.valor || 0))}?</p>
+      <div style="display:flex;gap:10px;">
+        <button type="button" id="_reajuste-saldo-cancelar" style="flex:1;border:1px solid #e5e7eb;background:#fff;color:#374151;border-radius:10px;padding:12px;font-weight:700;">Nao</button>
+        <button type="button" id="_reajuste-saldo-confirmar" style="flex:1;border:0;border-radius:10px;padding:12px;font-weight:700;color:#fff;background:#dc2626;">Excluir</button>
+      </div>
+    </div>
+  `;
+
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) overlay.remove();
+  });
+
+  document.body.appendChild(overlay);
+
+  document.getElementById('_reajuste-saldo-cancelar').addEventListener('click', function() {
+    overlay.remove();
+  });
+
+  document.getElementById('_reajuste-saldo-confirmar').addEventListener('click', async function() {
+    lancamentos.splice(index, 1);
+    overlay.remove();
+
+    await salvarLocal(currentDate);
+    loadLancamentos();
+    showToast('Reajuste excluido com sucesso!', 'success');
+  });
+}
+
+function parseValorReajusteSaldo(valorDigitado) {
+  const texto = String(valorDigitado || '').trim();
+  if (!texto) return NaN;
+
+  let normalizado = texto.replace(/[^\d,.-]/g, '');
+  const temVirgula = normalizado.includes(',');
+  const temPonto = normalizado.includes('.');
+
+  if (temVirgula && temPonto) {
+    normalizado = normalizado.replace(/\./g, '').replace(',', '.');
+  } else if (temVirgula) {
+    normalizado = normalizado.replace(',', '.');
+  } else if (temPonto) {
+    const partes = normalizado.split('.');
+    const ultimoGrupo = partes[partes.length - 1] || '';
+    if (partes.length > 1 && ultimoGrupo.length === 3) {
+      normalizado = normalizado.replace(/\./g, '');
+    }
+  }
+
+  return parseFloat(normalizado);
+}
+
+function arredondarCentavos(valor) {
+  return Math.round((Number(valor) || 0) * 100) / 100;
+}
+
+function calcularSaldoAtualGlobal() {
+  let totalReceitasPagasGlobal = 0;
+  let totalDespesasPagasGlobal = 0;
+
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (!key || !key.startsWith('lancamentos_')) continue;
+
+    try {
+      const data = localStorage.getItem(key);
+      const listaMes = data ? JSON.parse(data) : [];
+      if (!Array.isArray(listaMes)) continue;
+
+      listaMes.forEach(lanc => {
+        if (!lanc) return;
+        const pago = lanc.hasOwnProperty('pago') ? lanc.pago : false;
+
+        if (pago || isPagamentoFaturaCartao(lanc)) {
+          if (lanc.valor > 0) {
+            totalReceitasPagasGlobal += lanc.valor;
+          } else {
+            totalDespesasPagasGlobal += lanc.valor;
+          }
+        }
+      });
+    } catch (error) {
+      console.warn('Nao foi possivel calcular saldo para', key, error);
+    }
+  }
+
+  return arredondarCentavos(totalReceitasPagasGlobal + totalDespesasPagasGlobal);
+}
+
+async function reajustarSaldo() {
+  menuDropdown.classList.remove('active');
+
+  const saldoAtual = calcularSaldoAtualGlobal();
+  const modalReajuste = document.getElementById('reajustarSaldoModal');
+  const saldoAtualEl = document.getElementById('reajustarSaldoAtual');
+  const input = document.getElementById('reajustarSaldoInput');
+
+  saldoAtualEl.textContent = `R$ ${formatToBRL(saldoAtual)}`;
+  input.value = formatToBRL(saldoAtual);
+  modalReajuste.dataset.saldoAtual = String(saldoAtual);
+  atualizarPreviaReajusteSaldo();
+  modalReajuste.style.display = 'flex';
+  setTimeout(() => input.focus(), 80);
+}
+
+function fecharModalReajusteSaldo() {
+  const modalReajuste = document.getElementById('reajustarSaldoModal');
+  modalReajuste.style.display = 'none';
+}
+
+function atualizarPreviaReajusteSaldo() {
+  const modalReajuste = document.getElementById('reajustarSaldoModal');
+  const input = document.getElementById('reajustarSaldoInput');
+  const preview = document.getElementById('reajustarSaldoPreview');
+  const saldoAtual = arredondarCentavos(parseFloat(modalReajuste.dataset.saldoAtual || '0'));
+  const saldoInformado = arredondarCentavos(parseValorReajusteSaldo(input.value));
+
+  preview.classList.remove('receita', 'despesa', 'neutro');
+
+  if (isNaN(saldoInformado)) {
+    preview.classList.add('neutro');
+    preview.textContent = 'Digite o novo saldo para calcular o reajuste.';
+    return;
+  }
+
+  const diferenca = arredondarCentavos(saldoInformado - saldoAtual);
+  if (Math.abs(diferenca) < 0.01) {
+    preview.classList.add('neutro');
+    preview.textContent = 'Nenhum lançamento será criado. O saldo já está ajustado.';
+    return;
+  }
+
+  const isReceita = diferenca > 0;
+  preview.classList.add(isReceita ? 'receita' : 'despesa');
+  preview.innerHTML = `${isReceita ? 'Receita' : 'Despesa'} de <strong>R$ ${formatToBRL(Math.abs(diferenca))}</strong> será lançada hoje.`;
+}
+
+function handleReajusteSaldoKeydown(event) {
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    confirmarReajusteSaldo();
+  } else if (event.key === 'Escape') {
+    fecharModalReajusteSaldo();
+  }
+}
+
+async function confirmarReajusteSaldo() {
+  const input = document.getElementById('reajustarSaldoInput');
+  const saldoInformado = arredondarCentavos(parseValorReajusteSaldo(input.value));
+
+  if (isNaN(saldoInformado)) {
+    showToast('Informe um saldo valido.', 'error');
+    return;
+  }
+
+  await aplicarReajusteSaldo(saldoInformado);
+}
+
+async function aplicarReajusteSaldo(saldoInformado) {
+  const saldoAtual = calcularSaldoAtualGlobal();
+  const diferenca = arredondarCentavos(saldoInformado - saldoAtual);
+
+  if (Math.abs(diferenca) < 0.01) {
+    fecharModalReajusteSaldo();
+    showToast('O saldo ja esta ajustado.', 'success');
+    return;
+  }
+
+  const dataReajuste = getDataHoje();
+  const dataObj = new Date(dataReajuste + 'T12:00:00');
+  const monthKey = getMonthKey(dataObj);
+  const storageKey = 'lancamentos_' + monthKey;
+  let listaMes = [];
+
+  try {
+    const dataMes = localStorage.getItem(storageKey);
+    listaMes = dataMes ? JSON.parse(dataMes) : [];
+    if (!Array.isArray(listaMes)) listaMes = [];
+  } catch (error) {
+    console.warn('Nao foi possivel ler lancamentos do mes do reajuste:', error);
+    listaMes = [];
+  }
+
+  const isReceita = diferenca > 0;
+  const lancamentoReajuste = {
+    descricao: 'Reajuste de saldo',
+    tipo: isReceita ? 'receita' : 'despesa',
+    valor: diferenca,
+    pago: true,
+    dataVencimento: dataReajuste,
+    formaPagamento: null,
+    categoria: null,
+    tipoSistema: 'reajuste_saldo',
+    ultimaModificacao: Date.now()
+  };
+
+  listaMes.push(lancamentoReajuste);
+  localStorage.setItem(storageKey, JSON.stringify(listaMes));
+  await syncLancamentosToSupabase(monthKey);
+
+  if (monthKey === getMonthKey(currentDate)) {
+    loadLancamentos();
+  } else {
+    atualizarTotais();
+    applyCombinedFilters();
+  }
+
+  fecharModalReajusteSaldo();
+  showToast(`Reajuste de R$ ${formatToBRL(Math.abs(diferenca))} lancado como ${isReceita ? 'receita' : 'despesa'}.`, 'success');
+}
+
 // ── CATEGORIAS PADRÃO ──
 var CATEGORIAS_PADRAO = {
   despesa: [
@@ -4652,12 +4956,16 @@ function abrirModalPagarCartao() {
   // Abrir bottom sheet
   modal.classList.add('active');
   document.body.style.overflow = 'hidden';
+  document.body.style.overflowX = 'hidden';
+  document.documentElement.style.overflowX = 'hidden';
 }
 
 function fecharModalPagarCartao() {
   const modal = document.getElementById('pagarCartaoModal');
   modal.classList.remove('active');
   document.body.style.overflow = '';
+  document.body.style.overflowX = '';
+  document.documentElement.style.overflowX = '';
   const content = document.querySelector('.pagar-cartao-bs-content');
   if (content) content.classList.remove('adiantado-aberto');
 }
@@ -6809,10 +7117,10 @@ function renderAgrupandoPorCartao(allTransactions, filteredLancamentos) {
 
     // Separar despesas de cartão de crédito das demais transações
     const despesasCartao = allTransactions.filter(l =>
-        !isPagamentoFaturaCartao(l) && l.tipo === 'despesa' && l.formaPagamento && l.formaPagamento !== 'debito_pix'
+        !isPagamentoFaturaCartao(l) && isLancamentoCartaoCredito(l)
     );
     const outrasTransacoes = allTransactions.filter(l =>
-        !isPagamentoFaturaCartao(l) && !(l.tipo === 'despesa' && l.formaPagamento && l.formaPagamento !== 'debito_pix')
+        !isPagamentoFaturaCartao(l) && !isLancamentoCartaoCredito(l)
     );
     const pagamentosAdiantados = allTransactions.filter(l => isPagamentoAdiantadoFatura(l, lancamentos));
 
@@ -7622,6 +7930,10 @@ function fecharModalDeleteUnique() {
     deleteModal.style.display = 'none';
     pendingDeleteIndex = null;
   }
+  if (!pendingDeleteShouldReturnToModal) {
+    pendingDeleteShouldReturnToModal = true;
+    return;
+  }
   // Reabrir o modal de edição se necessário
   modal.style.display = 'flex';
   lockTransactionPageScroll();
@@ -7631,6 +7943,7 @@ function fecharModalDeleteUnique() {
 // Função para confirmar e executar a exclusão
 async function confirmarExclusaoUnica() {
   if (pendingDeleteIndex !== null) {
+    const shouldReturnToModal = pendingDeleteShouldReturnToModal;
     // Remover o lançamento
     lancamentos.splice(pendingDeleteIndex, 1);
     await salvarLocal(currentDate);
@@ -7639,14 +7952,17 @@ async function confirmarExclusaoUnica() {
     // Fechar o modal de exclusão
     fecharModalDeleteUnique();
 
-    // Fechar o modal de edição
-    closeModal();
+    // Fechar o modal de edição quando a exclusão veio da edição
+    if (shouldReturnToModal) {
+      closeModal();
+    }
 
     // Mostrar toast de confirmação
     showToast('🗑️ Transação excluída com sucesso!');
 
     // Limpar o índice pendente
     pendingDeleteIndex = null;
+    pendingDeleteShouldReturnToModal = true;
   } else {
     fecharModalDeleteUnique();
   }
@@ -7699,8 +8015,8 @@ function aplicarVencimentoCartao(formaPagamento) {
   const dataCartaoTexto = document.getElementById('dataVencimentoCartaoTexto');
   if (!dataInput) return;
 
-  if (!formaPagamento || formaPagamento === 'debito_pix') {
-    // Débito/Pix: libera o campo
+  if (!isFormaPagamentoCartaoCredito(formaPagamento)) {
+    // Conta normal: libera o campo
     dataInput.style.display = '';
     mostrarDataRapida('dataVencimento', true);
     dataInput.removeAttribute('readonly');
@@ -7762,7 +8078,7 @@ function atualizarBloqueioDataVencimento() {
 
 function avisarDataVencimentoCartao() {
   const fp = document.getElementById('formaPagamento').value || '';
-  if (fp && fp !== 'debito_pix') {
+  if (isFormaPagamentoCartaoCredito(fp)) {
     showToast('Não é possível alterar a data de vencimento em pagamentos com cartão.', 'warning');
   }
 }
@@ -7837,13 +8153,16 @@ function abrirFormaPagamentoModal() {
     .classList.add('active');
 }
 
-function abrirGerenciarCartoes() {
+function abrirGerenciarContas() {
 
   fecharFormaPagamentoModal();
 
-  // abre sua tela index3
-  window.location.href = 'index3.html';
+  window.location.href = 'index4.html';
 
+}
+
+function abrirGerenciarCartoes() {
+  abrirGerenciarContas();
 }
 
 // ===================================================================
@@ -8542,6 +8861,11 @@ window.fecharModalDeleteUnique = function() {
     mainFab.style.display = 'none';
     return;
   }
+  if (!pendingDeleteShouldReturnToModal) {
+    pendingDeleteIndex = null;
+    pendingDeleteShouldReturnToModal = true;
+    return;
+  }
   pendingDeleteIndex = null;
   modal.style.display = 'flex';
   lockTransactionPageScroll();
@@ -8553,6 +8877,7 @@ const _origConfirmarExclusaoUnica = confirmarExclusaoUnica;
 window.confirmarExclusaoUnica = async function() {
   const isCCDelete = ccPendingDeleteIndex !== null;
   const indexToDelete = isCCDelete ? ccPendingDeleteIndex : pendingDeleteIndex;
+  const shouldReturnToModal = pendingDeleteShouldReturnToModal;
   if (indexToDelete !== null) {
     lancamentos.splice(indexToDelete, 1);
     await salvarLocal(currentDate);
@@ -8566,7 +8891,11 @@ window.confirmarExclusaoUnica = async function() {
       closeModalCC();
     } else {
       pendingDeleteIndex = null;
-      closeModal();
+      if (shouldReturnToModal) {
+        closeModal();
+      } else {
+        pendingDeleteShouldReturnToModal = true;
+      }
     }
     showToast('🗑️ Transação excluída com sucesso!');
   } else {
@@ -8588,7 +8917,7 @@ window.addEventListener('click', function(e) {
 currentFilter = 'transacoes'; // Garante que comece com o filtro padrão
 updateMonthDisplay();
 carregarPreferenciaVisibilidade();
-carregarFormasPagamento(); // ← ADICIONE ESTA LINHA
+carregarFormasPagamento();
 
 // Na inicialização, adicione:
 setTimeout(() => {

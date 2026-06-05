@@ -394,6 +394,10 @@ function navigateTo(pagina) {
             return data ? JSON.parse(data) : [];
         }
 
+        function isReajusteSaldo(lancamento) {
+            return lancamento?.tipoSistema === 'reajuste_saldo';
+        }
+
         // ========== ATUALIZAR DISPLAY DO MÊS ==========
         function updateMonthDisplay() {
             const month = currentDate.getMonth();
@@ -415,7 +419,7 @@ function navigateTo(pagina) {
             if (!categoriasList) return;
             
             // Filtrar apenas despesas (valores negativos)
-            const despesas = lancamentos.filter(l => l.valor < 0);
+            const despesas = lancamentos.filter(l => l.valor < 0 && !isReajusteSaldo(l));
             
             if (despesas.length === 0) {
                 categoriasList.innerHTML = `<div class="categoria-empty"><i class="ri-inbox-line"></i><div>Nenhuma despesa no mês</div></div>`;
