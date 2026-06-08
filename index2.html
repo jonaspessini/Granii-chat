@@ -6879,26 +6879,16 @@ function renderDailyBalance(transactions) {
     // Remover todos os resumos diários e cabeçalhos existentes
     document.querySelectorAll('.daily-balance-row, .date-header').forEach(el => el.remove());
 
-    // Saldo acumulado inicia com o Saldo Atual (dinheiro real já recebido/pago em todos os meses).
-    // O "Saldo do dia" mostra quanto ficará no Saldo Atual após todas as transações do dia serem efetivadas.
-    let totalReceitasPagasGlobal = 0;
-    let totalDespesasPagasGlobal = 0;
-    for (let _ki = 0; _ki < localStorage.length; _ki++) {
-        const _key = localStorage.key(_ki);
-        if (_key && _key.startsWith('lancamentos_')) {
-            try {
-                const _lancs = JSON.parse(localStorage.getItem(_key) || '[]');
-                _lancs.forEach(lanc => {
-                    const pago = lanc.hasOwnProperty('pago') ? lanc.pago : false;
-                    if (pago || isPagamentoFaturaCartao(lanc)) {
-                        if (lanc.valor > 0) totalReceitasPagasGlobal += lanc.valor;
-                        else totalDespesasPagasGlobal += lanc.valor;
-                    }
-                });
-            } catch(e) {}
+    // Meses anteriores entram pelo saldo previsto, mesmo sem marcar como pago/recebido.
+    // No mês aberto, os efetivados entram na base e os pendentes são somados por dia.
+    let saldoEfetivadoMesAberto = 0;
+    lancamentos.forEach(lanc => {
+        const pago = lanc.hasOwnProperty('pago') ? lanc.pago : false;
+        if (pago || isPagamentoFaturaCartao(lanc)) {
+            saldoEfetivadoMesAberto += lanc.valor || 0;
         }
-    }
-    let saldoAcumulado = totalReceitasPagasGlobal + totalDespesasPagasGlobal;
+    });
+    let saldoAcumulado = getSaldoAcumuladoMesesAnteriores() + saldoEfetivadoMesAberto;
 
     // Para cada data, calcular o saldo acumulado e adicionar cabeçalho
     for (let i = 0; i < sortedDates.length; i++) {
