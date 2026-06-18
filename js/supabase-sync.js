@@ -32,6 +32,30 @@ export function ensureLocalId(transaction) {
     return transaction;
 }
 
+function parseInstallmentInfo(value) {
+    if (!value) return undefined;
+    try {
+        return JSON.parse(value);
+    } catch (error) {
+        console.warn('Nao foi possivel ler dados extras da transacao:', error);
+        return undefined;
+    }
+}
+
+function buildInstallmentInfo(transaction) {
+    const info = transaction.parcelamento ? { ...transaction.parcelamento } : {};
+
+    if (transaction.tipoSistema && !info.tipoSistema) {
+        info.tipoSistema = transaction.tipoSistema;
+    }
+
+    if (transaction.cartaoId && !info.cartaoId) {
+        info.cartaoId = transaction.cartaoId;
+    }
+
+    return Object.keys(info).length > 0 ? JSON.stringify(info) : null;
+}
+
 // CARREGAR transações do Supabase → localStorage
 export async function loadUserTransactionsFromSupabase() {
     const user = await getCurrentUserData();
@@ -56,6 +80,7 @@ export async function loadUserTransactionsFromSupabase() {
     const groupedByMonth = {};
     (data || []).forEach(t => {
         if (!groupedByMonth[t.month_key]) groupedByMonth[t.month_key] = [];
+        const installmentInfo = parseInstallmentInfo(t.installment_info);
 
         groupedByMonth[t.month_key].push({
             local_id: t.local_id,
@@ -67,7 +92,9 @@ export async function loadUserTransactionsFromSupabase() {
             dataCompra: t.purchase_date || undefined,
             formaPagamento: t.payment_method,
             categoria: t.category || null,
-            parcelamento: t.installment_info ? JSON.parse(t.installment_info) : undefined,
+            tipoSistema: installmentInfo?.tipoSistema || undefined,
+            cartaoId: installmentInfo?.cartaoId || undefined,
+            parcelamento: installmentInfo,
             ultimaModificacao: t.last_modified
         });
     });
@@ -122,7 +149,7 @@ export async function saveMonthTransactionsToSupabase(monthKey) {
         purchase_date: t.dataCompra || null,
         payment_method: t.formaPagamento || null,
         category: t.categoria || null,
-        installment_info: t.parcelamento ? JSON.stringify(t.parcelamento) : null,
+        installment_info: buildInstallmentInfo(t),
         last_modified: t.ultimaModificacao || null
     }));
 

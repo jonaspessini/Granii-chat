@@ -2766,7 +2766,15 @@ function isPagamentoFaturaCartao(lancamento) {
 }
 
 function isReajusteSaldo(lancamento) {
-  return lancamento?.tipoSistema === 'reajuste_saldo';
+  if (!lancamento) return false;
+  return lancamento.tipoSistema === 'reajuste_saldo' ||
+    (lancamento.parcelamento && lancamento.parcelamento.tipoSistema === 'reajuste_saldo') ||
+    (
+      lancamento.descricao === 'Reajuste de saldo' &&
+      lancamento.pago === true &&
+      !lancamento.formaPagamento &&
+      !lancamento.categoria
+    );
 }
 
 function getLancamentosSemPagamentosFatura(lista) {
@@ -4676,6 +4684,9 @@ async function aplicarReajusteSaldo(saldoInformado) {
     formaPagamento: null,
     categoria: null,
     tipoSistema: 'reajuste_saldo',
+    parcelamento: {
+      tipoSistema: 'reajuste_saldo'
+    },
     ultimaModificacao: Date.now()
   };
 
