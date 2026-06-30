@@ -6840,6 +6840,25 @@ function verificarBackupAtual() {
 function renderDailyBalance(transactions) {
     const transactionsContainer = document.getElementById('transactionsContainer');
 
+    function getValorPendenteParaSaldoDiario(transaction) {
+        if (!transaction) return 0;
+
+        if (transaction._isFaturaAgrupadaSaldoDiario) {
+            return transaction.valor || 0;
+        }
+
+        if (!isLancamentoCartaoCredito(transaction)) {
+            return transaction.valor || 0;
+        }
+
+        const totalBrutoFatura = getTotalBrutoFaturaCartao(transaction.formaPagamento, lancamentos);
+        if (totalBrutoFatura <= 0) return transaction.valor || 0;
+
+        const saldoRestanteFatura = calcularSaldoRestanteFatura(totalBrutoFatura, transaction.formaPagamento, lancamentos);
+        const proporcaoLancamento = Math.abs(transaction.valor || 0) / totalBrutoFatura;
+        return -saldoRestanteFatura * proporcaoLancamento;
+    }
+
     // Agrupar TODAS as transações (pagas e não pagas) por data para o CÁLCULO do saldo
     const groupedByDateForCalculation = {};
 
@@ -6861,7 +6880,7 @@ function renderDailyBalance(transactions) {
             };
         }
 
-        groupedByDateForCalculation[date].total += transaction.valor;
+        groupedByDateForCalculation[date].total += getValorPendenteParaSaldoDiario(transaction);
         groupedByDateForCalculation[date].transactions.push(transaction);
     });
 
@@ -7246,10 +7265,9 @@ function renderAgrupandoPorCartao(allTransactions, filteredLancamentos) {
             pago: faturaPaga,
             valorPago: Math.max(0, totalBrutoFatura - totalFatura),
             dataVencimento: getDataVencimentoFaturaString(grupo),
-            // Sempre usa o total bruto para o cálculo do saldo acumulado diário,
-            // independente de a fatura estar paga ou não. Se usar -totalFatura,
-            // faturas pagas (totalFatura = 0) somem do cálculo e o saldo fica errado.
-            valor: -totalBrutoFatura,
+            // No saldo diário, fatura aberta entra só com o restante após pagamentos adiantados.
+            _isFaturaAgrupadaSaldoDiario: true,
+            valor: -(faturaPaga ? totalBrutoFatura : totalFatura),
             ultimaModificacao: faturaPaga ? (ultimaModificacaoPagamento || ultimaModificacaoItens) : ultimaModificacaoItens
         };
     });
