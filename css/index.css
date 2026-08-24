@@ -75,9 +75,48 @@
             white-space: nowrap;
         }
 
-        .home-user-info i {
+        #homeUserEmail {
+            display: inline-block;
+        }
+
+        .home-greeting-message-enter {
+            animation: greeting-message-enter 420ms ease-out both;
+        }
+
+        @keyframes greeting-message-enter {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .home-greeting-icon {
             flex: 0 0 auto;
-            font-size: 1.1em;
+            display: inline-block;
+            font-size: 1.35em;
+            line-height: 1;
+            transform-origin: 70% 80%;
+            animation: greeting-wave 3.5s ease-in-out infinite;
+        }
+
+        @keyframes greeting-wave {
+            0%, 55%, 100% { transform: rotate(0deg); }
+            60% { transform: rotate(16deg); }
+            65% { transform: rotate(-12deg); }
+            70% { transform: rotate(16deg); }
+            75% { transform: rotate(-8deg); }
+            80% { transform: rotate(0deg); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .home-greeting-icon,
+            .home-greeting-message-enter {
+                animation: none;
+            }
         }
 
         .home-user-info:active {
