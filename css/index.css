@@ -103,6 +103,17 @@
             animation: greeting-wave 3.5s ease-in-out infinite;
         }
 
+        .home-greeting-icon.is-hidden {
+            display: none !important;
+            animation: none;
+        }
+
+        .home-greeting-icon.home-greeting-message-enter {
+            animation:
+                greeting-message-enter 420ms ease-out both,
+                greeting-wave 3.5s 420ms ease-in-out infinite;
+        }
+
         @keyframes greeting-wave {
             0%, 55%, 100% { transform: rotate(0deg); }
             60% { transform: rotate(16deg); }

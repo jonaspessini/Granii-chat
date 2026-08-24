@@ -24,8 +24,8 @@
 <div class="header-purple">
     <div class="home-user-bar">
         <button class="home-user-info" id="homeUserNameBtn" type="button">
-            <span class="home-greeting-icon" aria-hidden="true">👋</span>
             <span id="homeUserEmail">Carregando...</span>
+            <span class="home-greeting-icon" id="homeGreetingIcon" aria-hidden="true" hidden>👋</span>
         </button>
         <button class="home-logout-btn" id="homeLogoutBtn" type="button">
             <i class="ri-logout-box-r-line"></i>
@@ -206,11 +206,20 @@ function navigateTo(pagina) {
     window.initSupabase = initSupabaseForUser;
     let rotacaoSaudacaoId;
 
-    function exibirMensagemSaudacao(elemento, mensagem) {
+    function exibirMensagemSaudacao(elemento, mensagem, mostrarEmoji) {
+        const emojiSaudacao = document.getElementById('homeGreetingIcon');
         elemento.textContent = mensagem;
+        if (emojiSaudacao) {
+            emojiSaudacao.classList.remove('home-greeting-message-enter');
+            emojiSaudacao.hidden = !mostrarEmoji;
+            emojiSaudacao.classList.toggle('is-hidden', !mostrarEmoji);
+        }
         elemento.classList.remove('home-greeting-message-enter');
         void elemento.offsetWidth;
         elemento.classList.add('home-greeting-message-enter');
+        if (emojiSaudacao && mostrarEmoji) {
+            emojiSaudacao.classList.add('home-greeting-message-enter');
+        }
     }
 
     function iniciarRotacaoSaudacao(elemento, saudacao) {
@@ -225,13 +234,17 @@ function navigateTo(pagina) {
         ];
 
         clearInterval(rotacaoSaudacaoId);
-        exibirMensagemSaudacao(elemento, saudacao);
+        exibirMensagemSaudacao(elemento, saudacao, true);
 
         let exibindoSaudacao = true;
         rotacaoSaudacaoId = window.setInterval(() => {
             exibindoSaudacao = !exibindoSaudacao;
             const indiceDaMensagem = (new Date().getDate() - 1) % mensagensFinanceiras.length;
-            exibirMensagemSaudacao(elemento, exibindoSaudacao ? saudacao : mensagensFinanceiras[indiceDaMensagem]);
+            exibirMensagemSaudacao(
+                elemento,
+                exibindoSaudacao ? saudacao : mensagensFinanceiras[indiceDaMensagem],
+                exibindoSaudacao
+            );
         }, 4500);
     }
 
