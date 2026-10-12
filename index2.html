@@ -1006,6 +1006,22 @@ index2
   </div>
 </div>
 
+<!-- Bottom Sheet: Confirmar pagamento ou recebimento -->
+<div class="bottom-sheet-modal" id="confirmarBaixaModal" onclick="fecharConfirmarBaixaOutside(event)">
+  <div class="bottom-sheet-content baixa-bs-content">
+    <div class="bottom-sheet-handle"></div>
+    <div class="bottom-sheet-title" id="baixaTitulo">Confirmar pagamento</div>
+    <label class="baixa-field-label" for="baixaValor">Valor</label>
+    <div class="baixa-input-wrap"><span>R$</span><input id="baixaValor" type="number" min="0.01" step="0.01" inputmode="decimal"></div>
+    <label class="baixa-field-label" for="baixaData">Data do pagamento</label>
+    <div class="baixa-date-wrap"><input id="baixaData" class="baixa-date-input" type="date"></div>
+    <div class="baixa-actions">
+      <button type="button" class="baixa-cancel-btn" onclick="fecharConfirmarBaixa()">Cancelar</button>
+      <button type="button" class="baixa-confirm-btn" id="baixaConfirmarBtn" onclick="confirmarBaixaTransacao()">Pagar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal Reajustar Saldo -->
 <div id="reajustarSaldoModal" class="modal reajustar-saldo-modal">
   <div class="modal-content">
@@ -1265,6 +1281,7 @@ const today = (() => {
     let selectedEntryType = 'unico';
     let preselectedType = null;
     let currentTransactionIndex = null;
+    let settlementTransactionIndex = null;
     let currentFilter = 'transacoes'; // Valor padrão
     // Variável para armazenar os dados da transação enquanto aguarda confirmação da categoria
     let pendingTransactionData = null;
@@ -2223,10 +2240,82 @@ function openTransactionDetails(index) {
     }
 
     function toggleTransactionStatus() {
-      if (currentTransactionIndex !== null) {
+      if (currentTransactionIndex === null) return;
+      const lanc = lancamentos[currentTransactionIndex];
+      if (!lanc) return;
+      if (!lanc.pago) {
+        abrirConfirmarBaixa(currentTransactionIndex);
+      } else {
         toggleStatus(currentTransactionIndex);
         closeTransactionDetails();
       }
+    }
+
+    function abrirConfirmarBaixa(index) {
+      const lanc = lancamentos[index];
+      if (!lanc || isLancamentoCartaoCredito(lanc)) return;
+      settlementTransactionIndex = index;
+      const receita = lanc.tipo === 'receita';
+      const confirmButton = document.getElementById('baixaConfirmarBtn');
+      document.getElementById('baixaTitulo').textContent = receita ? 'Confirmar recebimento' : 'Confirmar pagamento';
+      confirmButton.textContent = receita ? 'Receber' : 'Pagar';
+      confirmButton.classList.toggle('receita', receita);
+      document.getElementById('baixaValor').value = Math.abs(lanc.valor).toFixed(2);
+      document.getElementById('baixaData').value = getDataHoje();
+      closeTransactionDetails();
+      document.getElementById('confirmarBaixaModal').classList.add('active');
+    }
+
+    function fecharConfirmarBaixa() {
+      document.getElementById('confirmarBaixaModal').classList.remove('active');
+      settlementTransactionIndex = null;
+    }
+
+    function fecharConfirmarBaixaOutside(event) {
+      if (event.target === document.getElementById('confirmarBaixaModal')) fecharConfirmarBaixa();
+    }
+
+    async function confirmarBaixaTransacao() {
+      const index = settlementTransactionIndex;
+      const lanc = index === null ? null : lancamentos[index];
+      const value = Number(document.getElementById('baixaValor').value);
+      const date = document.getElementById('baixaData').value;
+      if (!lanc || !Number.isFinite(value) || value <= 0 || !date) {
+        showToast('Informe um valor válido e a data do pagamento ou recebimento.', 'warning');
+        return;
+      }
+      fecharConfirmarBaixa();
+      await marcarLancamentoComoPago(index, date, value);
+      closeTransactionDetails();
+    }
+
+    async function marcarLancamentoComoPago(index, dataPagamento, valorPago) {
+      const lanc = lancamentos[index];
+      if (!lanc || isLancamentoCartaoCredito(lanc)) return;
+      const sourceMonth = getMonthKey(currentDate);
+      const newMonthDate = new Date(`${dataPagamento}T00:00:00`);
+      const destinationMonth = getMonthKey(newMonthDate);
+      const valorComSinal = Math.sign(lanc.valor || 1) * valorPago;
+      const updated = { ...lanc, valor: valorComSinal, pago: true, dataVencimento: dataPagamento, ultimaModificacao: Date.now() };
+
+      if (sourceMonth === destinationMonth) {
+        lancamentos[index] = updated;
+        await salvarLocal(currentDate);
+      } else {
+        const sourceKey = 'lancamentos_' + sourceMonth;
+        const destinationKey = 'lancamentos_' + destinationMonth;
+        const sourceRows = JSON.parse(localStorage.getItem(sourceKey) || '[]');
+        const destinationRows = JSON.parse(localStorage.getItem(destinationKey) || '[]');
+        const identity = lanc.local_id;
+        const sourceIndex = identity ? sourceRows.findIndex(row => row.local_id === identity) : index;
+        if (sourceIndex >= 0 && sourceIndex < sourceRows.length) sourceRows.splice(sourceIndex, 1);
+        destinationRows.push(updated);
+        localStorage.setItem(sourceKey, JSON.stringify(sourceRows));
+        localStorage.setItem(destinationKey, JSON.stringify(destinationRows));
+        await Promise.all([syncLancamentosToSupabase(sourceMonth), syncLancamentosToSupabase(destinationMonth)]);
+      }
+      loadLancamentos();
+      if (balanceChartModal.classList.contains('active')) updateBalanceChart();
     }
 
     function editTransaction() {
@@ -2468,6 +2557,21 @@ function closeModal() {
       _edicaoPendente = null;
     }
 
+async function moverEdicaoEntreMeses(monthOrigem, monthDestino, localizar, substituto = null) {
+  if (monthOrigem === monthDestino) return;
+  const origemKey = 'lancamentos_' + monthOrigem;
+  const destinoKey = 'lancamentos_' + monthDestino;
+  const origem = JSON.parse(localStorage.getItem(origemKey) || '[]');
+  const destino = JSON.parse(localStorage.getItem(destinoKey) || '[]');
+  const indexOrigem = origem.findIndex(localizar);
+  if (indexOrigem < 0) return;
+  const [registro] = origem.splice(indexOrigem, 1);
+  destino.push(substituto || registro);
+  localStorage.setItem(origemKey, JSON.stringify(origem));
+  localStorage.setItem(destinoKey, JSON.stringify(destino));
+  await Promise.all([syncLancamentosToSupabase(monthOrigem), syncLancamentosToSupabase(monthDestino)]);
+}
+
 async function confirmarEdicaoParcelado(opcao) {
   if (editIndex === null || !_edicaoPendente) return;
 
@@ -2479,6 +2583,7 @@ async function confirmarEdicaoParcelado(opcao) {
   const parcelaAtual    = parc.atual;
   const isFixo          = parc.isFixo;
   const touchedMonthKeys = new Set();
+  const monthAntesEdicao = getMonthKey(currentDate);
 
   function limparDescricaoBase(desc) {
     return desc.replace(/\s*\(\d+\/\d+\)\s*$/, '');
@@ -2508,8 +2613,21 @@ async function confirmarEdicaoParcelado(opcao) {
         lancamentos[editIndex].parcelamento.groupId = groupId; // Mantém o mesmo groupId
       }
 
-      await salvarLocal(currentDate);
-      touchedMonthKeys.add(getMonthKey(currentDate));
+      const monthOrigem = getMonthKey(currentDate);
+      const monthDestino = getMonthKey(new Date(ed.dataVencimento + 'T12:00:00'));
+      const lancamentoEditado = { ...lancamentos[editIndex] };
+      if (monthOrigem === monthDestino) {
+        lancamentos[editIndex] = lancamentoEditado;
+        await salvarLocal(currentDate);
+      } else {
+        await moverEdicaoEntreMeses(monthOrigem, monthDestino, row =>
+          lancamentoEditado.local_id ? row.local_id === lancamentoEditado.local_id :
+          row.parcelamento?.groupId === groupId && row.parcelamento?.atual === parcelaAtual,
+          lancamentoEditado
+        );
+      }
+      touchedMonthKeys.add(monthOrigem);
+      touchedMonthKeys.add(monthDestino);
       showToast('✓ Apenas este lançamento foi alterado');
       break;
     }
@@ -2578,6 +2696,16 @@ async function confirmarEdicaoParcelado(opcao) {
         tempDate.setMonth(tempDate.getMonth() + 1);
       }
 
+      const monthOrigemAtual = getMonthKey(currentDate);
+      const monthDestinoAtual = getMonthKey(new Date(ed.dataVencimento + 'T12:00:00'));
+      if (monthOrigemAtual !== monthDestinoAtual) {
+        await moverEdicaoEntreMeses(monthOrigemAtual, monthDestinoAtual, row =>
+          row.parcelamento?.groupId === groupId && row.parcelamento?.atual === parcelaAtual
+        );
+        touchedMonthKeys.add(monthOrigemAtual);
+        touchedMonthKeys.add(monthDestinoAtual);
+      }
+
       showToast(`✓ Alterado este e mais ${totalParcelas - parcelaAtual} lançamentos futuros`);
       break;
     }
@@ -2606,6 +2734,7 @@ async function confirmarEdicaoParcelado(opcao) {
               tipo: ed.tipo,
               valor: ed.valorFinal,
               dataCompra: ed.dataCompra || l.dataCompra,
+              ...(i === parcelaAtual ? { dataVencimento: ed.dataVencimento, pago: ed.pago } : {}),
               formaPagamento: ed.formaPagamento,
               categoria: ed.categoriaId,
               parcelamento: {
@@ -2627,6 +2756,16 @@ async function confirmarEdicaoParcelado(opcao) {
         tempDate.setMonth(tempDate.getMonth() + 1);
       }
 
+      const monthOrigemAtual = getMonthKey(currentDate);
+      const monthDestinoAtual = getMonthKey(new Date(ed.dataVencimento + 'T12:00:00'));
+      if (monthOrigemAtual !== monthDestinoAtual) {
+        await moverEdicaoEntreMeses(monthOrigemAtual, monthDestinoAtual, row =>
+          row.parcelamento?.groupId === groupId && row.parcelamento?.atual === parcelaAtual
+        );
+        touchedMonthKeys.add(monthOrigemAtual);
+        touchedMonthKeys.add(monthDestinoAtual);
+      }
+
       showToast(`✓ Todos os ${totalParcelas} lançamentos foram alterados`);
       break;
     }
@@ -2636,7 +2775,14 @@ async function confirmarEdicaoParcelado(opcao) {
     await syncLancamentosToSupabase(mk);
   }
 
-  loadLancamentos();
+  const monthNovoLancamento = getMonthKey(new Date(ed.dataVencimento + 'T12:00:00'));
+  if (monthNovoLancamento !== monthAntesEdicao) {
+    currentDate = new Date(ed.dataVencimento + 'T12:00:00');
+    currentDate.setDate(1);
+    updateMonthDisplay();
+  } else {
+    loadLancamentos();
+  }
   editParceladoModal.style.display = 'none';
   _edicaoPendente = null;
   editIndex = null;
@@ -2954,10 +3100,11 @@ function confirmarSemCategoria() {
 }
 
 // Função principal que executa o salvamento
-function executarSalvarLancamento() {
+async function executarSalvarLancamento() {
   // Se temos dados pendentes do modal, usar eles
   let descricaoBase, valor, tipo, dataVencimento, pago, formaPagamento, categoriaId, valorFinal;
   let isEditing = (editIndex !== null);
+  let navegarParaMesEditado = false;
 
   if (pendingTransactionData) {
     descricaoBase = pendingTransactionData.descricaoBase;
@@ -3012,7 +3159,11 @@ function executarSalvarLancamento() {
     }
 
     // Lançamento único: editar diretamente
-    lancamentos[editIndex] = {
+    const monthOrigem = getMonthKey(currentDate);
+    const monthDestino = getMonthKey(new Date(dataVencimento + 'T12:00:00'));
+    const indiceOrigem = editIndex;
+    const lancamentoOriginal = lancamentos[editIndex];
+    const lancamentoAtualizado = {
       ...lancamentos[editIndex],
       descricao: descricaoBase,
       tipo: tipo,
@@ -3023,7 +3174,18 @@ function executarSalvarLancamento() {
       categoria: categoriaId,
       ultimaModificacao: pago ? Date.now() : lancamentos[editIndex].ultimaModificacao
     };
-    salvarLocal(currentDate);
+    if (monthOrigem === monthDestino) {
+      lancamentos[editIndex] = lancamentoAtualizado;
+      await salvarLocal(currentDate);
+    } else {
+      await moverEdicaoEntreMeses(monthOrigem, monthDestino, (row, rowIndex) =>
+        lancamentoOriginal.local_id ? row.local_id === lancamentoOriginal.local_id : rowIndex === indiceOrigem,
+        lancamentoAtualizado
+      );
+      currentDate = new Date(dataVencimento + 'T12:00:00');
+      currentDate.setDate(1);
+      navegarParaMesEditado = true;
+    }
   } else {
     if (selectedEntryType === 'parcelado') {
       const totalParcelas = parseInt(totalParcelasInput.value);
@@ -3132,7 +3294,8 @@ function executarSalvarLancamento() {
     }
   }
 
-  loadLancamentos();
+  if (navegarParaMesEditado) updateMonthDisplay();
+  else loadLancamentos();
   closeModal();
 }
 
@@ -8712,6 +8875,7 @@ async function salvarLancamentoCC() {
 async function executarSalvarLancamentoCC() {
   let descricaoBase, valor, dataCompra, dataVencimento, formaPagamento, pago, categoriaId, valorFinal;
   const isEditing = (ccEditIndex !== null);
+  let navegarParaMesEditado = false;
 
   if (ccPendingTransactionData) {
     ({ descricaoBase, valor, dataCompra, dataVencimento, formaPagamento, pago, categoriaId, valorFinal } = ccPendingTransactionData);
@@ -8759,7 +8923,11 @@ async function executarSalvarLancamentoCC() {
       ccEditIndex = null;
       return;
     }
-    lancamentos[ccEditIndex] = {
+    const monthOrigem = getMonthKey(currentDate);
+    const monthDestino = getMonthKey(new Date(dataVencimento + 'T12:00:00'));
+    const indiceOrigem = ccEditIndex;
+    const lancamentoOriginal = lancamentos[ccEditIndex];
+    const lancamentoAtualizado = {
       ...lancamentos[ccEditIndex],
       descricao: descricaoBase,
       tipo: 'despesa',
@@ -8771,7 +8939,18 @@ async function executarSalvarLancamentoCC() {
       categoria: categoriaId,
       ultimaModificacao: pago ? Date.now() : lancamentos[ccEditIndex].ultimaModificacao
     };
-    salvarLocal(currentDate);
+    if (monthOrigem === monthDestino) {
+      lancamentos[ccEditIndex] = lancamentoAtualizado;
+      await salvarLocal(currentDate);
+    } else {
+      await moverEdicaoEntreMeses(monthOrigem, monthDestino, (row, rowIndex) =>
+        lancamentoOriginal.local_id ? row.local_id === lancamentoOriginal.local_id : rowIndex === indiceOrigem,
+        lancamentoAtualizado
+      );
+      currentDate = new Date(dataVencimento + 'T12:00:00');
+      currentDate.setDate(1);
+      navegarParaMesEditado = true;
+    }
   } else {
     if (ccSelectedEntryType === 'parcelado') {
       const totalParcelas = parseInt(document.getElementById('ccTotalParcelas').value);
@@ -8832,7 +9011,8 @@ async function executarSalvarLancamentoCC() {
     }
   }
 
-  loadLancamentos();
+  if (navegarParaMesEditado) updateMonthDisplay();
+  else loadLancamentos();
   closeModalCC();
 }
 
