@@ -91,6 +91,8 @@
       let metaMovimentacaoId = null;
       let metaHistoricoExpandidoId = null;
       let resolverAvisoMeta = null;
+      let posicaoScrollMetas = 0;
+      let estilosBodyAntesPopup = null;
       let tipoMovimentacao = 'aporte';
       const moedaMeta = valor => Number(valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       const escaparMeta = texto => String(texto || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -103,6 +105,22 @@
         const valor = String(input.value || '').trim();
         if (!valor) return 0;
         return Number(valor.replace(/\./g, '').replace(',', '.'));
+      }
+      function bloquearFundoPopupMeta() {
+        if (estilosBodyAntesPopup) return;
+        posicaoScrollMetas = window.scrollY || document.documentElement.scrollTop || 0;
+        const body = document.body;
+        estilosBodyAntesPopup = { position: body.style.position, top: body.style.top, left: body.style.left, right: body.style.right, width: body.style.width, overflow: body.style.overflow };
+        body.style.position = 'fixed'; body.style.top = `-${posicaoScrollMetas}px`; body.style.left = '0'; body.style.right = '0'; body.style.width = '100%'; body.style.overflow = 'hidden';
+      }
+      function abrirPopupMeta(modal) { bloquearFundoPopupMeta(); modal.classList.add('active'); }
+      function fecharPopupMeta(modal) {
+        modal.classList.remove('active');
+        if (document.querySelector('.goal-modal.active') || !estilosBodyAntesPopup) return;
+        const body = document.body;
+        Object.assign(body.style, estilosBodyAntesPopup);
+        estilosBodyAntesPopup = null;
+        window.scrollTo(0, posicaoScrollMetas);
       }
       function ajustarModalMetaAoTeclado() {
         const viewport = window.visualViewport;
@@ -131,7 +149,12 @@
         modalAtivo.style.height = `${viewport.height}px`;
         painel.style.maxHeight = `${Math.max(150, viewport.height - 24)}px`;
         painel.style.marginTop = '0';
-        requestAnimationFrame(() => campoAtivo.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+        requestAnimationFrame(() => {
+          const campoRect = campoAtivo.getBoundingClientRect();
+          const painelRect = painel.getBoundingClientRect();
+          if (campoRect.bottom > painelRect.bottom - 12) painel.scrollTop += campoRect.bottom - (painelRect.bottom - 12);
+          else if (campoRect.top < painelRect.top + 12) painel.scrollTop -= (painelRect.top + 12) - campoRect.top;
+        });
       }
       function salvarMetasStorage() { localStorage.setItem(GOALS_STORAGE_KEY, JSON.stringify(metas)); }
       function abrirDialogoMeta(titulo, mensagem, confirmar = false, perigo = false) {
@@ -141,11 +164,11 @@
         const botao = document.getElementById('goalNoticeConfirm');
         botao.textContent = confirmar ? 'Confirmar' : 'Entendi';
         botao.classList.toggle('danger', perigo);
-        document.getElementById('goalNoticeModal').classList.add('active');
+        abrirPopupMeta(document.getElementById('goalNoticeModal'));
         return new Promise(resolve => { resolverAvisoMeta = resolve; });
       }
       function resolverDialogoMeta(resultado) {
-        document.getElementById('goalNoticeModal').classList.remove('active');
+        fecharPopupMeta(document.getElementById('goalNoticeModal'));
         if (resolverAvisoMeta) resolverAvisoMeta(resultado);
         resolverAvisoMeta = null;
       }
@@ -199,7 +222,7 @@
         campoAlvo.value = meta ? moedaMeta(meta.alvo) : '';
         document.getElementById('goalDeadline').value = meta?.dataFim || '';
         document.getElementById('goalDeleteButton').style.display = meta ? 'block' : 'none';
-        document.getElementById('goalModal').classList.add('active');
+        abrirPopupMeta(document.getElementById('goalModal'));
       }
       function editarMeta(id) { abrirModalMeta(id); }
       function atualizarPopupHistoricoMeta(id) {
@@ -211,13 +234,13 @@
       function abrirHistoricoMeta(id) {
         metaHistoricoExpandidoId = id;
         atualizarPopupHistoricoMeta(id);
-        document.getElementById('goalHistoryModal').classList.add('active');
+        abrirPopupMeta(document.getElementById('goalHistoryModal'));
       }
       function fecharHistoricoMeta() {
-        document.getElementById('goalHistoryModal').classList.remove('active');
+        fecharPopupMeta(document.getElementById('goalHistoryModal'));
         metaHistoricoExpandidoId = null;
       }
-      function fecharModalMeta() { document.getElementById('goalModal').classList.remove('active'); metaEditandoId = null; }
+      function fecharModalMeta() { fecharPopupMeta(document.getElementById('goalModal')); metaEditandoId = null; }
       async function salvarMeta() {
         const nome = document.getElementById('goalName').value.trim();
         const alvo = lerCampoMoedaMeta(document.getElementById('goalTarget'));
@@ -244,9 +267,9 @@
         document.getElementById('movementDate').value = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`;
         const meta = metas.find(item => item.id === id);
         document.getElementById('movementHistory').innerHTML = criarHistoricoMetaHTML(meta);
-        document.getElementById('movementModal').classList.add('active');
+        abrirPopupMeta(document.getElementById('movementModal'));
       }
-      function fecharModalMovimentacao() { document.getElementById('movementModal').classList.remove('active'); metaMovimentacaoId = null; }
+      function fecharModalMovimentacao() { fecharPopupMeta(document.getElementById('movementModal')); metaMovimentacaoId = null; }
       async function salvarMovimentacao() {
         const valor = lerCampoMoedaMeta(document.getElementById('movementValue'));
         const dataMovimento = document.getElementById('movementDate').value;
@@ -285,9 +308,9 @@
         window.visualViewport.addEventListener('scroll', ajustarModalMetaAoTeclado);
       }
       window.addEventListener('resize', ajustarModalMetaAoTeclado);
-      document.querySelectorAll('.goal-modal').forEach(modal => modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('active'); }));
+      document.querySelectorAll('.goal-modal').forEach(modal => modal.addEventListener('click', e => { if (e.target === modal) fecharPopupMeta(modal); }));
       document.getElementById('goalNoticeModal').addEventListener('click', e => { if (e.target === e.currentTarget) resolverDialogoMeta(false); });
-      document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (document.getElementById('goalNoticeModal').classList.contains('active')) resolverDialogoMeta(false); document.querySelectorAll('.goal-modal.active').forEach(modal => { if (modal.id !== 'goalNoticeModal') modal.classList.remove('active'); }); } });
+      document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (document.getElementById('goalNoticeModal').classList.contains('active')) resolverDialogoMeta(false); document.querySelectorAll('.goal-modal.active').forEach(modal => { if (modal.id !== 'goalNoticeModal') fecharPopupMeta(modal); }); } });
       try { metas = JSON.parse(localStorage.getItem(GOALS_STORAGE_KEY) || '[]'); if (!Array.isArray(metas)) metas = []; } catch (_) { metas = []; }
       renderizarMetas();
     </script>
