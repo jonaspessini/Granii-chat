@@ -54,7 +54,7 @@
       <div class="goal-modal-panel">
         <div class="goal-modal-head"><h2 id="goalModalTitle">Nova meta</h2><button class="goal-modal-close" type="button" onclick="fecharModalMeta()" aria-label="Fechar">&times;</button></div>
         <div class="goal-field"><label for="goalName">Nome da meta</label><input id="goalName" type="text" maxlength="80" placeholder="Ex.: Viagem, reserva de emergência"></div>
-        <div class="goal-field"><label for="goalTarget">Valor desejado (R$)</label><input id="goalTarget" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="10000,00"></div>
+        <div class="goal-field"><label for="goalTarget">Valor desejado (R$)</label><input id="goalTarget" type="text" inputmode="decimal" autocomplete="off" placeholder="0,00"></div>
         <div class="goal-field"><label for="goalDeadline">Data para concluir (opcional)</label><input id="goalDeadline" type="date"></div>
         <div class="goal-form-actions"><button class="goal-cancel" type="button" onclick="fecharModalMeta()">Cancelar</button><button class="goal-save" type="button" onclick="salvarMeta()">Salvar meta</button></div>
         <button class="goal-delete" id="goalDeleteButton" type="button" onclick="excluirMeta()" style="display:none">Excluir meta</button>
@@ -63,7 +63,7 @@
     <div class="goal-modal" id="movementModal" role="dialog" aria-modal="true" aria-labelledby="movementTitle">
       <div class="goal-modal-panel">
         <div class="goal-modal-head"><h2 id="movementTitle">Aporte</h2><button class="goal-modal-close" type="button" onclick="fecharModalMovimentacao()" aria-label="Fechar">&times;</button></div>
-        <div class="goal-field"><label for="movementValue">Valor (R$)</label><input id="movementValue" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0,00"></div>
+        <div class="goal-field"><label for="movementValue">Valor (R$)</label><input id="movementValue" type="text" inputmode="decimal" autocomplete="off" placeholder="0,00"></div>
         <div class="goal-field"><label for="movementDate">Data do lançamento</label><input id="movementDate" type="date"></div>
         <div class="goal-form-actions"><button class="goal-cancel" type="button" onclick="fecharModalMovimentacao()">Cancelar</button><button class="goal-save" type="button" id="movementSaveButton" onclick="salvarMovimentacao()">Confirmar aporte</button></div>
         <div class="goal-history" id="movementHistory"></div>
@@ -94,6 +94,45 @@
       let tipoMovimentacao = 'aporte';
       const moedaMeta = valor => Number(valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       const escaparMeta = texto => String(texto || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      function formatarCampoMoedaMeta(input) {
+        const digitos = input.value.replace(/\D/g, '');
+        if (!digitos) { input.value = ''; return; }
+        input.value = (Number(digitos) / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+      function lerCampoMoedaMeta(input) {
+        const valor = String(input.value || '').trim();
+        if (!valor) return 0;
+        return Number(valor.replace(/\./g, '').replace(',', '.'));
+      }
+      function ajustarModalMetaAoTeclado() {
+        const viewport = window.visualViewport;
+        if (!viewport) return;
+        const campoAtivo = document.activeElement;
+        const modalAtivo = campoAtivo?.closest('.goal-modal');
+        if (!modalAtivo) {
+          if (viewport.height >= window.innerHeight - 80) {
+            document.querySelectorAll('.goal-modal.active').forEach(modal => {
+              modal.style.top = '0'; modal.style.bottom = '0'; modal.style.height = '';
+              const painel = modal.querySelector('.goal-modal-panel');
+              if (painel) { painel.style.maxHeight = ''; painel.style.marginTop = ''; }
+            });
+          }
+          return;
+        }
+        const painel = modalAtivo.querySelector('.goal-modal-panel');
+        const tecladoAberto = viewport.height < window.innerHeight - 80;
+        if (!tecladoAberto) {
+          modalAtivo.style.top = '0'; modalAtivo.style.bottom = '0'; modalAtivo.style.height = '';
+          painel.style.maxHeight = ''; painel.style.marginTop = '';
+          return;
+        }
+        modalAtivo.style.top = `${viewport.offsetTop}px`;
+        modalAtivo.style.bottom = 'auto';
+        modalAtivo.style.height = `${viewport.height}px`;
+        painel.style.maxHeight = `${Math.max(150, viewport.height - 24)}px`;
+        painel.style.marginTop = '0';
+        requestAnimationFrame(() => campoAtivo.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+      }
       function salvarMetasStorage() { localStorage.setItem(GOALS_STORAGE_KEY, JSON.stringify(metas)); }
       function abrirDialogoMeta(titulo, mensagem, confirmar = false, perigo = false) {
         document.getElementById('goalNoticeTitle').textContent = titulo;
@@ -156,7 +195,8 @@
         const meta = id ? metas.find(item => item.id === id) : null;
         document.getElementById('goalModalTitle').textContent = meta ? 'Editar meta' : 'Nova meta';
         document.getElementById('goalName').value = meta?.nome || '';
-        document.getElementById('goalTarget').value = meta?.alvo ?? '';
+        const campoAlvo = document.getElementById('goalTarget');
+        campoAlvo.value = meta ? moedaMeta(meta.alvo) : '';
         document.getElementById('goalDeadline').value = meta?.dataFim || '';
         document.getElementById('goalDeleteButton').style.display = meta ? 'block' : 'none';
         document.getElementById('goalModal').classList.add('active');
@@ -180,7 +220,7 @@
       function fecharModalMeta() { document.getElementById('goalModal').classList.remove('active'); metaEditandoId = null; }
       async function salvarMeta() {
         const nome = document.getElementById('goalName').value.trim();
-        const alvo = Number(document.getElementById('goalTarget').value);
+        const alvo = lerCampoMoedaMeta(document.getElementById('goalTarget'));
         const dataFim = document.getElementById('goalDeadline').value;
         if (!nome || !Number.isFinite(alvo) || alvo <= 0) { await mostrarAvisoMeta('Preencha o nome e o valor desejado.'); return; }
         const hoje = new Date(); hoje.setHours(0,0,0,0);
@@ -208,7 +248,7 @@
       }
       function fecharModalMovimentacao() { document.getElementById('movementModal').classList.remove('active'); metaMovimentacaoId = null; }
       async function salvarMovimentacao() {
-        const valor = Number(document.getElementById('movementValue').value);
+        const valor = lerCampoMoedaMeta(document.getElementById('movementValue'));
         const dataMovimento = document.getElementById('movementDate').value;
         const meta = metas.find(item => item.id === metaMovimentacaoId);
         if (!meta || !Number.isFinite(valor) || valor <= 0 || !dataMovimento) { await mostrarAvisoMeta('Informe um valor maior que zero e a data do lançamento.'); return; }
@@ -236,6 +276,15 @@
         renderizarMetas();
         if (metaHistoricoExpandidoId === metaId) atualizarPopupHistoricoMeta(metaId);
       }
+      [document.getElementById('goalTarget'), document.getElementById('movementValue')].forEach(campo => {
+        campo.addEventListener('input', () => formatarCampoMoedaMeta(campo));
+        campo.addEventListener('focus', () => setTimeout(ajustarModalMetaAoTeclado, 250));
+      });
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', ajustarModalMetaAoTeclado);
+        window.visualViewport.addEventListener('scroll', ajustarModalMetaAoTeclado);
+      }
+      window.addEventListener('resize', ajustarModalMetaAoTeclado);
       document.querySelectorAll('.goal-modal').forEach(modal => modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('active'); }));
       document.getElementById('goalNoticeModal').addEventListener('click', e => { if (e.target === e.currentTarget) resolverDialogoMeta(false); });
       document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (document.getElementById('goalNoticeModal').classList.contains('active')) resolverDialogoMeta(false); document.querySelectorAll('.goal-modal.active').forEach(modal => { if (modal.id !== 'goalNoticeModal') modal.classList.remove('active'); }); } });
