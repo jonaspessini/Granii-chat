@@ -7670,7 +7670,7 @@ function abrirModalReajusteFatura(grupo, nomeCartao, cartaoObj, valorAtual) {
     if (overlayAnterior) overlayAnterior.remove();
     const overlay = document.createElement('div');
     overlay.id = '_reajuste-fatura-overlay';
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:3100;display:flex;align-items:center;justify-content:center;padding:20px;';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:3100;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;';
     overlay.innerHTML = `<div style="background:#fff;width:100%;max-width:400px;border-radius:16px;padding:22px;box-shadow:0 12px 40px rgba(0,0,0,.2);">
       <h3 style="margin:0 0 8px;color:#111827;">Ajustar fatura</h3>
       <div style="font-size:14px;color:#6b7280;margin-bottom:16px;">${nomeCartao} · valor em aberto: R$ ${formatToBRL(valorAtual)}</div>
@@ -7680,10 +7680,52 @@ function abrirModalReajusteFatura(grupo, nomeCartao, cartaoObj, valorAtual) {
       <div style="display:flex;gap:10px;margin-top:20px;"><button id="_reajuste-fatura-cancelar" style="flex:1;padding:12px;border:1px solid #d1d5db;background:#fff;border-radius:10px;font-weight:600;">Cancelar</button><button id="_reajuste-fatura-salvar" style="flex:1;padding:12px;border:0;background:#2563eb;color:#fff;border-radius:10px;font-weight:700;">Salvar ajuste</button></div>
     </div>`;
     document.body.appendChild(overlay);
-    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
-    overlay.querySelector('#_reajuste-fatura-cancelar').addEventListener('click', () => overlay.remove());
+    const painel = overlay.firstElementChild;
+    const campoValor = overlay.querySelector('#_reajuste-fatura-valor');
+    const viewportVisual = window.visualViewport;
+    const ajustarAoTeclado = () => {
+      if (!overlay.isConnected) return;
+      const alturaVisivel = viewportVisual ? viewportVisual.height : window.innerHeight;
+      const topoVisivel = viewportVisual ? viewportVisual.offsetTop : 0;
+      const tecladoAberto = document.activeElement === campoValor && alturaVisivel < window.innerHeight - 80;
+      if (tecladoAberto) {
+        overlay.style.top = `${topoVisivel}px`;
+        overlay.style.bottom = 'auto';
+        overlay.style.height = `${alturaVisivel}px`;
+        overlay.style.alignItems = 'flex-start';
+        overlay.style.padding = '12px 20px';
+        painel.style.maxHeight = `${Math.max(160, alturaVisivel - 24)}px`;
+        painel.style.overflowY = 'auto';
+        requestAnimationFrame(() => campoValor.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+      } else {
+        overlay.style.top = '0';
+        overlay.style.bottom = '0';
+        overlay.style.height = '';
+        overlay.style.alignItems = 'center';
+        overlay.style.padding = '20px';
+        painel.style.maxHeight = '';
+        painel.style.overflowY = '';
+      }
+    };
+    const removerListenersViewport = () => {
+      if (viewportVisual) {
+        viewportVisual.removeEventListener('resize', ajustarAoTeclado);
+        viewportVisual.removeEventListener('scroll', ajustarAoTeclado);
+      }
+      window.removeEventListener('resize', ajustarAoTeclado);
+    };
+    const fecharPopupReajuste = () => { removerListenersViewport(); overlay.remove(); };
+    if (viewportVisual) {
+      viewportVisual.addEventListener('resize', ajustarAoTeclado);
+      viewportVisual.addEventListener('scroll', ajustarAoTeclado);
+    }
+    window.addEventListener('resize', ajustarAoTeclado);
+    campoValor.addEventListener('focus', () => setTimeout(ajustarAoTeclado, 250));
+    campoValor.addEventListener('blur', () => setTimeout(ajustarAoTeclado, 150));
+    overlay.addEventListener('click', e => { if (e.target === overlay) fecharPopupReajuste(); });
+    overlay.querySelector('#_reajuste-fatura-cancelar').addEventListener('click', fecharPopupReajuste);
     overlay.querySelector('#_reajuste-fatura-salvar').addEventListener('click', async () => {
-      const input = overlay.querySelector('#_reajuste-fatura-valor');
+      const input = campoValor;
       const novoValor = Number(String(input.value).replace(',', '.'));
       if (!Number.isFinite(novoValor) || novoValor < 0) { showToast('Informe um valor válido para a fatura.', 'warning'); input.focus(); return; }
       const diferenca = Math.round((novoValor - valorAtual) * 100) / 100;
@@ -7704,7 +7746,7 @@ function abrirModalReajusteFatura(grupo, nomeCartao, cartaoObj, valorAtual) {
         ultimaModificacao: Date.now()
       });
       await salvarLocal(currentDate);
-      overlay.remove();
+      fecharPopupReajuste();
       const modalFatura = document.getElementById('_fatura-modal-overlay');
       if (modalFatura) modalFatura.remove();
       filterTransactions(currentFilter);
