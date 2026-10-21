@@ -9,7 +9,7 @@ index2
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <script src="js/disable-zoom.js"></script>
-  <meta name="theme-color" content="#ffffff">
+  <meta name="theme-color" content="#21c45d">
   <title>Controle Financeiro Mensal</title>
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -7923,7 +7923,7 @@ function updateStatusBarColor(tipo) {
         metaTheme.name = 'theme-color';
         document.head.appendChild(metaTheme);
     }
-    metaTheme.setAttribute('content', '#ffffff');
+    metaTheme.setAttribute('content', cor);
 
     // Cordova StatusBar (app nativo)
     if (typeof StatusBar !== 'undefined') {
@@ -7934,7 +7934,7 @@ function updateStatusBarColor(tipo) {
 
 // Função para restaurar a cor original da status bar
 function restoreStatusBarColor() {
-    const corPadrao = '#ffffff';
+    const corPadrao = '#21c45d';
 
     // Restaura a meta theme-color
     const metaTheme = document.querySelector('meta[name="theme-color"]');
@@ -7943,7 +7943,7 @@ function restoreStatusBarColor() {
     // Cordova StatusBar (app nativo)
     if (typeof StatusBar !== 'undefined') {
         StatusBar.backgroundColorByHexString(corPadrao);
-        StatusBar.styleDefault();
+        StatusBar.styleLightContent();
     }
 }
 
