@@ -368,6 +368,17 @@ function navigateTo(pagina) {
             );
         }
 
+        function isReajusteFaturaCartao(lancamento) {
+            return lancamento?.tipoSistema === 'reajuste_fatura_cartao' ||
+                lancamento?.parcelamento?.tipoSistema === 'reajuste_fatura_cartao';
+        }
+
+        function obterValorBrutoItemFatura(lancamento) {
+            return isReajusteFaturaCartao(lancamento)
+                ? -(Number(lancamento.valor) || 0)
+                : Math.abs(Number(lancamento?.valor) || 0);
+        }
+
         function getLancamentosSemPagamentosFatura(lista) {
             return (Array.isArray(lista) ? lista : []).filter(l => !isPagamentoFaturaCartao(l));
         }
@@ -399,7 +410,7 @@ function navigateTo(pagina) {
         function getTotalPagamentosFaturaCartao(cartaoId, lista) {
             return (Array.isArray(lista) ? lista : [])
                 .filter(l => isPagamentoFaturaCartao(l) && normalizarIdCartao(getCartaoIdPagamentoFatura(l)) === normalizarIdCartao(cartaoId))
-                .reduce((sum, l) => sum + Math.abs(l.valor || 0), 0);
+                .reduce((sum, l) => sum + obterValorBrutoItemFatura(l), 0);
         }
 
         function isFaturaCartaoQuitadaParaVisualizacao(lancamento, lista) {
@@ -468,7 +479,7 @@ function navigateTo(pagina) {
             if (!categoriasList) return;
             
             // Filtrar apenas despesas (valores negativos)
-            const despesas = lancamentos.filter(l => l.valor < 0 && !isReajusteSaldo(l));
+            const despesas = lancamentos.filter(l => l.valor < 0 && !isReajusteSaldo(l) && !isReajusteFaturaCartao(l));
             
             if (despesas.length === 0) {
                 categoriasList.innerHTML = `<div class="categoria-empty"><i class="ri-inbox-line"></i><div>Nenhuma despesa no mês</div></div>`;
@@ -705,6 +716,7 @@ function navigateTo(pagina) {
             
             const pendencias = lancamentos.filter(lanc => {
                 if (lanc.pago) return false;
+                if (isPagamentoFaturaCartao(lanc)) return false;
                 if (isFaturaCartaoQuitadaParaVisualizacao(lanc, lancamentos)) return false;
                 if (!lanc.dataVencimento) return false;
                 const dataVenc = new Date(lanc.dataVencimento + 'T00:00:00');
@@ -712,18 +724,38 @@ function navigateTo(pagina) {
                 return dataVenc <= limiteFuturo;
             });
             
-            pendencias.sort((a, b) => new Date(a.dataVencimento) - new Date(b.dataVencimento));
+            const cartoesIdsPendentes = new Set(pendencias.filter(isLancamentoCartaoCredito).map(lanc => normalizarIdCartao(lanc.formaPagamento)));
+            const pendenciasNormais = pendencias.filter(lanc => !isLancamentoCartaoCredito(lanc));
+            const cartoes = JSON.parse(localStorage.getItem('cartoes_credito') || '[]');
+            cartoesIdsPendentes.forEach(cartaoId => {
+                const itensCartao = lancamentos.filter(lanc => isLancamentoCartaoCredito(lanc) && normalizarIdCartao(lanc.formaPagamento) === cartaoId);
+                const dataFatura = pendencias.find(lanc => isLancamentoCartaoCredito(lanc) && normalizarIdCartao(lanc.formaPagamento) === cartaoId)?.dataVencimento;
+                const totalBruto = itensCartao.reduce((sum, lanc) => sum + obterValorBrutoItemFatura(lanc), 0);
+                const totalPago = lancamentos
+                    .filter(lanc => isPagamentoFaturaCartao(lanc) && normalizarIdCartao(getCartaoIdPagamentoFatura(lanc)) === cartaoId)
+                    .reduce((sum, lanc) => sum + Math.abs(lanc.valor || 0), 0);
+                const valorAberto = Math.max(0, totalBruto - totalPago);
+                if (valorAberto <= 0) return;
+                const cartao = cartoes.find(item => normalizarIdCartao(item.id) === cartaoId);
+                pendenciasNormais.push({
+                    descricao: `Fatura ${cartao?.nome || 'Cartão'}`,
+                    valor: -valorAberto,
+                    dataVencimento: dataFatura,
+                    _faturaCartao: true
+                });
+            });
+            pendenciasNormais.sort((a, b) => new Date(a.dataVencimento) - new Date(b.dataVencimento));
             
             const container = document.getElementById('pendingList');
             if (!container) return;
             
-            if (pendencias.length === 0) {
+            if (pendenciasNormais.length === 0) {
                 container.innerHTML = `<div class="empty-state"><i class="ri-checkbox-circle-line"></i><div>Nenhuma pendência próxima</div></div>`;
                 return;
             }
             
             container.innerHTML = '';
-            pendencias.forEach(pend => {
+            pendenciasNormais.forEach(pend => {
                 const dias = calcularDiasAteVencimento(pend.dataVencimento);
                 let statusClass = 'upcoming';
                 let statusText = '';

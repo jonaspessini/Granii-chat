@@ -2904,6 +2904,13 @@ function isLancamentoCartaoCredito(lancamento) {
     isFormaPagamentoCartaoCredito(lancamento.formaPagamento);
 }
 
+function obterValorBrutoItemFatura(lancamento) {
+  // Ajustes positivos são créditos que reduzem o total da fatura.
+  return lancamento?.tipoSistema === 'reajuste_fatura_cartao'
+    ? -(Number(lancamento.valor) || 0)
+    : Math.abs(Number(lancamento?.valor) || 0);
+}
+
 function isPagamentoFaturaCartao(lancamento) {
   return !!lancamento && (
     lancamento.tipoSistema === 'pagamento_fatura_cartao' ||
@@ -2939,7 +2946,7 @@ function getTotalPagamentosFaturaCartao(cartaoId, lista) {
   const lancs = Array.isArray(lista) ? lista : lancamentos;
   return lancs
     .filter(l => isPagamentoFaturaCartao(l) && normalizarIdCartao(getCartaoIdPagamentoFatura(l)) === normalizarIdCartao(cartaoId))
-    .reduce((sum, l) => sum + Math.abs(l.valor || 0), 0);
+    .reduce((sum, l) => sum + obterValorBrutoItemFatura(l), 0);
 }
 
 function getUltimoPagamentoFaturaCartao(cartaoId, lista) {
@@ -2969,7 +2976,7 @@ function getTotalBrutoFaturaCartao(cartaoId, lista) {
   const lancs = getLancamentosSemPagamentosFatura(lista);
   return lancs
     .filter(l => isLancamentoCartaoCredito(l) && normalizarIdCartao(l.formaPagamento) === normalizarIdCartao(cartaoId))
-    .reduce((sum, l) => sum + Math.abs(l.valor || 0), 0);
+    .reduce((sum, l) => sum + obterValorBrutoItemFatura(l), 0);
 }
 
 function isMesmoPagamentoFatura(a, b) {
@@ -3014,7 +3021,7 @@ function isFaturaCartaoQuitadaParaVisualizacao(lancamento, lista) {
       isLancamentoCartaoCredito(l) &&
       normalizarIdCartao(l.formaPagamento) === normalizarIdCartao(lancamento.formaPagamento)
     )
-    .reduce((sum, l) => sum + Math.abs(l.valor || 0), 0);
+    .reduce((sum, l) => sum + obterValorBrutoItemFatura(l), 0);
 
   if (totalBrutoFatura <= 0) return false;
 
@@ -7356,7 +7363,7 @@ function renderAgrupandoPorCartao(allTransactions, filteredLancamentos) {
     }
 
     function renderGrupoCartao(grupo) {
-        const totalBrutoFatura = grupo.itens.reduce((sum, l) => sum + Math.abs(l.valor), 0);
+        const totalBrutoFatura = grupo.itens.reduce((sum, l) => sum + obterValorBrutoItemFatura(l), 0);
         const totalFatura = calcularSaldoRestanteFatura(totalBrutoFatura, grupo.formaPagamento, lancamentos);
         const ultimoPagamentoFatura = getUltimoPagamentoFaturaCartao(grupo.formaPagamento, lancamentos);
         const valorExibidoFatura = totalFatura <= 0 ? (ultimoPagamentoFatura || totalBrutoFatura) : totalFatura;
@@ -7418,7 +7425,7 @@ function renderAgrupandoPorCartao(allTransactions, filteredLancamentos) {
 
     // As faturas agrupadas entram na mesma sequencia de vencimento das transacoes.
     const faturasAgrupadas = Object.values(grupos).map(grupo => {
-        const totalBrutoFatura = grupo.itens.reduce((sum, l) => sum + Math.abs(l.valor), 0);
+        const totalBrutoFatura = grupo.itens.reduce((sum, l) => sum + obterValorBrutoItemFatura(l), 0);
         const totalFatura = calcularSaldoRestanteFatura(totalBrutoFatura, grupo.formaPagamento, lancamentos);
         const faturaPaga = totalFatura <= 0;
         const ultimaModificacaoPagamento = getUltimaModificacaoPagamentoFaturaCartao(grupo.formaPagamento, lancamentos);
@@ -7478,7 +7485,7 @@ function abrirModalFaturaAgrupada(grupo, nomeCartao, cartaoObj) {
     const anterior = document.getElementById('_fatura-modal-overlay');
     if (anterior) anterior.remove();
 
-    const totalBrutoFatura = grupo.itens.reduce((sum, l) => sum + Math.abs(l.valor), 0);
+    const totalBrutoFatura = grupo.itens.reduce((sum, l) => sum + obterValorBrutoItemFatura(l), 0);
     const totalFatura = calcularSaldoRestanteFatura(totalBrutoFatura, grupo.formaPagamento, lancamentos);
     const totalPagoFatura = Math.max(0, totalBrutoFatura - totalFatura);
     const isPago = totalFatura <= 0;
@@ -7518,13 +7525,14 @@ function abrirModalFaturaAgrupada(grupo, nomeCartao, cartaoObj) {
         }
         const metaText = [dataText, catNome].filter(Boolean).join(' · ');
 
+        const isCreditoReajuste = lanc.tipoSistema === 'reajuste_fatura_cartao' && lanc.valor > 0;
         return `
             <div class="fatura-modal-item" data-idx="${lanc.originalIndex ?? lanc._idx}" style="cursor:pointer;">
                 <div class="fatura-modal-item-info">
                     <div class="fatura-modal-item-desc">${desc}</div>
                     ${metaText ? `<div class="fatura-modal-item-meta">${metaText}</div>` : ''}
                 </div>
-                <div class="fatura-modal-item-valor">R$ ${valorFmt}</div>
+                <div class="fatura-modal-item-valor ${isCreditoReajuste ? 'pagamento' : ''}">${isCreditoReajuste ? '+' : ''} R$ ${valorFmt}</div>
             </div>
         `;
     }).join('');
@@ -7601,6 +7609,7 @@ function abrirModalFaturaAgrupada(grupo, nomeCartao, cartaoObj) {
             </div>
 
             <div class="fatura-modal-footer">
+                ${!isPago ? `<button type="button" id="_fatura-modal-adjust-btn" style="width:100%;border:1px solid #d1d5db;background:#fff;color:#374151;border-radius:12px;padding:12px 16px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:9px;">Reajuste da fatura</button>` : ''}
                 <button type="button" id="_fatura-modal-pay-btn" class="fatura-modal-pay-btn ${classeBotaoPagamento}">
                     <i class="${isPago ? 'ri-arrow-go-back-line' : 'ri-checkbox-circle-line'}"></i>
                     ${textoBotaoPagamento}
@@ -7616,6 +7625,9 @@ function abrirModalFaturaAgrupada(grupo, nomeCartao, cartaoObj) {
 
     document.body.appendChild(overlay);
 
+    const botaoAjuste = document.getElementById('_fatura-modal-adjust-btn');
+    if (botaoAjuste) botaoAjuste.addEventListener('click', () => abrirModalReajusteFatura(grupo, nomeCartao, cartaoObj, totalFatura));
+
     // Abrir modal de detalhes ao clicar em uma despesa da fatura
     overlay.querySelectorAll('.fatura-modal-item').forEach(item => {
         item.addEventListener('click', function(e) {
@@ -7629,6 +7641,10 @@ function abrirModalFaturaAgrupada(grupo, nomeCartao, cartaoObj) {
             }
             const idx = parseInt(this.dataset.idx, 10);
             if (!isNaN(idx)) {
+                if (lancamentos[idx]?.tipoSistema === 'reajuste_fatura_cartao') {
+                    abrirConfirmacaoExcluirPagamentoFatura(idx);
+                    return;
+                }
                 overlay.remove();
                 openTransactionDetails(idx);
             }
@@ -7649,14 +7665,63 @@ function abrirModalFaturaAgrupada(grupo, nomeCartao, cartaoObj) {
     }
 }
 
+function abrirModalReajusteFatura(grupo, nomeCartao, cartaoObj, valorAtual) {
+    const overlayAnterior = document.getElementById('_reajuste-fatura-overlay');
+    if (overlayAnterior) overlayAnterior.remove();
+    const overlay = document.createElement('div');
+    overlay.id = '_reajuste-fatura-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:3100;display:flex;align-items:center;justify-content:center;padding:20px;';
+    overlay.innerHTML = `<div style="background:#fff;width:100%;max-width:400px;border-radius:16px;padding:22px;box-shadow:0 12px 40px rgba(0,0,0,.2);">
+      <h3 style="margin:0 0 8px;color:#111827;">Ajustar fatura</h3>
+      <div style="font-size:14px;color:#6b7280;margin-bottom:16px;">${nomeCartao} · valor em aberto: R$ ${formatToBRL(valorAtual)}</div>
+      <label for="_reajuste-fatura-valor" style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">Novo valor da fatura</label>
+      <input id="_reajuste-fatura-valor" type="number" min="0" step="0.01" inputmode="decimal" value="${Number(valorAtual).toFixed(2)}" style="width:100%;box-sizing:border-box;padding:12px;border:1px solid #d1d5db;border-radius:10px;font-size:16px;">
+      <div style="font-size:12px;color:#6b7280;margin-top:8px;">A diferença será lançada como ajuste vinculado a esta fatura.</div>
+      <div style="display:flex;gap:10px;margin-top:20px;"><button id="_reajuste-fatura-cancelar" style="flex:1;padding:12px;border:1px solid #d1d5db;background:#fff;border-radius:10px;font-weight:600;">Cancelar</button><button id="_reajuste-fatura-salvar" style="flex:1;padding:12px;border:0;background:#2563eb;color:#fff;border-radius:10px;font-weight:700;">Salvar ajuste</button></div>
+    </div>`;
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+    overlay.querySelector('#_reajuste-fatura-cancelar').addEventListener('click', () => overlay.remove());
+    overlay.querySelector('#_reajuste-fatura-salvar').addEventListener('click', async () => {
+      const input = overlay.querySelector('#_reajuste-fatura-valor');
+      const novoValor = Number(String(input.value).replace(',', '.'));
+      if (!Number.isFinite(novoValor) || novoValor < 0) { showToast('Informe um valor válido para a fatura.', 'warning'); input.focus(); return; }
+      const diferenca = Math.round((novoValor - valorAtual) * 100) / 100;
+      if (Math.abs(diferenca) < 0.01) { showToast('O novo valor é igual ao valor atual.', 'warning'); return; }
+      const cartaoId = normalizarIdCartao(grupo.formaPagamento);
+      const dataVencimento = grupo.itens.find(item => item.dataVencimento)?.dataVencimento || '';
+      lancamentos.push({
+        descricao: `Reajuste fatura ${nomeCartao}`,
+        tipo: 'despesa',
+        valor: -diferenca,
+        pago: false,
+        dataVencimento,
+        formaPagamento: grupo.formaPagamento,
+        cartaoId,
+        categoria: null,
+        tipoSistema: 'reajuste_fatura_cartao',
+        parcelamento: { tipoSistema: 'reajuste_fatura_cartao', cartaoId, faturaMonthKey: getMonthKey(currentDate) },
+        ultimaModificacao: Date.now()
+      });
+      await salvarLocal(currentDate);
+      overlay.remove();
+      const modalFatura = document.getElementById('_fatura-modal-overlay');
+      if (modalFatura) modalFatura.remove();
+      filterTransactions(currentFilter);
+      showToast(`Fatura ajustada para R$ ${formatToBRL(novoValor)}.`, 'success');
+    });
+}
+
 // Função para atualizar o label do topo baseado no tipo
 function abrirConfirmacaoExcluirPagamentoFatura(indexPagamento) {
-    if (typeof indexPagamento !== 'number' || indexPagamento < 0 || !lancamentos[indexPagamento] || !isPagamentoFaturaCartao(lancamentos[indexPagamento])) {
-        showToast('Nao foi possivel localizar este pagamento.', 'error');
+    const lancamento = lancamentos[indexPagamento];
+    const isReajuste = lancamento?.tipoSistema === 'reajuste_fatura_cartao';
+    if (typeof indexPagamento !== 'number' || indexPagamento < 0 || !lancamento || (!isReajuste && !isPagamentoFaturaCartao(lancamento))) {
+        showToast('Nao foi possivel localizar este lancamento.', 'error');
         return;
     }
 
-    const pagamento = lancamentos[indexPagamento];
+    const pagamento = lancamento;
     const confirmacaoAnterior = document.getElementById('_pagamento-fatura-excluir-overlay');
     if (confirmacaoAnterior) confirmacaoAnterior.remove();
 
@@ -7669,8 +7734,8 @@ function abrirConfirmacaoExcluirPagamentoFatura(indexPagamento) {
             <div style="width:44px;height:44px;border-radius:14px;background:#fee2e2;color:#dc2626;display:flex;align-items:center;justify-content:center;margin-bottom:14px;">
                 <i class="ri-delete-bin-line" style="font-size:24px;"></i>
             </div>
-            <h3 style="margin:0 0 8px;font-size:18px;color:#1f2937;">Excluir pagamento?</h3>
-            <p style="margin:0 0 18px;font-size:14px;line-height:1.4;color:#6b7280;">Deseja excluir o pagamento adiantado de R$ ${formatToBRL(Math.abs(pagamento.valor || 0))}?</p>
+            <h3 style="margin:0 0 8px;font-size:18px;color:#1f2937;">${isReajuste ? 'Excluir reajuste?' : 'Excluir pagamento?'}</h3>
+            <p style="margin:0 0 18px;font-size:14px;line-height:1.4;color:#6b7280;">${isReajuste ? `Deseja excluir o reajuste de R$ ${formatToBRL(Math.abs(pagamento.valor || 0))}?` : `Deseja excluir o pagamento adiantado de R$ ${formatToBRL(Math.abs(pagamento.valor || 0))}?`}</p>
             <div style="display:flex;gap:10px;">
                 <button type="button" id="_pagamento-fatura-cancelar" style="flex:1;border:1px solid #e5e7eb;background:#fff;color:#374151;border-radius:10px;padding:12px;font-weight:700;">Nao</button>
                 <button type="button" id="_pagamento-fatura-confirmar" style="flex:1;border:0;border-radius:10px;padding:12px;font-weight:700;color:#fff;background:#dc2626;">Excluir</button>
@@ -7697,7 +7762,7 @@ function abrirConfirmacaoExcluirPagamentoFatura(indexPagamento) {
 
         await salvarLocal(currentDate);
         loadLancamentos();
-        showToast('Pagamento adiantado excluido com sucesso!', 'success');
+        showToast(isReajuste ? 'Reajuste excluido com sucesso!' : 'Pagamento adiantado excluido com sucesso!', 'success');
     });
 }
 
@@ -7751,7 +7816,7 @@ function abrirConfirmacaoFaturaAgrupada(grupo, novoStatusPago) {
 async function marcarPagamentoFaturaAgrupada(grupo, novoStatusPago) {
     if (!grupo || !Array.isArray(grupo.itens) || grupo.itens.length === 0) return;
 
-    const totalBrutoFatura = grupo.itens.reduce((sum, l) => sum + Math.abs(l.valor), 0);
+    const totalBrutoFatura = grupo.itens.reduce((sum, l) => sum + obterValorBrutoItemFatura(l), 0);
     const saldoAberto = calcularSaldoRestanteFatura(totalBrutoFatura, grupo.formaPagamento, lancamentos);
 
     if (novoStatusPago) {
