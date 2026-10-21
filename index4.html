@@ -85,7 +85,8 @@
     </div>
 
     <script>
-      const GOALS_STORAGE_KEY = 'metas_financeiras';
+      let GOALS_STORAGE_KEY = null;
+      let metasUserId = null;
       let metas = [];
       let metaEditandoId = null;
       let metaMovimentacaoId = null;
@@ -156,7 +157,27 @@
           else if (campoRect.top < painelRect.top + 12) painel.scrollTop -= (painelRect.top + 12) - campoRect.top;
         });
       }
-      function salvarMetasStorage() { localStorage.setItem(GOALS_STORAGE_KEY, JSON.stringify(metas)); }
+      async function salvarMetasStorage() {
+        if (!GOALS_STORAGE_KEY || !metasUserId) return false;
+        localStorage.setItem(GOALS_STORAGE_KEY, JSON.stringify(metas));
+        try {
+          const { saveUserGoalsToSupabase } = await import('./js/supabase-sync.js');
+          return await saveUserGoalsToSupabase(metas);
+        } catch (error) {
+          console.error('Erro ao sincronizar metas:', error);
+          localStorage.setItem(`metas_financeiras_pendente_${metasUserId}`, '1');
+          return false;
+        }
+      }
+      async function avisarFalhaSincronizacaoMeta(sincronizado) {
+        if (!sincronizado) await mostrarAvisoMeta('A meta foi salva neste aparelho, mas não foi sincronizada com a nuvem. Confira sua conexão e a configuração do Supabase.');
+      }
+      window.inicializarMetasUsuario = function(userId, metasCarregadas) {
+        metasUserId = userId;
+        GOALS_STORAGE_KEY = `metas_financeiras_${userId}`;
+        metas = Array.isArray(metasCarregadas) ? metasCarregadas : [];
+        renderizarMetas();
+      };
       function abrirDialogoMeta(titulo, mensagem, confirmar = false, perigo = false) {
         document.getElementById('goalNoticeTitle').textContent = titulo;
         document.getElementById('goalNoticeMessage').textContent = mensagem;
@@ -252,11 +273,11 @@
           const index = metas.findIndex(item => item.id === metaEditandoId);
           metas[index] = { ...metas[index], nome, alvo, dataFim };
         } else metas.push({ id: `meta_${Date.now()}_${Math.random().toString(36).slice(2,7)}`, nome, alvo, dataFim, guardado: 0, movimentos: [] });
-        salvarMetasStorage(); fecharModalMeta(); renderizarMetas();
+        const sincronizado = await salvarMetasStorage(); fecharModalMeta(); renderizarMetas(); await avisarFalhaSincronizacaoMeta(sincronizado);
       }
       async function excluirMeta() {
         if (!metaEditandoId || !await confirmarAcaoMeta('Excluir esta meta e o histórico de aportes e retiradas?')) return;
-        metas = metas.filter(item => item.id !== metaEditandoId); salvarMetasStorage(); fecharModalMeta(); renderizarMetas();
+        metas = metas.filter(item => item.id !== metaEditandoId); const sincronizado = await salvarMetasStorage(); fecharModalMeta(); renderizarMetas(); await avisarFalhaSincronizacaoMeta(sincronizado);
       }
       function abrirMovimentacao(id, tipo) {
         metaMovimentacaoId = id; tipoMovimentacao = tipo;
@@ -280,7 +301,7 @@
         meta.guardado = Math.round((saldoAtual + (tipoMovimentacao === 'aporte' ? valor : -valor)) * 100) / 100;
         meta.movimentos = Array.isArray(meta.movimentos) ? meta.movimentos : [];
         meta.movimentos.push({ tipo: tipoMovimentacao, valor, data: dataMovimento });
-        salvarMetasStorage(); fecharModalMovimentacao(); renderizarMetas();
+        const sincronizado = await salvarMetasStorage(); fecharModalMovimentacao(); renderizarMetas(); await avisarFalhaSincronizacaoMeta(sincronizado);
       }
       async function excluirMovimentacao(metaId, indiceMovimento) {
         const meta = metas.find(item => item.id === metaId);
@@ -295,9 +316,10 @@
         }
         meta.guardado = Math.round((saldoAtual + (movimento.tipo === 'aporte' ? -valor : valor)) * 100) / 100;
         meta.movimentos.splice(indiceMovimento, 1);
-        salvarMetasStorage();
+        const sincronizado = await salvarMetasStorage();
         renderizarMetas();
         if (metaHistoricoExpandidoId === metaId) atualizarPopupHistoricoMeta(metaId);
+        await avisarFalhaSincronizacaoMeta(sincronizado);
       }
       [document.getElementById('goalTarget'), document.getElementById('movementValue')].forEach(campo => {
         campo.addEventListener('input', () => formatarCampoMoedaMeta(campo));
@@ -311,18 +333,20 @@
       document.querySelectorAll('.goal-modal').forEach(modal => modal.addEventListener('click', e => { if (e.target === modal) fecharPopupMeta(modal); }));
       document.getElementById('goalNoticeModal').addEventListener('click', e => { if (e.target === e.currentTarget) resolverDialogoMeta(false); });
       document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (document.getElementById('goalNoticeModal').classList.contains('active')) resolverDialogoMeta(false); document.querySelectorAll('.goal-modal.active').forEach(modal => { if (modal.id !== 'goalNoticeModal') fecharPopupMeta(modal); }); } });
-      try { metas = JSON.parse(localStorage.getItem(GOALS_STORAGE_KEY) || '[]'); if (!Array.isArray(metas)) metas = []; } catch (_) { metas = []; }
-      renderizarMetas();
+      document.getElementById('goalsList').innerHTML = '<div class="goals-empty">Carregando suas metas…</div>';
     </script>
 <script type="module">
   import { supabase } from './js/supabase-config.js';
   import { startSingleSessionGuard } from './js/single-session.js';
+  import { loadUserGoalsFromSupabase } from './js/supabase-sync.js';
 
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) {
     window.location.href = 'login.html';
   } else {
     startSingleSessionGuard();
+    const resultadoMetas = await loadUserGoalsFromSupabase();
+    window.inicializarMetasUsuario(session.user.id, resultadoMetas.goals);
   }
 </script>
 <script>

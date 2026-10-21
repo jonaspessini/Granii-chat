@@ -5069,7 +5069,8 @@ function limparDadosLocaisDoApp() {
       key === 'contas_config' ||
       key === 'nextContaId' ||
       key === 'valoresVisiveis' ||
-      key === 'categorias_config'
+      key === 'categorias_config' ||
+      key.startsWith('metas_financeiras_')
     )) {
       keysToRemove.push(key);
     }

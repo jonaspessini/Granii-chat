@@ -11,6 +11,94 @@ export async function getCurrentUserData() {
     return currentUser;
 }
 
+const GOALS_LEGACY_KEY = 'metas_financeiras';
+const goalsStorageKey = userId => `metas_financeiras_${userId}`;
+const goalsPendingKey = userId => `metas_financeiras_pendente_${userId}`;
+
+function lerMetasLocais(chave) {
+    try {
+        const metas = JSON.parse(localStorage.getItem(chave) || '[]');
+        return Array.isArray(metas) ? metas : [];
+    } catch (_) {
+        return [];
+    }
+}
+
+// Carrega e salva as metas no registro exclusivo do usuário autenticado.
+export async function loadUserGoalsFromSupabase() {
+    const user = await getCurrentUserData();
+    if (!user) return { success: false, goals: [], error: new Error('Usuário não autenticado') };
+
+    const localKey = goalsStorageKey(user.id);
+    let localExiste = localStorage.getItem(localKey) !== null;
+    const legacyOwner = localStorage.getItem(`${GOALS_LEGACY_KEY}_owner_id`);
+    const legacyGoals = localStorage.getItem(GOALS_LEGACY_KEY);
+
+    // Migra dados anteriores apenas para a primeira conta que os utilizava.
+    if (legacyGoals !== null && (!legacyOwner || legacyOwner === user.id)) {
+        if (!localExiste) localStorage.setItem(localKey, legacyGoals);
+        localStorage.setItem(`${GOALS_LEGACY_KEY}_owner_id`, user.id);
+        localStorage.removeItem(GOALS_LEGACY_KEY);
+        localExiste = localStorage.getItem(localKey) !== null;
+    }
+
+    const { data, error } = await supabase
+        .from('user_goals')
+        .select('goals')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+    if (error) {
+        console.error('Erro ao carregar metas:', error);
+        return { success: false, goals: lerMetasLocais(localKey), error };
+    }
+
+    const localGoals = lerMetasLocais(localKey);
+    const syncPendente = localStorage.getItem(goalsPendingKey(user.id)) === '1';
+    if (syncPendente) {
+        const synced = await saveUserGoalsToSupabase(localGoals);
+        return { success: synced, goals: localGoals };
+    }
+
+    if (data) {
+        const goals = Array.isArray(data.goals) ? data.goals : [];
+        localStorage.setItem(localKey, JSON.stringify(goals));
+        return { success: true, goals };
+    }
+
+    if (localExiste) {
+        const synced = await saveUserGoalsToSupabase(localGoals);
+        return { success: synced, goals: localGoals };
+    }
+
+    localStorage.setItem(localKey, '[]');
+    return { success: true, goals: [] };
+}
+
+export async function saveUserGoalsToSupabase(goals) {
+    const user = await getCurrentUserData();
+    if (!user || !Array.isArray(goals)) return false;
+
+    const { error } = await supabase
+        .from('user_goals')
+        .upsert({
+            user_id: user.id,
+            goals,
+            updated_at: new Date().toISOString()
+        }, { onConflict: 'user_id' });
+
+    if (error) {
+        console.error('Erro ao sincronizar metas:', error);
+        localStorage.setItem(goalsPendingKey(user.id), '1');
+        return false;
+    }
+
+    localStorage.removeItem(goalsPendingKey(user.id));
+    localStorage.setItem(goalsStorageKey(user.id), JSON.stringify(goals));
+    localStorage.setItem(`${GOALS_LEGACY_KEY}_owner_id`, user.id);
+    return true;
+}
+
 // Limpa transações e cartões do localStorage
 function clearLocalData() {
     const keysToRemove = [];
@@ -271,6 +359,16 @@ export async function deleteAllUserDataFromSupabase() {
         return false;
     }
 
+    const { error: goalsError } = await supabase
+        .from('user_goals')
+        .delete()
+        .eq('user_id', user.id);
+
+    if (goalsError) {
+        console.error('Erro ao apagar metas:', goalsError);
+        return false;
+    }
+
     console.log('Dados do usuario apagados do Supabase');
     return true;
 }
@@ -443,6 +541,7 @@ export async function loadUserData() {
     await loadUserTransactionsFromSupabase();
     await loadUserCardsFromSupabase();
     await loadUserCategoriesFromSupabase();  // ← ADICIONE ESTA LINHA
+    await loadUserGoalsFromSupabase();
 
     console.log('✅ Dados carregados!');
     return true;
@@ -454,6 +553,8 @@ export async function syncAllToSupabase() {
     await saveUserTransactionsToSupabase();
     await saveUserCardsToSupabase();
     await saveUserCategoriesToSupabase();  // Adicione também para sincronizar categorias
+    const user = await getCurrentUserData();
+    if (user) await saveUserGoalsToSupabase(lerMetasLocais(goalsStorageKey(user.id)));
     console.log('✅ Sincronização completa!');
     return true;
 }
