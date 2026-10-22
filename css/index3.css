@@ -586,7 +586,7 @@ body {
 }
 
 .nav-btn.active {
-  color: #009587;
+  color: var(--cor-principal);
 }
 
 .nav-btn i {
