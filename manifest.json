@@ -4,8 +4,8 @@
   "description": "Controle financeiro mensal",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#ffffff",
+  "background_color": "",
+  "theme_color": "",
   "orientation": "portrait",
   "icons": [
     {
